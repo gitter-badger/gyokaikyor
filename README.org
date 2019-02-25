@@ -1,6 +1,6 @@
 #+TITLE: gyokaikyor
 #+STARTUP: showall
-
+  [![Travis build status](https://travis-ci.org/smxshxishxad/gyokaikyor.svg?branch=master)](https://travis-ci.org/smxshxishxad/gyokaikyor)
 * これは何か？
 漁海況業務に関するパッケージ．
 資源評価と統合して１つのパッケージとするか，重複処理部分を別パッケージとして切り出す予定．
