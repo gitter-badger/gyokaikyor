@@ -1,5 +1,5 @@
 #+TITLE: gyokaikyor
-#+STARTUP: overview
+#+STARTUP: showall
 
 * これは何か？
 漁海況業務に関するパッケージ．
