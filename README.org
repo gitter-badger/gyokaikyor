@@ -5,7 +5,7 @@
 漁海況業務に関するパッケージ．
 資源評価と統合して１つのパッケージとするか，重複処理部分を別パッケージとして切り出す予定．
 
-プロジェクトの詳細なメモは file:/Users/ahayashi/Documents/GitHub/gyokaikyor/gyokaikyor.org を参照
+プロジェクトの詳細は [[https://github.com/smxshxishxad/gyokaikyor/blob/master/gyokaikyor.org][こちら]] を参照
 
 * 改善案の募集
 改善案は [[https://github.com/smxshxishxad/gyokaikyor/issues][Issues]] にて随時募集中
