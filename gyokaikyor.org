@@ -19,7 +19,6 @@
 - [[#デモ][デモ]]
   - [[#ファイル情報を整備する][ファイル情報を整備する]]
 - [[#開発環境の整備][開発環境の整備]]
-  - [[#ディレクトリ作成][ディレクトリ作成]]
   - [[#本バッケージ内部で使用するパッケージ][本バッケージ内部で使用するパッケージ]]
 - [[#開発][開発]]
   - [[#各県ファイルの処理概要][各県ファイルの処理概要]]
@@ -121,10 +120,11 @@ R パッケージのディレクトリは全て GitHub で公開する．
 
 #+END_SRC
 * 開発環境の整備
-** ディレクトリ作成
 #+BEGIN_SRC R :results silent
-  # getwd()
   # usethis::create_package("gyokaikyor")
+    usethis::use_mit_license("Akira Hayashi")
+    usethis::use_coverage(type = "codecov")
+    usethis::use_lifecycle_badge("experimental")
 #+END_SRC
 ** 本バッケージ内部で使用するパッケージ
 #+BEGIN_SRC R :results silent

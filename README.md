@@ -4,7 +4,9 @@
 1.  [これは何か？](#orgbb2f71b)
 2.  [改善案の募集](#orga5b5b25)
 
-[\![Travis build status](<https://travis-ci.org/smxshxishxad/gyokaikyor.svg?branch=master>)](<https://travis-ci.org/smxshxishxad/gyokaikyor>)
+[![Travis build status](<https://travis-ci.org/smxshxishxad/gyokaikyor.svg?branch=master>)](<https://travis-ci.org/smxshxishxad/gyokaikyor>)
+[![Coverage status](https://codecov.io/gh/smxshxishxad/gyokaikyor/branch/master/graph/badge.svg)](https://codecov.io/github/smxshxishxad/gyokaikyor?branch=master)
+[![lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 
 
 <a id="orgbb2f71b"></a>
