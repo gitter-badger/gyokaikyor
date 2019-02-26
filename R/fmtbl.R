@@ -115,7 +115,7 @@ fmtbl.kumamoto  <- function(fname, spcs, nest = TRUE) {
   cpos_bl   <- cpos_date # Column position of "被鱗体長" is
                          #   same as that of "%Y.%m.%d" column
   date      <- alldata[1, cpos_date] %>%
-    tinyplyr::jpdate2julian() %>%
+    tinyplyr::date2julian() %>%
     tinyplyr::num2date()
   method    <- alldata[1, cpos_date + 4] %>%
     unlist() %>%

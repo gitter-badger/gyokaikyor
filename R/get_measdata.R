@@ -3,7 +3,7 @@ get_measdata <- function(df, col) {
   out  <- df[rows, col] %>%
     unlist() %>%
     as.numeric() %>%
-    na.omit() %>%
+    stats::na.omit() %>%
     as.vector()
   out
 }

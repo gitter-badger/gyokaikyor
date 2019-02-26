@@ -1,4 +1,7 @@
+
 ^codecov\.yml$
 ^LICENSE\.md$
 ^\.travis\.yml$
 .+org$
+data.git/
+_bk/
