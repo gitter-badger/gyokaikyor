@@ -363,6 +363,25 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 :PROPERTIES:
 :header-args: :results silent :exports code
 :END:
+*** インボート
+#+BEGIN_SRC  R :tangle R/util.R
+#' Pipe operator
+#'
+#' @name %>%
+#' @rdname pipe
+#' @keywords internal
+#' @export
+#' @importFrom magrittr %>%
+#' @usage lhs \%>\% rhs
+
+#' @name %<>%
+#' @rdname doublepipe
+#' @keywords internal
+#' @export
+#' @importFrom magrittr %<>%
+#' @usage lhs \%<>\% rhs
+NULL
+
 *** ファイル名操作
 #+BEGIN_SRC R :tangle R/handle_fname.R
   give_classi   <- function(fname, prefec) {
