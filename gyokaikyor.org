@@ -493,7 +493,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     out  <- df[rows, col] %>%
       unlist() %>%
       as.numeric() %>%
-      na.omit() %>%
+      stats::na.omit() %>%
       as.vector()
     out
   }
