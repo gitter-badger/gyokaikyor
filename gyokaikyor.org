@@ -382,6 +382,21 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                  "Unknown prefecture")
   })
 #+END_SRC
+*** テスト/ 計測データ取得
+#+BEGIN_SRC  R :tangle tests/testthat/test_get_measdata.R
+  context("Get measure data vector from data frame")
+
+  test_that("get_measdata() extracts vector correctly",{
+    df <- data.frame(a = 1:200, b = 101:300, c = 201:400)
+    expect_equal(get_measdata(df, 1), 8:107)
+    expect_equal(get_measdata(df, 2), 108:207)
+    expect_equal(get_measdata(df, 3), 208:307)
+  })
+#+END_SRC
+*** テスト/ 整形
+#+BEGIN_SRC  :tangle tests/testthat/test_fmtbl.R
+
+#+END_SRC
 ** 関数
 :PROPERTIES:
 :header-args: :results silent :exports code
