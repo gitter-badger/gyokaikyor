@@ -716,7 +716,8 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     method    <- alldata[1, cpos_date + 4] %>%
       unlist() %>%
       as.vector()
-    bl         <- purrr::map(cpos_date, get_measdata, df = alldata)
+    bl         <- purrr::map(cpos_date, get_measdata,
+                             prefec = "kumamoto", df = alldata)
 
     out        <- list()
     out$date   <- date
