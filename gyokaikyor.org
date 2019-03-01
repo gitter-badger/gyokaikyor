@@ -538,10 +538,8 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     shtname
   }
 #+END_SRC
-*** 計測データ取得
-#+BEGIN_SRC R :tangle R/get_measdata.R
-  get_measdata <- function(df, col) {
-    rows <- 8:107
+*** データ取得
+#+BEGIN_SRC R :tangle R/get_data.R
   get_vector <- function(col, df, startrow, endrow, na.rm) {
     rows <- startrow:endrow
     out  <- df[rows, col] %>%
