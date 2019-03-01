@@ -134,6 +134,8 @@ R パッケージのディレクトリは全て GitHub で公開する．
   usethis::use_package("tibble")
   usethis::use_package("tidyr")
   usethis::use_package("lubridate")
+  usethis::use_package("readxl")
+  usethis::use_package("stringr")
   usethis::use_package("purrr")
   usethis::use_package("tinyplyr")
   # usethis::use_package("ggplot2", "Imports")
