@@ -43,20 +43,24 @@ jpmonth2num <- function(x) {
 fmtbl.nagasaki  <- function(fname, spcs, nest = TRUE) {
   shtname   <- make_shtname(prefecture = "nagasaki", spcs = spcs)
   alldata   <- load_alldata(fname, shtname)
-  colpos    <- get_col2load(target = alldata[4,], regex = ".月", offset = 0)
+  colpos    <- get_col2load(target = alldata[4, ], regex = ".月", offset = 0)
   month     <- jpmonth2num(alldata[4, colpos])
   classname <- make_blclass(alldata[5:86, 2], alldata[5:86, 3])
-  histdata  <- purrr::map(colpos, get_histdata, df = alldata, rows = 5:86, name = classname)
+  histdata  <- purrr::map(colpos, get_histdata, df = alldata,
+                          rows = 5:86, name = classname)
 
   out       <- list()
 
   parse_ym <- function(fname, months) {
-    ym_start_match <- stringr::str_match(fname, "/([0-9]{4})\\.((?:0|1)[1-9])")
+    ym_start_match <- stringr::str_match(fname,
+                                         ".+/([0-9]{4})\\.((?:0|1)[1-9])")
     year_start     <- ym_start_match[2] %>% as.numeric()
     month_start    <- ym_start_match[3] %>% as.numeric()
     ym_end_match   <-
       stringr::str_match(fname,
-                         "/[0-9]{4}\\.(?:0|1)[1-9]-([0-9]{4})\\.((?:0|1)[1-9])")
+                         ".+/[0-9]{4}\\.(?:0|1)[1-9]-([0-9]{4})
+                           \\.((?:0|1)[1-9])"
+                         )
     year_end       <- ym_end_match[2] %>% as.numeric()
     month_end      <- ym_end_match[3] %>% as.numeric()
     out <- list()
@@ -111,9 +115,7 @@ fmtbl.nagasaki  <- function(fname, spcs, nest = TRUE) {
 fmtbl.kumamoto  <- function(fname, spcs, nest = TRUE) {
   shtname   <- make_shtname(prefecture = "kumamoto", spcs = spcs)
   alldata   <- load_alldata(fname, shtname)
-  cpos_date <- get_col2load(alldata[1,], regex = "[0-9]+", offset = 0)
-  cpos_bl   <- cpos_date # Column position of "被鱗体長" is
-                         #   same as that of "%Y.%m.%d" column
+  cpos_date <- get_col2load(alldata[1, ], regex = "[0-9]+", offset = 0)
   date      <- alldata[1, cpos_date] %>%
     tinyplyr::date2julian() %>%
     tinyplyr::num2date()
