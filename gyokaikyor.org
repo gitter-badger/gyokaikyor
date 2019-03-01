@@ -171,9 +171,12 @@ Imports:
     tinyplyr,
     tidyr,
     lubridate,
-    purrr
+    purrr,
+    readxl,
+    stringr
 Suggests: 
-    testthat
+    testthat,
+    covr
 RoxygenNote: 6.1.1
 #+end_example
 
