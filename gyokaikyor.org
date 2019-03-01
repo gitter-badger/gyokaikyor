@@ -17,7 +17,6 @@
   - [[#グラフ描画][グラフ描画]]
   - [[#予報文案テンプレートの生成][予報文案テンプレートの生成]]
 - [[#デモ][デモ]]
-  - [[#ファイル情報を整備する][ファイル情報を整備する]]
 - [[#開発環境の整備][開発環境の整備]]
   - [[#本バッケージ内部で使用するパッケージ][本バッケージ内部で使用するパッケージ]]
 - [[#開発][開発]]
@@ -95,7 +94,6 @@ R パッケージのディレクトリは全て GitHub で公開する．
 できるだけタグが短いもの．
 マークダウンが有力か？
 * デモ
-** ファイル情報を整備する
 #+BEGIN_SRC R
   library(gyokaikyor)
   library(hash)
@@ -138,6 +136,8 @@ R パッケージのディレクトリは全て GitHub で公開する．
   usethis::use_package("tibble")
   usethis::use_package("tidyr")
   usethis::use_package("lubridate")
+  usethis::use_package("readxl")
+  usethis::use_package("stringr")
   usethis::use_package("purrr")
   usethis::use_package("tinyplyr")
   # usethis::use_package("ggplot2", "Imports")
@@ -270,6 +270,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   devtools::load_all()
   system("R CMD INSTALL --preclean --no-multiarch --with-keep.source .")
   devtools::test()
+  lintr::lint_package()
   devtools::document(roclets=c('rd', 'collate', 'namespace'))
   devtools::check(args = "--as-cran")
   covr::package_coverage()
@@ -423,7 +424,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 NULL
 
 ## quiets concerns of R CMD check re: the .'s that appear in pipelines
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
+if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #+END_SRC
 *** ファイル名操作
 #+BEGIN_SRC R :tangle R/handle_fname.R
@@ -433,7 +434,6 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     out
   }
 
-  #' @export
   give_class <- function(fname, tbl.fname) {
     prefec     <- hash::values(tbl.fname, keys = fname)
     out <- purrr::map2(fname, prefec, give_classi)
@@ -467,7 +467,6 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 
   locate_patterns <- function(df, regex) {
     nrows <- dim(df)[1]
-    ncols <- dim(df)[2]
     match <- apply(df, 2, gregexpr, pattern = regex) %>%
       unlist()
     pos <- which(match == TRUE)
@@ -475,7 +474,6 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     mod <- purrr::map(pos, `%%`, nrows)
     col <- purrr::map2(quo, mod, quot2col)
     row <- purrr::map2(mod, nrows, quot_ring)
-    rc  <- purrr::map2(row, col, make_RC)
     pos <- cellranger::R1C1_to_A1(paste0("R", row, "C", col))
     pos
   }
@@ -540,15 +538,30 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #+END_SRC
 *** 整形
 #+BEGIN_SRC R :tangle R/fmtbl.R
+  #' Load and format bl histogram data
+  #'
+  #' @inheritParams readxl::read_excel
+  #' @param spcs Spcs name in romaji, one of
+  #' @param nest If \code{TRUE}, data will be shown in rectangle format
+  #'   whith nested bl datafor quick overview.
+  #' \itemize{
+  #' \item maiwashi
+  #' \item maaji
+  #' \item sabarui
+  #' \item masaba
+  #' \item gomasaba
+  #' \item katakuchi
+  #' \item urume
+  #' }
   #' @export
-  fmtbl <- function(fname, spcs, nest = FALSE) {
+  fmtbl <- function(path, spcs, nest = FALSE) {
     UseMethod("fmtbl")
   }
 
-  load_alldata <- function(fname, shtname) {
+  load_alldata <- function(path, sheet) {
     suppressMessages(
-      alldata   <- readxl::read_excel(fname,
-                                      sheet = shtname, col_names = FALSE)
+      alldata   <- readxl::read_excel(path,
+                                      sheet = sheet, col_names = FALSE)
     )
   }
 
@@ -582,23 +595,27 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     out
   }
 
-  fmtbl.nagasaki  <- function(fname, spcs, nest = TRUE) {
-    shtname   <- make_shtname(prefecture = "nagasaki", spcs = spcs)
-    alldata   <- load_alldata(fname, shtname)
-    colpos    <- get_col2load(target = alldata[4,], regex = ".月", offset = 0)
+  fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
+    sheet     <- make_shtname(prefecture = "nagasaki", spcs = spcs)
+    alldata   <- load_alldata(path, sheet)
+    colpos    <- get_col2load(target = alldata[4, ], regex = ".月", offset = 0)
     month     <- jpmonth2num(alldata[4, colpos])
     classname <- make_blclass(alldata[5:86, 2], alldata[5:86, 3])
-    histdata  <- purrr::map(colpos, get_histdata, df = alldata, rows = 5:86, name = classname)
+    histdata  <- purrr::map(colpos, get_histdata, df = alldata,
+                            rows = 5:86, name = classname)
 
     out       <- list()
 
-    parse_ym <- function(fname, months) {
-      ym_start_match <- stringr::str_match(fname, "/([0-9]{4})\\.((?:0|1)[1-9])")
+    parse_ym <- function(path, months) {
+      ym_start_match <- stringr::str_match(path,
+                                           ".+/([0-9]{4})\\.((?:0|1)[1-9])")
       year_start     <- ym_start_match[2] %>% as.numeric()
       month_start    <- ym_start_match[3] %>% as.numeric()
       ym_end_match   <-
-        stringr::str_match(fname,
-                           "/[0-9]{4}\\.(?:0|1)[1-9]-([0-9]{4})\\.((?:0|1)[1-9])")
+        stringr::str_match(path,
+                           ".+/[0-9]{4}\\.(?:0|1)[1-9]-([0-9]{4})
+                             \\.((?:0|1)[1-9])"
+                           )
       year_end       <- ym_end_match[2] %>% as.numeric()
       month_end      <- ym_end_match[3] %>% as.numeric()
       out <- list()
@@ -608,7 +625,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
       out$month_end   <- month_end
       out
     }
-    parsedym <- parse_ym(fname, month)
+    parsedym <- parse_ym(path, month)
 
     check_month <- function(months, month_start, month_end) {
       if (!(month_start == months[1]) | (!month_end == rev(months)[1])) {
@@ -650,19 +667,17 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     out
   }
 
-  fmtbl.kumamoto  <- function(fname, spcs, nest = TRUE) {
-    shtname   <- make_shtname(prefecture = "kumamoto", spcs = spcs)
-    alldata   <- load_alldata(fname, shtname)
-    cpos_date <- get_col2load(alldata[1,], regex = "[0-9]+", offset = 0)
-    cpos_bl   <- cpos_date # Column position of "被鱗体長" is
-                           #   same as that of "%Y.%m.%d" column
+  fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
+    sheet     <- make_shtname(prefecture = "kumamoto", spcs = spcs)
+    alldata   <- load_alldata(path, sheet)
+    cpos_date <- get_col2load(alldata[1, ], regex = "[0-9]+", offset = 0)
     date      <- alldata[1, cpos_date] %>%
       tinyplyr::date2julian() %>%
       tinyplyr::num2date()
     method    <- alldata[1, cpos_date + 4] %>%
       unlist() %>%
       as.vector()
-    bl        <- purrr::map(cpos_date, get_measdata, df = alldata)
+    bl         <- purrr::map(cpos_date, get_measdata, df = alldata)
 
     out        <- list()
     out$date   <- date

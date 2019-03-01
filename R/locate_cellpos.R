@@ -23,7 +23,6 @@ make_RC <- function(row, col) {
 
 locate_patterns <- function(df, regex) {
   nrows <- dim(df)[1]
-  ncols <- dim(df)[2]
   match <- apply(df, 2, gregexpr, pattern = regex) %>%
     unlist()
   pos <- which(match == TRUE)
@@ -31,7 +30,6 @@ locate_patterns <- function(df, regex) {
   mod <- purrr::map(pos, `%%`, nrows)
   col <- purrr::map2(quo, mod, quot2col)
   row <- purrr::map2(mod, nrows, quot_ring)
-  rc  <- purrr::map2(row, col, make_RC)
   pos <- cellranger::R1C1_to_A1(paste0("R", row, "C", col))
   pos
 }

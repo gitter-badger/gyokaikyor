@@ -18,7 +18,9 @@ Imports:
     tinyplyr,
     tidyr,
     lubridate,
-    purrr
+    purrr,
+    readxl,
+    stringr
 Suggests: 
     testthat,
     covr
