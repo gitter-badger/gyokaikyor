@@ -626,15 +626,6 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     out
   }
 
-  get_histdata <- function(df, col, rows, name) {
-    out <- df[rows, col] %>%
-      unlist() %>%
-      as.numeric() %>%
-      as.vector()
-    names(out) <- name
-    out
-  }
-
   jpmonth2num <- function(x) {
     out <- x %>%
       as.vector() %>%
