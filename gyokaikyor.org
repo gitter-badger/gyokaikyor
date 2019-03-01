@@ -538,11 +538,21 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #+BEGIN_SRC R :tangle R/get_measdata.R
   get_measdata <- function(df, col) {
     rows <- 8:107
+  get_vector <- function(col, df, startrow, endrow, na.rm) {
+    rows <- startrow:endrow
     out  <- df[rows, col] %>%
       unlist() %>%
       as.numeric() %>%
-      stats::na.omit() %>%
       as.vector()
+    if (na.rm) {
+      out %<>% stats::na.omit() %>%
+        as.vector()
+    } else {
+      out %<>% tidyr::replace_na(0)
+    }
+    out
+  }
+
     out
   }
 #+END_SRC
