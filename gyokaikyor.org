@@ -502,6 +502,21 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #+END_SRC
 *** 整形
 #+BEGIN_SRC R :tangle R/fmtbl.R
+  #' Load and format bl histogram data
+  #'
+  #' @inheritParams readxl::read_excel
+  #' @param spcs Spcs name in romaji, one of
+  #' @param nest If \code{TRUE}, data will be shown in rectangle format
+  #'   whith nested bl datafor quick overview.
+  #' \itemize{
+  #' \item maiwashi
+  #' \item maaji
+  #' \item sabarui
+  #' \item masaba
+  #' \item gomasaba
+  #' \item katakuchi
+  #' \item urume
+  #' }
   #' @export
   fmtbl <- function(fname, spcs, nest = FALSE) {
     UseMethod("fmtbl")
