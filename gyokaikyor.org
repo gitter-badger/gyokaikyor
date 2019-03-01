@@ -702,5 +702,35 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     }
     out
   }
+  path <- "data.git/漁海況/2018年3月/各県資料/鹿児島県/体長組成(H29年度).xlsx"
+  spcs <- "katakuchi"
+  fmtbl.kagoshima <- function(path, spcs, nest = TRUE) {
+    sheet     <- make_shtname(prefecture = "kagoshima", spcs = spcs)
+    alldata   <- load_alldata(path, sheet)
+    cpos_date <- get_col2load(alldata[3, ], regex = "[0-9]+", offset = 0)
+    date      <- alldata[3, cpos_date] %>%
+      tinyplyr::num2date()
+    method    <- alldata[6, cpos_date] %>%
+      unlist() %>%
+      as.vector()
+    bl         <- purrr::map(cpos_date, get_measdata, df = alldata)
 
+    out        <- list()
+    out$date   <- date
+    out$method <- method
+    out$year   <- lubridate::year(out$date)
+    out$month  <- lubridate::month(out$date)
+    out$bl     <- bl
+
+    out <- tibble::as_tibble(out)
+    if (nest == FALSE) {
+      out <- tidyr::unnest(out)
+    }
+    out
+
+  }
+  kagoshima <- fmtbl.kagoshima(path, spcs, nest = TRUE)
+  kagoshima
+  kagoshima <- fmtbl.kagoshima(path, spcs, nest = FALSE)
+  kagoshima
 #+END_SRC
