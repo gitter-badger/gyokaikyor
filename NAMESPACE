@@ -2,6 +2,5 @@
 
 export("%>%")
 export(fmtbl)
-export(give_class)
 importFrom(magrittr,"%<>%")
 importFrom(magrittr,"%>%")

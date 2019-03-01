@@ -1,12 +1,27 @@
+#' Load and format bl histogram data
+#'
+#' @inheritParams readxl::read_excel
+#' @param spcs Spcs name in romaji, one of
+#' @param nest If \code{TRUE}, data will be shown in rectangle format
+#'   whith nested bl datafor quick overview.
+#' \itemize{
+#' \item maiwashi
+#' \item maaji
+#' \item sabarui
+#' \item masaba
+#' \item gomasaba
+#' \item katakuchi
+#' \item urume
+#' }
 #' @export
-fmtbl <- function(fname, spcs, nest = FALSE) {
+fmtbl <- function(path, spcs, nest = FALSE) {
   UseMethod("fmtbl")
 }
 
-load_alldata <- function(fname, shtname) {
+load_alldata <- function(path, sheet) {
   suppressMessages(
-    alldata   <- readxl::read_excel(fname,
-                                    sheet = shtname, col_names = FALSE)
+    alldata   <- readxl::read_excel(path,
+                                    sheet = sheet, col_names = FALSE)
   )
 }
 
@@ -40,9 +55,9 @@ jpmonth2num <- function(x) {
   out
 }
 
-fmtbl.nagasaki  <- function(fname, spcs, nest = TRUE) {
-  shtname   <- make_shtname(prefecture = "nagasaki", spcs = spcs)
-  alldata   <- load_alldata(fname, shtname)
+fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
+  sheet     <- make_shtname(prefecture = "nagasaki", spcs = spcs)
+  alldata   <- load_alldata(path, sheet)
   colpos    <- get_col2load(target = alldata[4, ], regex = ".月", offset = 0)
   month     <- jpmonth2num(alldata[4, colpos])
   classname <- make_blclass(alldata[5:86, 2], alldata[5:86, 3])
@@ -51,13 +66,13 @@ fmtbl.nagasaki  <- function(fname, spcs, nest = TRUE) {
 
   out       <- list()
 
-  parse_ym <- function(fname, months) {
-    ym_start_match <- stringr::str_match(fname,
+  parse_ym <- function(path, months) {
+    ym_start_match <- stringr::str_match(path,
                                          ".+/([0-9]{4})\\.((?:0|1)[1-9])")
     year_start     <- ym_start_match[2] %>% as.numeric()
     month_start    <- ym_start_match[3] %>% as.numeric()
     ym_end_match   <-
-      stringr::str_match(fname,
+      stringr::str_match(path,
                          ".+/[0-9]{4}\\.(?:0|1)[1-9]-([0-9]{4})
                            \\.((?:0|1)[1-9])"
                          )
@@ -70,7 +85,7 @@ fmtbl.nagasaki  <- function(fname, spcs, nest = TRUE) {
     out$month_end   <- month_end
     out
   }
-  parsedym <- parse_ym(fname, month)
+  parsedym <- parse_ym(path, month)
 
   check_month <- function(months, month_start, month_end) {
     if (!(month_start == months[1]) | (!month_end == rev(months)[1])) {
@@ -112,9 +127,9 @@ fmtbl.nagasaki  <- function(fname, spcs, nest = TRUE) {
   out
 }
 
-fmtbl.kumamoto  <- function(fname, spcs, nest = TRUE) {
-  shtname   <- make_shtname(prefecture = "kumamoto", spcs = spcs)
-  alldata   <- load_alldata(fname, shtname)
+fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
+  sheet     <- make_shtname(prefecture = "kumamoto", spcs = spcs)
+  alldata   <- load_alldata(path, sheet)
   cpos_date <- get_col2load(alldata[1, ], regex = "[0-9]+", offset = 0)
   date      <- alldata[1, cpos_date] %>%
     tinyplyr::date2julian() %>%
@@ -122,7 +137,7 @@ fmtbl.kumamoto  <- function(fname, spcs, nest = TRUE) {
   method    <- alldata[1, cpos_date + 4] %>%
     unlist() %>%
     as.vector()
-  bl        <- purrr::map(cpos_date, get_measdata, df = alldata)
+  bl         <- purrr::map(cpos_date, get_measdata, df = alldata)
 
   out        <- list()
   out$date   <- date
