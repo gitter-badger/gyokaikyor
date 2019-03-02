@@ -404,6 +404,13 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     expect_equal(get_vector(3, df, 50, 60, na.rm = TRUE), c(250, 252:260))
     expect_equal(get_vector(3, df, 50, 60, na.rm = FALSE), c(250, 0, 252:260))
   })
+
+  test_that("get_measdata() extracts vector correctly", {
+    df <- data.frame(a = 1:200, b = 101:300, c = c(201:250, NA, 252:400))
+    expect_equal(get_measdata(1, df, prefec = "kumamoto"), 8:107)
+    expect_error(get_measdata(1, df, prefec = "foo"),
+                 "Unknown prefecture", fix = TRUE)
+  })
 #+END_SRC
 *** テスト/ 整形
 #+BEGIN_SRC  :tangle tests/testthat/test_fmtbl.R
