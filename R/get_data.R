@@ -25,12 +25,25 @@ get_measdata <- function(col, df, prefec) {
   out
 }
 
+locate_vecend <- function(x) {
+  out <- which(!is.na(x)) %>% max()
+  out
+}
+
 get_histdata <- function(col, df, prefec) {
   switch(prefec,
          "nagasaki" = {
-           startrow <- 5
-           endrow   <- 86
-           class    <- make_blclass(seq(0, 520, 10), seq(10, 530, 10))
+           startrow  <- 5
+           endrow    <- locate_vecend(df[, col]) - 1
+           class_l   <- get_vector(col = cellranger::letter_to_num("B"),
+                                   df = df,
+                                   startrow = startrow, endrow = endrow,
+                                   na.rm = FALSE)
+           class_r   <- get_vector(col = cellranger::letter_to_num("C"),
+                                   df = df,
+                                   startrow = startrow, endrow = endrow,
+                                   na.rm = FALSE)
+           class    <- make_blclass(class_l, class_r)
          },
          "kagoshima" = {
            startrow <- 9
