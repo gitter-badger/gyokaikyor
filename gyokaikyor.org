@@ -388,6 +388,17 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                  "Unknown spcs name")
   })
 
+  test_that("make_shtname() makes sheetname for kagoshima data", {
+    expect_equal(make_shtname(prefec = "kagoshima", spcs = "katakuchi"), "ｶﾀｸﾁ")
+    expect_equal(make_shtname(prefec = "kagoshima", spcs = "urume"), "ｳﾙﾒ")
+    expect_equal(make_shtname(prefec = "kagoshima", spcs = "maiwashi"), "ﾏｲﾜｼ")
+    expect_equal(make_shtname(prefec = "kagoshima", spcs = "masaba"), "ﾏｻﾊﾞ")
+    expect_equal(make_shtname(prefec = "kagoshima", spcs = "gomasaba"), "ｺﾞﾏｻﾊﾞ")
+    expect_equal(make_shtname(prefec = "kagoshima", spcs = "maaji"), "ﾏｱｼﾞ")
+    expect_error(make_shtname(prefec = "kagoshima", spcs = "foo"),
+                 "Unknown spcs name")
+  })
+
   test_that("make_shtname() stops for unknown prefecture", {
     expect_error(make_shtname(prefec = "foo", spcs = "katakuchi"),
                  "Unknown prefecture")
