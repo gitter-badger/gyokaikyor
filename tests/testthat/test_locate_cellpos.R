@@ -46,7 +46,7 @@ test_that("get_bottomright() locates cell position that has given regex", {
   expect_equal(get_bottomright(df, "foo"), "$B$7")
 })
 
-test_taht("locate_vecend() locates the end of the vector", {
+test_that("locate_vecend() locates the end of the vector", {
   expect_equal(locate_vecend(c(1:10, NA, NA, NA)), 10)
   expect_equal(locate_vecend(c(rep(NA, 9), 100, NA, NA, NA)), 10)
 })
