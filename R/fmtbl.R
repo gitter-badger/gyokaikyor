@@ -57,15 +57,15 @@ fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
 
   out       <- list()
 
-  parse_ym <- function(path, months) {
+  parse_ym <- function(path, month) {
     ym_start_match <- stringr::str_match(path,
                                          ".+/([0-9]{4})\\.((?:0|1)[1-9])")
     year_start     <- ym_start_match[2] %>% as.numeric()
     month_start    <- ym_start_match[3] %>% as.numeric()
+
     ym_end_match   <-
       stringr::str_match(path,
-                         ".+/[0-9]{4}\\.(?:0|1)[1-9]-([0-9]{4})
-                           \\.((?:0|1)[1-9])"
+                         ".+/[0-9]{4}\\.(?:0|1)[1-9]-([0-9]{4})\\.((?:0|1)[1-9])"
                          )
     year_end       <- ym_end_match[2] %>% as.numeric()
     month_end      <- ym_end_match[3] %>% as.numeric()
@@ -117,7 +117,6 @@ fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
   }
   out
 }
-
 fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
   sheet     <- make_shtname(prefecture = "kumamoto", spcs = spcs)
   alldata   <- load_alldata(path, sheet)

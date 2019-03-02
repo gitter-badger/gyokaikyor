@@ -14,13 +14,13 @@ fmtbl(path, spcs, nest = FALSE)
 \item{nest}{If \code{TRUE}, data will be shown in rectangle format
   whith nested bl datafor quick overview.
 \itemize{
-\item maiwashi
-\item maaji
-\item sabarui
-\item masaba
-\item gomasaba
-\item katakuchi
-\item urume
+  \item maiwashi
+  \item maaji
+  \item sabarui
+  \item masaba
+  \item gomasaba
+  \item katakuchi
+  \item urume
 }}
 }
 \description{
