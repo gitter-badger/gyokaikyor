@@ -665,7 +665,7 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 
     out       <- list()
 
-    parse_ym <- function(path, months) {
+    parse_ym <- function(path, month) {
       ym_start_match <- stringr::str_match(path,
                                            ".+/([0-9]{4})\\.((?:0|1)[1-9])")
       year_start     <- ym_start_match[2] %>% as.numeric()
