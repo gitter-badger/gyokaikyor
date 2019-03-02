@@ -5,13 +5,13 @@
 #' @param nest If \code{TRUE}, data will be shown in rectangle format
 #'   whith nested bl datafor quick overview.
 #' \itemize{
-#' \item maiwashi
-#' \item maaji
-#' \item sabarui
-#' \item masaba
-#' \item gomasaba
-#' \item katakuchi
-#' \item urume
+#'   \item maiwashi
+#'   \item maaji
+#'   \item sabarui
+#'   \item masaba
+#'   \item gomasaba
+#'   \item katakuchi
+#'   \item urume
 #' }
 #' @export
 fmtbl <- function(path, spcs, nest = FALSE) {
@@ -38,15 +38,6 @@ make_blclass <- function(left, right) {
   out
 }
 
-get_histdata <- function(df, col, rows, name) {
-  out <- df[rows, col] %>%
-    unlist() %>%
-    as.numeric() %>%
-    as.vector()
-  names(out) <- name
-  out
-}
-
 jpmonth2num <- function(x) {
   out <- x %>%
     as.vector() %>%
@@ -62,7 +53,7 @@ fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
   month     <- jpmonth2num(alldata[4, colpos])
   classname <- make_blclass(alldata[5:86, 2], alldata[5:86, 3])
   histdata  <- purrr::map(colpos, get_histdata, df = alldata,
-                          rows = 5:86, name = classname)
+                          prefec = "nagasaki")
 
   out       <- list()
 
@@ -137,7 +128,33 @@ fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
   method    <- alldata[1, cpos_date + 4] %>%
     unlist() %>%
     as.vector()
-  bl         <- purrr::map(cpos_date, get_measdata, df = alldata)
+  bl         <- purrr::map(cpos_date, get_measdata,
+                           prefec = "kumamoto", df = alldata)
+
+  out        <- list()
+  out$date   <- date
+  out$method <- method
+  out$year   <- lubridate::year(out$date)
+  out$month  <- lubridate::month(out$date)
+  out$bl     <- bl
+
+  out <- tibble::as_tibble(out)
+  if (nest == FALSE) {
+    out <- tidyr::unnest(out)
+  }
+  out
+}
+
+fmtbl.kagoshima <- function(path, spcs, nest = TRUE) {
+  sheet     <- make_shtname(prefecture = "kagoshima", spcs = spcs)
+  alldata   <- load_alldata(path, sheet)
+  cpos_date <- get_col2load(alldata[3, ], regex = "[0-9]+", offset = 0)
+  date      <- alldata[3, cpos_date] %>%
+    tinyplyr::num2date()
+  method    <- alldata[6, cpos_date] %>%
+    unlist() %>%
+    as.vector()
+  bl         <- purrr::map(cpos_date, get_histdata, df = alldata, prefec = "kagoshima")
 
   out        <- list()
   out$date   <- date

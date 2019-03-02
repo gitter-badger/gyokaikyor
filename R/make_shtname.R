@@ -19,6 +19,16 @@ make_shtname <- function(prefecture, spcs) {
                   "maaji"     = shtname <- "マアジ",
                   stop("Unknown spcs name"))
          },
+         "kagoshima" = {
+           switch(spcs,
+                  "katakuchi" = shtname <- "ｶﾀｸﾁ",
+                  "urume"     = shtname <- "ｳﾙﾒ",
+                  "maiwashi"  = shtname <- "ﾏｲﾜｼ",
+                  "masaba"    = shtname <- "ﾏｻﾊﾞ",
+                  "gomasaba"  = shtname <- "ｺﾞﾏｻﾊﾞ",
+                  "maaji"     = shtname <- "ﾏｱｼﾞ",
+                  stop("Unknown spcs name"))
+         },
          stop("Unknown prefecture")
          )
   shtname
