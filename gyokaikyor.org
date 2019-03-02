@@ -412,6 +412,17 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     expect_error(get_measdata(1, df, prefec = "foo"),
                  "Unknown prefecture", fix = TRUE)
   })
+
+  test_that("get_histdata() extracts vector correctly", {
+    df <- data.frame(blank = 1:200,
+                     class_l = seq(5, 1000, 5), class_r = seq(10, 1005, 5),
+                     a = c(1:50, rep(NA, 50), 101:150,
+                           sum(c(1:50, 101:150)), rep(NA, 49)))
+    expect_equal(get_histdata(4, df, prefec = "nagasaki")[, 2],
+                 c(5:50, rep(0, 50), 101:150))
+    expect_error(get_histdata(1, df, prefec = "kumamoto"),
+                 "Unknown prefecture", fix = TRUE)
+  })
 #+END_SRC
 *** テスト/ 整形
 #+BEGIN_SRC  :tangle tests/testthat/test_fmtbl.R
