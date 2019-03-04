@@ -443,7 +443,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+BEGIN_SRC R :tangle tests/testthat/test_fmtbl.R
   context("Load blhist data from Excel spreadhseet and tidy it up")
 
-  test_that("fmtbl.kaagoshima() works well", {
+  test_that("fmtbl.kagoshima() works well", {
     path <- "./test_bl_kagoshima.xlsx"
     expect_is(fmtbl.kagoshima(path, spcs = "katakuchi", nest = TRUE), "data.frame")
     expect_is(fmtbl.kagoshima(path, spcs = "katakuchi", nest = FALSE), "data.frame")
