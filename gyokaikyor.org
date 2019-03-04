@@ -439,15 +439,19 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                  "Unknown prefecture", fix = TRUE)
   })
 #+END_SRC
-*** テスト/ 整形
+*** テスト/ 体長データ整形
 #+BEGIN_SRC R :tangle tests/testthat/test_fmtbl.R
-  context("Load data from Excel spreadhseet")
+  context("Load blhist data from Excel spreadhseet and tidy it up")
 
   test_that("fmtbl.kaagoshima() works well", {
     path <- "./test_bl_kagoshima.xlsx"
     expect_is(fmtbl.kagoshima(path, spcs = "katakuchi", nest = TRUE), "data.frame")
     expect_is(fmtbl.kagoshima(path, spcs = "katakuchi", nest = FALSE), "data.frame")
   })
+#+END_SRC
+*** テスト/ 漁獲量データ整形
+#+BEGIN_SRC  R :tangle tests/testthat/test_fmtcatch.R
+
 #+END_SRC
 ** 関数
 :PROPERTIES:

@@ -1,4 +1,4 @@
-context("Load data from Excel spreadhseet")
+context("Load blhist data from Excel spreadhseet and tidy it up")
 
 test_that("fmtbl.kaagoshima() works well", {
   path <- "./test_bl_kagoshima.xlsx"
