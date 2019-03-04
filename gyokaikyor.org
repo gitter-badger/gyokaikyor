@@ -100,19 +100,23 @@ R パッケージのディレクトリは全て GitHub で公開する．
   library(ggplot2)
   fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/04 【熊本県】H29まき網＆棒受網 体長組成.xlsx")
   fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/04_H30_まき網＆棒受網体長組成.xlsx",
-              "data.git/漁海況/2018年3月/各県資料/長崎県/2017.09-2018.01小型まき網体長組成.xls")
-  prefec <- c("kumamoto", "nagasaki")
+              "data.git/漁海況/2018年3月/各県資料/長崎県/2017.09-2018.01小型まき網体長組成.xls",
+              "data.git/漁海況/2018年3月/各県資料/鹿児島県/体長組成(H29年度).xlsx")
+  prefec <- c("kumamoto", "nagasaki", "kagoshima")
   tbl_fname <- hash(fname, prefec)
 
   fname2 <- give_class(fname, tbl_fname)
   fname2[[1]]
   fname2[[2]]
+  fname2[[3]]
 
   kumamoto_nested <- fmtbl(fname2[[1]], spcs = "katakuchi")
   kumamoto        <- fmtbl(fname2[[1]], spcs = "katakuchi", nest = FALSE)
   kumamoto        <- fmtbl(fname2[[1]], spcs = "maiwashi", nest = FALSE)
   nagasaki_nested <- fmtbl(fname2[[2]], spcs = "katakuchi")
   nagasaki        <- fmtbl(fname2[[2]], spcs = "katakuchi", nest = FALSE)
+  kagoshima_nested <- fmtbl(fname2[[3]], spcs = "katakuchi")
+  kagoshima        <- fmtbl(fname2[[3]], spcs = "katakuchi", nest = FALSE)
 
   kumamoto %>%
     ggplot(aes(bl, fill = as.factor(month))) +
@@ -436,8 +440,14 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   })
 #+END_SRC
 *** テスト/ 整形
-#+BEGIN_SRC  :tangle tests/testthat/test_fmtbl.R
+#+BEGIN_SRC R :tangle tests/testthat/test_fmtbl.R
+  context("Load data from Excel spreadhseet")
 
+  test_that("fmtbl.kaagoshima() works well", {
+    path <- "./test_bl_kagoshima.xlsx"
+    expect_is(fmtbl.kagoshima(path, spcs = "katakuchi", nest = TRUE), "data.frame")
+    expect_is(fmtbl.kagoshima(path, spcs = "katakuchi", nest = FALSE), "data.frame")
+  })
 #+END_SRC
 ** 関数
 :PROPERTIES:
