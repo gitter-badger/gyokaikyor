@@ -622,6 +622,24 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out <- which(match == TRUE) + offset
     out
   }
+
+  insert_regex <- function(str, regex, prefix = FALSE, option = FALSE) {
+    if (option == FALSE) {
+      rep <- "+"
+    } else {
+      rep <- "*"
+    }
+    if (prefix == TRUE) {
+      out <- paste0(regex, rep, substr(str, 1, 1))
+    } else {
+      out <- substr(str, 1, 1)
+    }
+    for (i in 2:nchar(str)) {
+      out <- paste0(out, regex, rep, substr(str, i, i))
+    }
+    out
+  }
+
 #+END_SRC
 *** 種名シート名生成
 #+BEGIN_SRC  R :tangle R/make_shtname.R
@@ -969,15 +987,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
       unlist()
 
     load_catch_4ports <- function(path, spcs) {
-
-      insert_fullspace <- function(str) {
-        s   <- "\u3000"
-        out <- paste0(s, "+", substr(str, 1, 1))
-        for (i in 2:nchar(str)) {
-          out <- paste0(out, s, "+", substr(str, i, i))
-        }
-        out
-      }
 
       spcs_jp <- switch(spcs,
                         "maaji" = "マアジ",
