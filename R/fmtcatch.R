@@ -135,10 +135,7 @@
 
  fmtcatch.nagasaki <- function(path) {
    sheets <- readxl::excel_sheets(path)
-   sheets
-   sheet <- sheets[42]
-   sheet <- sheets[43]
-   data <- load_alldata(path, sheet)
+   data   <- load_alldata(path, sheet)
 
    locate_spcsrow <- function(spcs, df) {
      regex <- "カ ?タ ?ク ?チ"
