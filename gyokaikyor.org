@@ -143,10 +143,13 @@ R パッケージのディレクトリは全て GitHub で公開する．
   usethis::use_package("readxl")
   usethis::use_package("stringr")
   usethis::use_package("purrr")
-  usethis::use_package("tinyplyr")
+  usethis::use_dev_package("tinyplyr")
+  usethis::use_package("Nippon")
+  usethis::use_package("dplyr")
   # usethis::use_package("ggplot2", "Imports")
   # usethis::use_package("tibble", "Imports")
   usethis::use_testthat()
+  usethis::use_pipe()
 #+END_SRC
 
 #+BEGIN_SRC sh :exports results :session nil
@@ -178,7 +181,9 @@ Imports:
     lubridate,
     purrr,
     readxl,
-    stringr
+    stringr,
+    Nippon,
+    dplyr
 Suggests: 
     testthat,
     covr
