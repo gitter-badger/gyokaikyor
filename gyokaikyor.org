@@ -737,7 +737,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   load_alldata <- function(path, sheet) {
     suppressMessages(
       alldata   <- readxl::read_excel(path,
-                                      sheet = sheet, col_names = FALSE)
+                                      sheet = sheet, col_names = FALSE,
+                                      col_types = "text")
     )
   }
 
