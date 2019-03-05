@@ -807,6 +807,23 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
   }
 
   fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
+    parse_year <- function(path) {
+      if ( ( stringr::str_detect(path, "/"))) {
+        fname <- stringr::str_match(path, "^.+/(\\d+\\s?【熊本県】.+)")[2]
+      } else {
+        fname <- path
+      }
+      match  <- stringr::str_match(fname, "^\\d+\\s?【熊本県】(\\w\\d+)まき")
+      wareki <- match[2]
+      era    <- stringr::str_sub(wareki, 1, 1)
+      jpyr   <- stringr::str_replace(wareki, "^\\w", "")
+      year   <- switch(era,
+             "H" = paste0("heisei", jpyr, "年") %>%
+               Nippon::wareki2AD()
+             )
+
+      year
+    }
     sheet     <- make_shtname(prefecture = "kumamoto", spcs = spcs)
     alldata   <- load_alldata(path, sheet)
     cpos_date <- get_col2load(alldata[1, ], regex = "[0-9]+", offset = 0)
