@@ -500,8 +500,10 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 :END:
 *** インボート
 #+BEGIN_SRC  R :tangle R/util.R
-## quiets concerns of R CMD check re: the .'s that appear in pipelines
-if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
+  ## quiets concerns of R CMD check re: the .'s that appear in pipelines
+  if (getRversion() >= "2.15.1") {
+    utils::globalVariables(c(".", "maki4ports", "bou_akune", "bou_uchinoura"))
+  }
 #+END_SRC
 *** ファイル名操作
 #+BEGIN_SRC R :tangle R/handle_fname.R
