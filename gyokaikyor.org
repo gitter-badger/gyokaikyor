@@ -9,6 +9,8 @@
     - [[#ファイルがやっていること][ファイルがやっていること]]
     - [[#問題点][問題点]]
     - [[#解決策][解決策]]
+  - [[#カタクチ月別県別漁獲量xlsx][★カタクチ月別県別漁獲量.xlsx]]
+    - [[#ファイル中での作業][ファイル中での作業]]
   - [[#各県いわし][各県いわし]]
 - [[#ディレクトリの構成][ディレクトリの構成]]
 - [[#パッケージの機能][パッケージの機能]]
@@ -17,12 +19,14 @@
   - [[#グラフ描画][グラフ描画]]
   - [[#予報文案テンプレートの生成][予報文案テンプレートの生成]]
 - [[#デモ][デモ]]
+  - [[#体長組成][体長組成]]
+  - [[#漁獲量][漁獲量]]
 - [[#開発環境の整備][開発環境の整備]]
   - [[#本バッケージ内部で使用するパッケージ][本バッケージ内部で使用するパッケージ]]
 - [[#開発][開発]]
-  - [[#各県ファイルの処理概要][各県ファイルの処理概要]]
+  - [[#各県ファイルに対して必要な処理概要][各県ファイルに対して必要な処理概要]]
     - [[#体長][体長]]
-    - [[#漁獲量][漁獲量]]
+    - [[#漁獲量-1][漁獲量]]
   - [[#どう問題を解くか][どう問題を解くか]]
     - [[#get_topleftkey--flmm][get_topleft(key = "FL(mm)")]]
   - [[#リロード--自動テスト][リロード & 自動テスト]]
@@ -32,7 +36,8 @@
     - [[#テスト-文字列操作][テスト/ 文字列操作]]
     - [[#テスト-種名正規表現生成][テスト/ 種名正規表現生成]]
     - [[#テスト-計測データ取得][テスト/ 計測データ取得]]
-    - [[#テスト-整形][テスト/ 整形]]
+    - [[#テスト-体長データ整形][テスト/ 体長データ整形]]
+    - [[#テスト-漁獲量データ整形][テスト/ 漁獲量データ整形]]
   - [[#関数][関数]]
     - [[#インボート][インボート]]
     - [[#ファイル名操作][ファイル名操作]]
@@ -40,7 +45,8 @@
     - [[#文字列操作][文字列操作]]
     - [[#種名シート名生成][種名シート名生成]]
     - [[#データ取得][データ取得]]
-    - [[#整形][整形]]
+    - [[#体長データ整形][体長データ整形]]
+    - [[#漁獲量データ整形][漁獲量データ整形]]
 
 * これは何か？
 漁海況業務のリポジトリ．
@@ -76,6 +82,13 @@ get_table("./output.git/nagasaki_2018oct.csv", gyokaikyo = TRUE, start = 2016, e
 過去のデータが報告なしに更新されていた場合に対処するため
 **** なぜ県ごとか？
 差分管理を確実に実施するため
+** ★カタクチ月別県別漁獲量.xlsx
+*** ファイル中での作業
+**** 各県の月別漁獲量データを手作業で整形
+**** "集計"というシートに各県のデータを貼り付け，月別組成を得る
+**** 単位をトンに揃えて農林統計の値で引き伸ばす
+**** 「しらす」については月別には集計せず，農林統計で引き伸ばす
+
 ** 各県いわし
 * ディレクトリの構成
 R パッケージのディレクトリは全て GitHub で公開する．
@@ -94,25 +107,30 @@ R パッケージのディレクトリは全て GitHub で公開する．
 できるだけタグが短いもの．
 マークダウンが有力か？
 * デモ
+** 体長組成
 #+BEGIN_SRC R
   library(gyokaikyor)
   library(hash)
   library(ggplot2)
   fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/04 【熊本県】H29まき網＆棒受網 体長組成.xlsx")
   fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/04_H30_まき網＆棒受網体長組成.xlsx",
-              "data.git/漁海況/2018年3月/各県資料/長崎県/2017.09-2018.01小型まき網体長組成.xls")
-  prefec <- c("kumamoto", "nagasaki")
+              "data.git/漁海況/2018年3月/各県資料/長崎県/2017.09-2018.01小型まき網体長組成.xls",
+              "data.git/漁海況/2018年3月/各県資料/鹿児島県/体長組成(H29年度).xlsx")
+  prefec <- c("kumamoto", "nagasaki", "kagoshima")
   tbl_fname <- hash(fname, prefec)
 
   fname2 <- give_class(fname, tbl_fname)
   fname2[[1]]
   fname2[[2]]
+  fname2[[3]]
 
   kumamoto_nested <- fmtbl(fname2[[1]], spcs = "katakuchi")
   kumamoto        <- fmtbl(fname2[[1]], spcs = "katakuchi", nest = FALSE)
   kumamoto        <- fmtbl(fname2[[1]], spcs = "maiwashi", nest = FALSE)
   nagasaki_nested <- fmtbl(fname2[[2]], spcs = "katakuchi")
   nagasaki        <- fmtbl(fname2[[2]], spcs = "katakuchi", nest = FALSE)
+  kagoshima_nested <- fmtbl(fname2[[3]], spcs = "katakuchi")
+  kagoshima        <- fmtbl(fname2[[3]], spcs = "katakuchi", nest = FALSE)
 
   kumamoto %>%
     ggplot(aes(bl, fill = as.factor(month))) +
@@ -120,6 +138,7 @@ R パッケージのディレクトリは全て GitHub で公開する．
     facet_grid(month ~ year, scale = "free_y")
 
 #+END_SRC
+** 漁獲量
 * 開発環境の整備
 #+BEGIN_SRC R :results silent
   # usethis::create_package("gyokaikyor")
@@ -133,16 +152,19 @@ R パッケージのディレクトリは全て GitHub で公開する．
   usethis::use_package("hash")
   usethis::use_package("tibble")
   usethis::use_package("cellranger")
-  usethis::use_package("tibble")
   usethis::use_package("tidyr")
   usethis::use_package("lubridate")
   usethis::use_package("readxl")
+  usethis::use_package("readr")
   usethis::use_package("stringr")
   usethis::use_package("purrr")
-  usethis::use_package("tinyplyr")
+  usethis::use_dev_package("tinyplyr")
+  usethis::use_package("Nippon")
+  usethis::use_package("dplyr")
   # usethis::use_package("ggplot2", "Imports")
   # usethis::use_package("tibble", "Imports")
   usethis::use_testthat()
+  usethis::use_pipe()
 #+END_SRC
 
 #+BEGIN_SRC sh :exports results :session nil
@@ -174,7 +196,9 @@ Imports:
     lubridate,
     purrr,
     readxl,
-    stringr
+    stringr,
+    Nippon,
+    dplyr
 Suggests: 
     testthat,
     covr
@@ -192,7 +216,7 @@ cat NAMESPACE
 : >%")
 
 * 開発
-** 各県ファイルの処理概要
+** 各県ファイルに対して必要な処理概要
 *** 体長
 **** まず県別に整理
 ***** 山口
@@ -245,6 +269,29 @@ fresco
 ***** parse_jpdate(format = )
 ***** make_regex(spcs = katakuchi)
 *** 漁獲量
+**** 鹿児島
+***** 「４港計」「阿久根棒受」「内之浦棒受」シートを読み込み
+****** 「４港計」シート
+******* 第3行からスペース含みの魚種名を探し，列を決定
+******* 行オフセット4つの位置にある「４港計」列の値を行方向に12ヶ月分（第5〜16行）取得
+****** 「阿久根 or 内之浦棒受」シート
+******* 32行目から魚種名を検索して列を決定（行数は変化しない）
+******* 行方向に12ヶ月分（第33〜44行），値を取得
+**** 長崎
+***** 魚種に応じてファイルを読み込み
+****** マアジ・サバ類
+****** マサバ・ゴマサバ
+****** イワシ類
+***** シート名を取得
+過去全データが期間別にシートを分けて入っている
+****** A列から魚種名を取得し，データ行を決定
+****** データ行から漁期の最初の月の列を取得
+前期と後期とで，エクセル方眼紙の列構成が違うのでこれが必要
+****** 漁獲量を取得
+とびとびにではあるが，一定の法則で入力されている．
+関数で処理．
+****** 合計が一致しているかチェック
+
 ** どう問題を解くか
 県ごとに，どうしてもデータ処理の振る舞いを変える必要がある
 そこで， 各県のファイル名に，県名を属性として与える
@@ -409,11 +456,11 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   context("Get measure data vector from data frame")
 
   test_that("get_vector() extracts vector correctly", {
-  df <- data.frame(a = 1:200, b = 101:300, c = c(201:250, NA, 252:400))
-    expect_equal(get_vector(1, df, 10, 20, na.rm = TRUE), 10:20)
-    expect_equal(get_vector(2, df, 50, 60, na.rm = TRUE), 150:160)
-    expect_equal(get_vector(3, df, 50, 60, na.rm = TRUE), c(250, 252:260))
-    expect_equal(get_vector(3, df, 50, 60, na.rm = FALSE), c(250, 0, 252:260))
+    df <- data.frame(a = 1:200, b = 101:300, c = c(201:250, NA, 252:400))
+    expect_equal(get_vector(1, 10:20, df, na.rm = TRUE), 10:20)
+    expect_equal(get_vector(2, 50:60, df, na.rm = TRUE), 150:160)
+    expect_equal(get_vector(3, 50:60, df, na.rm = TRUE), c(250, 252:260))
+    expect_equal(get_vector(3, 50:60, df, na.rm = FALSE), c(250, 0, 252:260))
   })
 
   test_that("get_measdata() extracts vector correctly", {
@@ -435,9 +482,60 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                  "Unknown prefecture", fix = TRUE)
   })
 #+END_SRC
-*** テスト/ 整形
-#+BEGIN_SRC  :tangle tests/testthat/test_fmtbl.R
+*** テスト/ 体長データ整形
+#+BEGIN_SRC R :tangle tests/testthat/test_fmtbl.R
+  context("Load blhist data from Excel spreadhseet and tidy it up")
 
+  test_that("fmtbl.nagasaki() works well", {
+    path <- "ExcelFiles/2017.09-2018.01_test_bl_nagasaki.xls"
+    expect_is(fmtbl.nagasaki(path, spcs = "katakuchi", nest = TRUE),
+              "data.frame")
+    expect_is(fmtbl.nagasaki(path, spcs = "katakuchi", nest = FALSE),
+              "data.frame")
+  })
+
+  test_that("fmtbl.kumamoto() works well", {
+    path <- "ExcelFiles/test_bl_kumamoto.xlsx"
+    expect_is(fmtbl.kumamoto(path, spcs = "katakuchi", nest = TRUE),
+              "data.frame")
+    expect_is(fmtbl.kumamoto(path, spcs = "katakuchi", nest = FALSE),
+              "data.frame")
+  })
+
+  test_that("fmtbl.kagoshima() works well", {
+    path <- "ExcelFiles/test_bl_kagoshima.xlsx"
+    expect_is(fmtbl.kagoshima(path, spcs = "katakuchi", nest = TRUE),
+              "data.frame")
+    expect_is(fmtbl.kagoshima(path, spcs = "katakuchi", nest = FALSE),
+              "data.frame")
+  })
+#+END_SRC
+*** テスト/ 漁獲量データ整形
+#+BEGIN_SRC  R :tangle tests/testthat/test_fmtcatch.R
+  context("Load catch data from Excel spreadhseet and tidy it up")
+
+  test_that("fmtcatch.kagoshima() works well", {
+    path <- "ExcelFiles/test_catch_kagoshima.xlsx"
+    expect_is(fmtcatch.kagoshima(path, spcs = "katakuchi", spread = TRUE),
+              "data.frame")
+    expect_is(fmtcatch.kagoshima(path, spcs = "katakuchi", spread = FALSE),
+              "data.frame")
+    expect_is(fmtcatch.kagoshima(path, spcs = "maiwashi", spread = TRUE),
+              "data.frame")
+    expect_is(fmtcatch.kagoshima(path, spcs = "maiwashi", spread = FALSE),
+              "data.frame")
+    expect_is(fmtcatch.kagoshima(path, spcs = "maiwashi",
+                                 spread = TRUE, maki.only = TRUE),
+              "data.frame")
+    expect_is(fmtcatch.kagoshima(path, spcs = "maiwashi",
+                                 spread = FALSE, maki.only = TRUE),
+              "data.frame")
+  })
+
+  test_that("fmtcatch.nagasaki() works well", {
+    path <- "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls"
+    expect_is(fmtcatch.nagasaki(path, spcs = "katakuchi"), "data.frame")
+  })
 #+END_SRC
 ** 関数
 :PROPERTIES:
@@ -445,25 +543,10 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 :END:
 *** インボート
 #+BEGIN_SRC  R :tangle R/util.R
-#' Pipe operator
-#'
-#' @name %>%
-#' @rdname pipe
-#' @keywords internal
-#' @export
-#' @importFrom magrittr %>%
-#' @usage lhs \%>\% rhs
-
-#' @name %<>%
-#' @rdname doublepipe
-#' @keywords internal
-#' @export
-#' @importFrom magrittr %<>%
-#' @usage lhs \%<>\% rhs
-NULL
-
-## quiets concerns of R CMD check re: the .'s that appear in pipelines
-if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
+  ## quiets concerns of R CMD check re: the .'s that appear in pipelines
+  if (getRversion() >= "2.15.1") {
+    utils::globalVariables(c(".", "maki4ports", "bou_akune", "bou_uchinoura"))
+  }
 #+END_SRC
 *** ファイル名操作
 #+BEGIN_SRC R :tangle R/handle_fname.R
@@ -534,6 +617,39 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     out <- which(match == TRUE) + offset
     out
   }
+
+  insert_regex <- function(str, regex, prefix = FALSE, option = FALSE) {
+    if (option == FALSE) {
+      rep <- "+"
+    } else {
+      rep <- "*"
+    }
+    if (prefix == TRUE) {
+      out <- paste0(regex, rep, substr(str, 1, 1))
+    } else {
+      out <- substr(str, 1, 1)
+    }
+    for (i in 2:nchar(str)) {
+      out <- paste0(out, regex, rep, substr(str, i, i))
+    }
+    out
+  }
+
+  parse_ym <- function(path) {
+    ym_start_match <- stringr::str_match(path, ".*/?(\\d{4})\\.((?:0|1)\\d)(?=-)")
+    year_start     <- ym_start_match[2] %>% as.numeric()
+    month_start    <- ym_start_match[3] %>% as.numeric()
+    ym_end_match   <-
+      stringr::str_match(path, ".*/?\\d{4}\\.(?:0|1)\\d-(\\d{4})\\.((?:0|1)\\d)")
+    year_end       <- ym_end_match[2] %>% as.numeric()
+    month_end      <- ym_end_match[3] %>% as.numeric()
+    out <- list()
+    out$year_start  <- year_start
+    out$month_start <- month_start
+    out$year_end    <- year_end
+    out$month_end   <- month_end
+    out
+  }
 #+END_SRC
 *** 種名シート名生成
 #+BEGIN_SRC  R :tangle R/make_shtname.R
@@ -575,12 +691,8 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #+END_SRC
 *** データ取得
 #+BEGIN_SRC R :tangle R/get_data.R
-  get_vector <- function(col, df, startrow, endrow, na.rm) {
-    rows <- startrow:endrow
-    out  <- df[rows, col] %>%
-      unlist() %>%
-      as.numeric() %>%
-      as.vector()
+  get_vector <- function(col, row, df, na.rm) {
+    out <- dplyr::pull(df, col)[row]
     if (na.rm) {
       out %<>% stats::na.omit() %>%
         as.vector()
@@ -597,8 +709,8 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
              endrow   <- 107
            },
            stop("Unknown prefecture"))
-    out <- get_vector(col, df,
-                      startrow = startrow, endrow = endrow, na.rm = TRUE)
+    out <- get_vector(col, startrow:endrow, df, na.rm = TRUE) %>%
+      as.numeric()
     out
   }
 
@@ -613,13 +725,9 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
              startrow  <- 5
              endrow    <- locate_vecend(df[, col]) - 1
              class_l   <- get_vector(col = cellranger::letter_to_num("B"),
-                                     df = df,
-                                     startrow = startrow, endrow = endrow,
-                                     na.rm = FALSE)
+                                     startrow:endrow, df = df, na.rm = FALSE)
              class_r   <- get_vector(col = cellranger::letter_to_num("C"),
-                                     df = df,
-                                     startrow = startrow, endrow = endrow,
-                                     na.rm = FALSE)
+                                     startrow:endrow, df = df, na.rm = FALSE)
              class    <- make_blclass(class_l, class_r)
            },
            "kagoshima" = {
@@ -628,13 +736,13 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
              class    <- make_blclass(seq(40, 235, 5), seq(45, 240, 5))
            },
            stop("Unknown prefecture"))
-    count <- get_vector(col, df,
-                        startrow = startrow, endrow = endrow, na.rm = FALSE)
+    count <- get_vector(col, startrow:endrow, df, na.rm = FALSE) %>%
+      as.numeric()
     out   <- data.frame(class = class, count = count)
     out
   }
 #+END_SRC
-*** 整形
+*** 体長データ整形
 #+BEGIN_SRC R :tangle R/fmtbl.R
   #' Load and format bl histogram data
   #'
@@ -659,7 +767,8 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
   load_alldata <- function(path, sheet) {
     suppressMessages(
       alldata   <- readxl::read_excel(path,
-                                      sheet = sheet, col_names = FALSE)
+                                      sheet = sheet, col_names = FALSE,
+                                      col_types = "text")
     )
   }
 
@@ -679,7 +788,7 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
   jpmonth2num <- function(x) {
     out <- x %>%
       as.vector() %>%
-      gsub("月", "", .) %>%
+      gsub("\u6708", "", .) %>% # "tsuki" in jp kanji
       as.numeric()
     out
   }
@@ -687,34 +796,16 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
   fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
     sheet     <- make_shtname(prefecture = "nagasaki", spcs = spcs)
     alldata   <- load_alldata(path, sheet)
-    colpos    <- get_col2load(target = alldata[4, ], regex = ".月", offset = 0)
+    colpos    <- get_col2load(target = alldata[4, ],
+                              regex = ".\u6708", # "tsuki" in jp kanji
+                              offset = 0)
     month     <- jpmonth2num(alldata[4, colpos])
-    classname <- make_blclass(alldata[5:86, 2], alldata[5:86, 3])
     histdata  <- purrr::map(colpos, get_histdata, df = alldata,
                             prefec = "nagasaki")
 
     out       <- list()
 
-    parse_ym <- function(path, month) {
-      ym_start_match <- stringr::str_match(path,
-                                           ".+/([0-9]{4})\\.((?:0|1)[1-9])")
-      year_start     <- ym_start_match[2] %>% as.numeric()
-      month_start    <- ym_start_match[3] %>% as.numeric()
-      ym_end_match   <-
-        stringr::str_match(path,
-                           ".+/[0-9]{4}\\.(?:0|1)[1-9]-([0-9]{4})
-                             \\.((?:0|1)[1-9])"
-                           )
-      year_end       <- ym_end_match[2] %>% as.numeric()
-      month_end      <- ym_end_match[3] %>% as.numeric()
-      out <- list()
-      out$year_start  <- year_start
-      out$month_start <- month_start
-      out$year_end    <- year_end
-      out$month_end   <- month_end
-      out
-    }
-    parsedym <- parse_ym(path, month)
+    parsedym <- parse_ym(path)
 
     check_month <- function(months, month_start, month_end) {
       if (!(month_start == months[1]) | (!month_end == rev(months)[1])) {
@@ -757,12 +848,28 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
   }
 
   fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
+    parse_year <- function(path) {
+      if ( ( stringr::str_detect(path, "/"))) {
+        fname <- stringr::str_match(path, "^.+/(\\d+\\s?【熊本県】.+)")[2]
+      } else {
+        fname <- path
+      }
+      match  <- stringr::str_match(fname, "^\\d+\\s?【熊本県】(\\w\\d+)まき")
+      wareki <- match[2]
+      era    <- stringr::str_sub(wareki, 1, 1)
+      jpyr   <- stringr::str_replace(wareki, "^\\w", "")
+      year   <- switch(era,
+             "H" = paste0("heisei", jpyr, "年") %>%
+               Nippon::wareki2AD()
+             )
+
+      year
+    }
     sheet     <- make_shtname(prefecture = "kumamoto", spcs = spcs)
     alldata   <- load_alldata(path, sheet)
     cpos_date <- get_col2load(alldata[1, ], regex = "[0-9]+", offset = 0)
     date      <- alldata[1, cpos_date] %>%
-      tinyplyr::date2julian() %>%
-      tinyplyr::num2date()
+      purrr::map_chr(tinyplyr::num2date)
     method    <- alldata[1, cpos_date + 4] %>%
       unlist() %>%
       as.vector()
@@ -792,7 +899,8 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     method    <- alldata[6, cpos_date] %>%
       unlist() %>%
       as.vector()
-    bl         <- purrr::map(cpos_date, get_histdata, df = alldata, prefec = "kagoshima")
+    bl         <- purrr::map(cpos_date, get_histdata,
+                             df = alldata, prefec = "kagoshima")
 
     out        <- list()
     out$date   <- date
@@ -806,5 +914,222 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
       out <- tidyr::unnest(out)
     }
     out
+  }
+#+END_SRC
+*** 漁獲量データ整形
+#+BEGIN_SRC R :tangle R/fmtcatch.R
+    #' Load and format catch data
+    #'
+    #' @inheritParams readxl::read_excel
+    #' @param spcs Spcs name in romaji, one of
+    #' @param nest If \code{TRUE}, data will be shown in rectangle format
+    #'   whith nested catch data for quick overview.
+    #' \itemize{
+    #'   \item maiwashi
+    #'   \item maaji
+    #'   \item sabarui
+    #'   \item masaba
+    #'   \item gomasaba
+    #'   \item katakuchi
+    #'   \item urume
+    #' }
+    #' @export
+    fmtcatch <- function(path, spcs, nest = FALSE) {
+      UseMethod("fmtcatch")
+    }
+   alert_decrease <- function(x) {
+     if (any(diff(x) < 0)) {
+       stop("There is a decrease in number.")
+     } else {
+       x
+     }
+   }
+
+   fmtcatch.kagoshima <- function(path, spcs, spread = TRUE, maki.only = FALSE) {
+     get_ym <- function(str, var) {
+       split <- stringr::str_split(str, "\\.")
+       if (var == "year") {
+         out <- split[[1]][1] %>% as.numeric()
+       } else if (var == "month"){
+         out <- split[[1]][2] %>% as.numeric()
+       }
+       out
+     }
+
+     make_year <- function(yr_jp, jpera) {
+       out <- paste0(jpera, yr_jp, "\u5E74") %>% # "nen" (year) in jp kanji
+         Nippon::wareki2AD()
+       out
+     }
+
+     data  <- load_alldata(path, sheet = "\uFF14\u6E2F\u8A08")
+                                           # "4koukei" (four port sum) in jp kanji
+     str   <- data[5:16, 1] %>%
+       unlist() %>%
+       as.vector()
+     yr_jp <- tryCatch(
+         purrr::map(str, get_ym, var = "year") %>%
+           unlist() %>%
+           alert_decrease(),
+         error = function(c) {
+           stop("fmtcatch.kagoshima() must be modified to follow jpera change.")
+         },
+         warning = function(c) "warning",
+         message = function(c) "message"
+       )
+
+     years <- make_year(yr_jp, "\u5e73\u6210") # "heisei" in jp kanji
+
+     months <- purrr::map(str, get_ym, var = "month") %>%
+       unlist()
+
+     load_catch_4ports <- function(path, spcs) {
+       spcs_jp <- switch(spcs,
+                         "maaji" = "マアジ",
+                         "sabarui" = "サバ類",
+                         "maiwashi" = "マイワシ",
+                         "urume" = "ウルメイワシ",
+                         "katakuchi" = "カタクチイワシ",
+                         stop("Unknown spcs"))
+       regex    <- insert_regex(spcs_jp, "\u3000", prefix = TRUE)
+       data     <- load_alldata(path, sheet = "４港計")
+       col_spcs <- which ( (gregexpr(regex, data[3, ]) > 0) == TRUE)
+       col2load <- col_spcs + 4
+       out      <- get_vector(col2load, 5:16, data, na.rm = FALSE) %>%
+         readr::parse_number()
+       out
+     }
+
+     load_catch_bouuke <- function(path, spcs, sheet, unit = "ton") {
+       data     <- load_alldata(path, sheet)
+       spcs_jp <- switch(spcs,
+                         "maaji" = "マアジ",
+                         "sabarui" = "サバ類",
+                         "maiwashi" = "マイワシ",
+                         "urume" = "ウルメ",
+                         "katakuchi" = "カタクチ",
+                         stop("Unknown spcs"))
+       cols_spcs <- which ( (gregexpr(spcs_jp, data[32, ]) > 0) == TRUE)
+       col_kg    <- cols_spcs[2]
+       out       <- get_vector(col_kg, 33:44, data, na.rm = FALSE) %>%
+         readr::parse_number()
+       if (unit == "ton") {
+         out <- out / 1000
+       } else if (unit == "kg") {
+       } else {
+         stop ("Unknown unit.")
+       }
+       out
+     }
+
+     catch_4ports        <- load_catch_4ports(path, spcs)
+     catch_bou_akune     <- load_catch_bouuke(path, spcs, sheet = "阿久根棒受")
+     catch_bou_uchinoura <- load_catch_bouuke(path, spcs, sheet = "内之浦棒受")
+     out <- list(year = years,
+                 month = months,
+                 maki4ports = catch_4ports,
+                 bou_akune = catch_bou_akune,
+                 bou_uchinoura = catch_bou_uchinoura) %>%
+       tibble::as_tibble()
+     if (maki.only == TRUE) {
+       out %<>% dplyr::select(-"bou_akune", -"bou_uchinoura")
+     } else {
+       out %<>%
+         dplyr::mutate(total = maki4ports + bou_akune + bou_uchinoura)
+       if (spread == FALSE) {
+         out %<>% dplyr::select(-"total") %>%
+           tidyr::gather("maki4ports", "bou_akune", "bou_uchinoura",
+                  key = "port", value = "catch_ton")
+       }
+     }
+     out
+   }
+
+   fmtcatch.nagasaki <- function(path, spcs) {
+     locate_spcsrow <- function(regex, df) {
+       spcs_col <- dplyr::pull(df, 1)
+       spcs_row <- which( (gregexpr(regex, spcs_col) > 0))
+       if (length(spcs_row) == 0) {
+         spcs_str <- spcs_col %>%
+           tidyr::replace_na(" ")
+         spcs_str[nchar(spcs_str) != 1] <- " "
+         spcs_str %<>%
+           stringr::str_c(collapse = "")
+         spcs_row <- unlist(gregexpr(regex, spcs_str))
+       }
+       spcs_row
+     }
+
+     get_monthcol <- function(row, df) {
+       regex <- "^([０-９]|[0-9])+　+月$"
+       col   <- which(gregexpr(regex, df[row, ]) > 0)
+       if (length(col) == 0) {
+         row <- row - 1
+         col <- which(gregexpr(regex, df[row, ]) > 0)
+       }
+       out   <- data.frame(row = row, col = col)
+       out
+     }
+
+     xtract_numerici <- function(str) {
+       regex <- "\\D+"
+       half <- Nippon::zen2han(str) %>%
+         stringr::str_replace(regex, "") %>%
+         readr::parse_integer()
+       half
+     }
+
+     xtract_numeric <- function(str) {
+       out <- purrr::map_int(str, xtract_numerici)
+       out
+     }
+
+     get_month <- function(regex, df, offset.x = 0, offset.y = 0,
+                           xtract.digit = FALSE) {
+       spcs_row <- locate_spcsrow(regex, df)
+       rowcol   <- purrr::map_dfr(spcs_row, get_monthcol, df = df)
+       out      <- purrr::map2(rowcol$col + offset.x,
+                               rowcol$row + offset.y,
+                               get_vector, df = df, na.rm = FALSE) %>%
+         purrr::flatten_chr()
+       if (xtract.digit) {
+         out %<>% xtract_numeric()
+       } else {
+         out %<>% readr::parse_number()
+       }
+       out
+     }
+
+     get_year <- function(sheet, month) {
+       ym  <- parse_ym(sheet)
+       out <- rep(ym$year_start, length(month))
+       if (any (diff(month) < 0)) {
+         out[(which (diff(month) < 0) + 1):length(out)] <- ym$year_start + 1
+       }
+       out
+     }
+
+     fmt_sheet <- function(sheet, path, regex) {
+       data   <- load_alldata(path, sheet)
+       months <- get_month(regex, data, xtract.digit = TRUE)
+       years  <- get_year(sheet, months)
+       catch  <- get_month(regex, data, offset.x = 2, offset.y = 5)
+       out    <- list(year = years,
+                      month = months,
+                      catch = catch) %>%
+         tibble::as_tibble()
+       out
+     }
+
+     spcs_jp <- switch(spcs,
+                       "maiwashi" = "マイワシ",
+                       "urume" = "ウルメイワシ",
+                       "katakuchi" = "カタクチ")
+     spcs_regex <- insert_regex(str = spcs_jp, regex = " ",
+                                prefix = FALSE, option = TRUE)
+     sheets <- readxl::excel_sheets(path)
+     out    <- purrr::map(sheets, fmt_sheet, path = path, regex = spcs_regex) %>%
+       dplyr::bind_rows()
+     out
   }
 #+END_SRC
