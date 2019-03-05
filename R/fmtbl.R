@@ -41,7 +41,7 @@ make_blclass <- function(left, right) {
 jpmonth2num <- function(x) {
   out <- x %>%
     as.vector() %>%
-    gsub("月", "", .) %>%
+    gsub("\u6708", "", .) %>% # "tsuki" in jp kanji
     as.numeric()
   out
 }
@@ -49,24 +49,21 @@ jpmonth2num <- function(x) {
 fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
   sheet     <- make_shtname(prefecture = "nagasaki", spcs = spcs)
   alldata   <- load_alldata(path, sheet)
-  colpos    <- get_col2load(target = alldata[4, ], regex = ".月", offset = 0)
+  colpos    <- get_col2load(target = alldata[4, ],
+                            regex = ".\u6708", # "tsuki" in jp kanji
+                            offset = 0)
   month     <- jpmonth2num(alldata[4, colpos])
-  classname <- make_blclass(alldata[5:86, 2], alldata[5:86, 3])
   histdata  <- purrr::map(colpos, get_histdata, df = alldata,
                           prefec = "nagasaki")
 
   out       <- list()
 
   parse_ym <- function(path, month) {
-    ym_start_match <- stringr::str_match(path,
-                                         ".+/([0-9]{4})\\.((?:0|1)[1-9])")
+    ym_start_match <- stringr::str_match(path, ".+/(\\d{4})\\.((?:0|1)\\d)")
     year_start     <- ym_start_match[2] %>% as.numeric()
     month_start    <- ym_start_match[3] %>% as.numeric()
     ym_end_match   <-
-      stringr::str_match(path,
-                         ".+/[0-9]{4}\\.(?:0|1)[1-9]-([0-9]{4})
-                           \\.((?:0|1)[1-9])"
-                         )
+      stringr::str_match(path, ".+/\\d{4}\\.(?:0|1)\\d-(\\d{4})\\.((?:0|1)\\d)")
     year_end       <- ym_end_match[2] %>% as.numeric()
     month_end      <- ym_end_match[3] %>% as.numeric()
     out <- list()
@@ -119,12 +116,28 @@ fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
 }
 
 fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
+  parse_year <- function(path) {
+    if ( ( stringr::str_detect(path, "/"))) {
+      fname <- stringr::str_match(path, "^.+/(\\d+\\s?【熊本県】.+)")[2]
+    } else {
+      fname <- path
+    }
+    match  <- stringr::str_match(fname, "^\\d+\\s?【熊本県】(\\w\\d+)まき")
+    wareki <- match[2]
+    era    <- stringr::str_sub(wareki, 1, 1)
+    jpyr   <- stringr::str_replace(wareki, "^\\w", "")
+    year   <- switch(era,
+           "H" = paste0("heisei", jpyr, "年") %>%
+             Nippon::wareki2AD()
+           )
+
+    year
+  }
   sheet     <- make_shtname(prefecture = "kumamoto", spcs = spcs)
   alldata   <- load_alldata(path, sheet)
   cpos_date <- get_col2load(alldata[1, ], regex = "[0-9]+", offset = 0)
   date      <- alldata[1, cpos_date] %>%
-    tinyplyr::date2julian() %>%
-    tinyplyr::num2date()
+    purrr::map_chr(tinyplyr::num2date)
   method    <- alldata[1, cpos_date + 4] %>%
     unlist() %>%
     as.vector()
@@ -154,7 +167,8 @@ fmtbl.kagoshima <- function(path, spcs, nest = TRUE) {
   method    <- alldata[6, cpos_date] %>%
     unlist() %>%
     as.vector()
-  bl         <- purrr::map(cpos_date, get_histdata, df = alldata, prefec = "kagoshima")
+  bl         <- purrr::map(cpos_date, get_histdata,
+                           df = alldata, prefec = "kagoshima")
 
   out        <- list()
   out$date   <- date

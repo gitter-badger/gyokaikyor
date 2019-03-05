@@ -15,13 +15,17 @@ Imports:
     hash,
     tibble,
     cellranger,
-    tinyplyr,
+    tinyplyr (>= 0.0.0.9000),
     tidyr,
     lubridate,
     purrr,
     readxl,
-    stringr
+    stringr,
+    Nippon,
+    dplyr
 Suggests: 
     testthat,
     covr
 RoxygenNote: 6.1.1
+Remotes:  
+    smxshxishxad/tinyplyr
