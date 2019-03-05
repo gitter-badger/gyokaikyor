@@ -845,7 +845,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     method    <- alldata[6, cpos_date] %>%
       unlist() %>%
       as.vector()
-    bl         <- purrr::map(cpos_date, get_histdata, df = alldata, prefec = "kagoshima")
+    bl         <- purrr::map(cpos_date, get_histdata,
+                             df = alldata, prefec = "kagoshima")
 
     out        <- list()
     out$date   <- date
