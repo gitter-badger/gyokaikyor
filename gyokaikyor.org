@@ -461,6 +461,11 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     expect_equal(get_vector(2, df, 50, 60, na.rm = TRUE), 150:160)
     expect_equal(get_vector(3, df, 50, 60, na.rm = TRUE), c(250, 252:260))
     expect_equal(get_vector(3, df, 50, 60, na.rm = FALSE), c(250, 0, 252:260))
+    df <- data.frame(a = 1:200, b = 101:300, c = c(201:250, NA, 252:400))
+    expect_equal(get_vector(1, 10:20, df, na.rm = TRUE), 10:20)
+    expect_equal(get_vector(2, 50:60, df, na.rm = TRUE), 150:160)
+    expect_equal(get_vector(3, 50:60, df, na.rm = TRUE), c(250, 252:260))
+    expect_equal(get_vector(3, 50:60, df, na.rm = FALSE), c(250, 0, 252:260))
   })
 
   test_that("get_measdata() extracts vector correctly", {
@@ -658,12 +663,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+END_SRC
 *** データ取得
 #+BEGIN_SRC R :tangle R/get_data.R
-  get_vector <- function(col, df, startrow, endrow, na.rm) {
-    rows <- startrow:endrow
-    out  <- df[rows, col] %>%
-      unlist() %>%
-      as.numeric() %>%
-      as.vector()
+  get_vector <- function(col, row, df, na.rm) {
+    out <- dplyr::pull(df, col)[row]
     if (na.rm) {
       out %<>% stats::na.omit() %>%
         as.vector()
@@ -680,8 +681,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
              endrow   <- 107
            },
            stop("Unknown prefecture"))
-    out <- get_vector(col, df,
-                      startrow = startrow, endrow = endrow, na.rm = TRUE)
+    out <- get_vector(col, srartrow:endrow, df, na.rm = TRUE)
     out
   }
 
@@ -696,13 +696,9 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
              startrow  <- 5
              endrow    <- locate_vecend(df[, col]) - 1
              class_l   <- get_vector(col = cellranger::letter_to_num("B"),
-                                     df = df,
-                                     startrow = startrow, endrow = endrow,
-                                     na.rm = FALSE)
+                                     startrow:endrow, df = df, na.rm = FALSE)
              class_r   <- get_vector(col = cellranger::letter_to_num("C"),
-                                     df = df,
-                                     startrow = startrow, endrow = endrow,
-                                     na.rm = FALSE)
+                                     startrow:endrow, df = df, na.rm = FALSE)
              class    <- make_blclass(class_l, class_r)
            },
            "kagoshima" = {
@@ -711,8 +707,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
              class    <- make_blclass(seq(40, 235, 5), seq(45, 240, 5))
            },
            stop("Unknown prefecture"))
-    count <- get_vector(col, df,
-                        startrow = startrow, endrow = endrow, na.rm = FALSE)
+    count <- get_vector(col, startrow:endrow, df, na.rm = FALSE)
     out   <- data.frame(class = class, count = count)
     out
   }
