@@ -877,3 +877,11 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
    fmtcatch <- function(path, spcs, nest = FALSE) {
      UseMethod("fmtcatch")
    }
+  alert_decrease <- function(x) {
+    if (any(diff(x) < 0)) {
+      stop("There is a decrease in number.")
+    } else {
+      x
+    }
+  }
+
