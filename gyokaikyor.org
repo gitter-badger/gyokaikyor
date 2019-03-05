@@ -245,6 +245,20 @@ fresco
 ***** parse_jpdate(format = )
 ***** make_regex(spcs = katakuchi)
 *** 漁獲量
+**** 長崎
+***** 魚種に応じてファイルを読み込み
+****** マアジ・サバ類
+****** マサバ・ゴマサバ
+****** イワシ類
+***** シート名を取得
+過去全データが期間別にシートを分けて入っている
+****** A列から魚種名を取得し，データ行を決定
+****** データ行から漁期の最初の月の列を取得
+前期と後期とで，エクセル方眼紙の列構成が違うのでこれが必要
+****** 漁獲量を取得
+とびとびにではあるが，一定の法則で入力されている．
+関数で処理．
+****** 合計が一致しているかチェック
 ** どう問題を解くか
 県ごとに，どうしてもデータ処理の振る舞いを変える必要がある
 そこで， 各県のファイル名に，県名を属性として与える
@@ -435,9 +449,14 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                  "Unknown prefecture", fix = TRUE)
   })
 #+END_SRC
-*** テスト/ 整形
-#+BEGIN_SRC  :tangle tests/testthat/test_fmtbl.R
+*** テスト/ 漁獲量データ整形
+#+BEGIN_SRC R :tangle tests/testthat/test_fmtbl.R
+  context("Load catch data from xlsheet and tidy it up")
 
+  test_that("fmtcatch.nagasaki() works well", {
+    nagasaki <- "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls"
+    expect_is(fmtcatch.nagasaki(nagasaki), "data.frame")
+  })
 #+END_SRC
 ** 関数
 :PROPERTIES:
@@ -806,5 +825,68 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
       out <- tidyr::unnest(out)
     }
     out
+  }
+#+END_SRC
+*** 漁獲量データ整形
+#+BEGIN_SRC R :tangle R/fmtcatch.R
+  path <- "data.git/漁海況/2018年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls"
+  fmtcatch.nagasaki <- function(path) {
+    sheets <- readxl::excel_sheets(path)
+    sheets
+    sheet <- sheets[42]
+    sheet <- sheets[43]
+    data <- load_alldata(path, sheet)
+
+    locate_spcsrow <- function(spcs, df) {
+      regex <- "カ ?タ ?ク ?チ"
+      spcs_col <- df[,1] %>%
+        dplyr::pull(1)
+      spcs_row <- which((gregexpr(regex, spcs_col) > 0))
+      if (length(spcs_row) == 0) {
+        spcs_str <- spcs_col %>%
+          tidyr::replace_na(" ")
+        spcs_str <- spcs_str[nchar(spcs_str) == 1] %>%
+          stringr::str_c(collapse = "")
+        spcs_row <- unlist(gregexpr(regex, spcs_str))
+      }
+      spcs_row
+    }
+
+    get_monthcol <- function(row, df) {
+      regex <- "^[１-９]+　+月$"
+      col   <- which(gregexpr(regex, df[row, ]) > 0)
+      out   <- data.frame(row = row, col = col)
+      out
+    }
+    rowcol <- purrr::map_dfr(spcs_row, get_monthcol, df = data)
+
+    xtract_numerici <- function(str) {
+      regex <- "\\D+"
+      half <- Nippon::zen2han(str) %>%
+        stringr::str_replace(regex, "") %>%
+        readr::parse_integer()
+      half
+    }
+    xtract_numeric <- function(str) {
+      out <- purrr::map_int(str, xtract_numerici)
+      out
+    }
+
+    get_month <- function(spcs, df, rowcol) {
+      out <- NULL
+      for (i in seq_len(nrow(rowcol))) {
+        r <- rowcol[i, "row"]
+        c <- rowcol[i, "col"]
+        out <- append(out, dplyr::pull(df, c)[r])
+      }
+      out
+    }
+    get_month("foo", data, rowcol) %>%
+      xtract_numeric()
+
+    spcs_row <- locate_spcsrow("katakuchi", data)
+    purrr::map(spcs_row, get_monthcell, df = data)
+
+  
   }
 #+END_SRC
