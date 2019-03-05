@@ -537,10 +537,10 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
               "data.frame")
   })
 
-  # test_that("fmtcatch.nagasaki() works well", {
-  #   nagasaki <- "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls"
-  #   expect_is(fmtcatch.nagasaki(nagasaki), "data.frame")
-  # })
+  test_that("fmtcatch.nagasaki() works well", {
+    path <- "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls"
+    expect_is(fmtcatch.nagasaki(path, spcs = "katakuchi"), "data.frame")
+  })
 #+END_SRC
 ** 関数
 :PROPERTIES:
