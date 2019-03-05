@@ -139,6 +139,23 @@ R パッケージのディレクトリは全て GitHub で公開する．
 
 #+END_SRC
 ** 漁獲量
+#+BEGIN_SRC R  library(hash)
+  library(hash)
+  fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/03_漁獲努力量（1804~1903）（熊本県）.xls",
+              "data.git/漁海況/2018年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls",
+              "data.git/漁海況/2018年3月/各県資料/鹿児島県/４港月計表（29年度）.xlsx")
+  prefec <- c("kumamoto", "nagasaki", "kagoshima")
+  tbl_fname <- hash(fname, prefec)
+
+  fname2 <- give_class(fname, tbl_fname)
+  fname2[[1]]
+  fname2[[2]]
+  fname2[[3]]
+
+  #fmtcatch(fname2[[1]], spcs = "katakuchi")
+  fmtcatch(fname2[[2]], spcs = "katakuchi")
+  fmtcatch(fname2[[3]], spcs = "katakuchi")
+#+END_SRC
 * 開発環境の整備
 #+BEGIN_SRC R :results silent
   # usethis::create_package("gyokaikyor")
