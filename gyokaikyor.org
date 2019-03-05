@@ -751,10 +751,7 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
       year_start     <- ym_start_match[2] %>% as.numeric()
       month_start    <- ym_start_match[3] %>% as.numeric()
       ym_end_match   <-
-        stringr::str_match(path,
-                           ".+/[0-9]{4}\\.(?:0|1)[1-9]-([0-9]{4})
-                             \\.((?:0|1)[1-9])"
-                           )
+        stringr::str_match(path, ".+/\\d{4}\\.(?:0|1)\\d-(\\d{4})\\.((?:0|1)\\d)")
       year_end       <- ym_end_match[2] %>% as.numeric()
       month_end      <- ym_end_match[3] %>% as.numeric()
       out <- list()
