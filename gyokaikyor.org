@@ -640,6 +640,21 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 
+  parse_ym <- function(path) {
+    ym_start_match <- stringr::str_match(path, ".*/?(\\d{4})\\.((?:0|1)\\d)(?=-)")
+    year_start     <- ym_start_match[2] %>% as.numeric()
+    month_start    <- ym_start_match[3] %>% as.numeric()
+    ym_end_match   <-
+      stringr::str_match(path, ".*/?\\d{4}\\.(?:0|1)\\d-(\\d{4})\\.((?:0|1)\\d)")
+    year_end       <- ym_end_match[2] %>% as.numeric()
+    month_end      <- ym_end_match[3] %>% as.numeric()
+    out <- list()
+    out$year_start  <- year_start
+    out$month_start <- month_start
+    out$year_end    <- year_end
+    out$month_end   <- month_end
+    out
+  }
 #+END_SRC
 *** 種名シート名生成
 #+BEGIN_SRC  R :tangle R/make_shtname.R
@@ -793,22 +808,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 
     out       <- list()
 
-    parse_ym <- function(path, month) {
-      ym_start_match <- stringr::str_match(path, ".+/(\\d{4})\\.((?:0|1)\\d)")
-      year_start     <- ym_start_match[2] %>% as.numeric()
-      month_start    <- ym_start_match[3] %>% as.numeric()
-      ym_end_match   <-
-        stringr::str_match(path, ".+/\\d{4}\\.(?:0|1)\\d-(\\d{4})\\.((?:0|1)\\d)")
-      year_end       <- ym_end_match[2] %>% as.numeric()
-      month_end      <- ym_end_match[3] %>% as.numeric()
-      out <- list()
-      out$year_start  <- year_start
-      out$month_start <- month_start
-      out$year_end    <- year_end
-      out$month_end   <- month_end
-      out
-    }
-    parsedym <- parse_ym(path, month)
+    parsedym <- parse_ym(path)
 
     check_month <- function(months, month_start, month_end) {
       if (!(month_start == months[1]) | (!month_end == rev(months)[1])) {
