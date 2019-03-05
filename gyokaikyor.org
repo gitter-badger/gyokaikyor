@@ -719,7 +719,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   jpmonth2num <- function(x) {
     out <- x %>%
       as.vector() %>%
-      gsub("月", "", .) %>%
+      gsub("\u6708", "", .) %>% # "tsuki" in jp kanji
       as.numeric()
     out
   }
@@ -727,9 +727,10 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
     sheet     <- make_shtname(prefecture = "nagasaki", spcs = spcs)
     alldata   <- load_alldata(path, sheet)
-    colpos    <- get_col2load(target = alldata[4, ], regex = ".月", offset = 0)
+    colpos    <- get_col2load(target = alldata[4, ],
+                              regex = ".\u6708", # "tsuki" in jp kanji
+                              offset = 0)
     month     <- jpmonth2num(alldata[4, colpos])
-    classname <- make_blclass(alldata[5:86, 2], alldata[5:86, 3])
     histdata  <- purrr::map(colpos, get_histdata, df = alldata,
                             prefec = "nagasaki")
 
