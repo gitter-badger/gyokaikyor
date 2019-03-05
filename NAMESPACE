@@ -3,5 +3,4 @@
 export("%>%")
 export(fmtbl)
 export(fmtcatch)
-importFrom(magrittr,"%<>%")
 importFrom(magrittr,"%>%")
