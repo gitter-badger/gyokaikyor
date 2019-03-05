@@ -811,8 +811,7 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
     alldata   <- load_alldata(path, sheet)
     cpos_date <- get_col2load(alldata[1, ], regex = "[0-9]+", offset = 0)
     date      <- alldata[1, cpos_date] %>%
-      tinyplyr::date2julian() %>%
-      tinyplyr::num2date()
+      purrr::map_chr(tinyplyr::num2date)
     method    <- alldata[1, cpos_date + 4] %>%
       unlist() %>%
       as.vector()
