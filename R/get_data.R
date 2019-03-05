@@ -1,9 +1,5 @@
-get_vector <- function(col, df, startrow, endrow, na.rm) {
-  rows <- startrow:endrow
-  out  <- df[rows, col] %>%
-    unlist() %>%
-    as.numeric() %>%
-    as.vector()
+get_vector <- function(col, row, df, na.rm) {
+  out <- dplyr::pull(df, col)[row]
   if (na.rm) {
     out %<>% stats::na.omit() %>%
       as.vector()
@@ -20,8 +16,8 @@ get_measdata <- function(col, df, prefec) {
            endrow   <- 107
          },
          stop("Unknown prefecture"))
-  out <- get_vector(col, df,
-                    startrow = startrow, endrow = endrow, na.rm = TRUE)
+  out <- get_vector(col, startrow:endrow, df, na.rm = TRUE) %>%
+    as.numeric()
   out
 }
 
@@ -36,13 +32,9 @@ get_histdata <- function(col, df, prefec) {
            startrow  <- 5
            endrow    <- locate_vecend(df[, col]) - 1
            class_l   <- get_vector(col = cellranger::letter_to_num("B"),
-                                   df = df,
-                                   startrow = startrow, endrow = endrow,
-                                   na.rm = FALSE)
+                                   startrow:endrow, df = df, na.rm = FALSE)
            class_r   <- get_vector(col = cellranger::letter_to_num("C"),
-                                   df = df,
-                                   startrow = startrow, endrow = endrow,
-                                   na.rm = FALSE)
+                                   startrow:endrow, df = df, na.rm = FALSE)
            class    <- make_blclass(class_l, class_r)
          },
          "kagoshima" = {
@@ -51,8 +43,8 @@ get_histdata <- function(col, df, prefec) {
            class    <- make_blclass(seq(40, 235, 5), seq(45, 240, 5))
          },
          stop("Unknown prefecture"))
-  count <- get_vector(col, df,
-                      startrow = startrow, endrow = endrow, na.rm = FALSE)
+  count <- get_vector(col, startrow:endrow, df, na.rm = FALSE) %>%
+    as.numeric()
   out   <- data.frame(class = class, count = count)
   out
 }

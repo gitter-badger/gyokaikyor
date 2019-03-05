@@ -18,7 +18,7 @@ test_that("fmtcatch.kagoshima() works well", {
             "data.frame")
 })
 
-# test_that("fmtcatch.nagasaki() works well", {
-#   nagasaki <- "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls"
-#   expect_is(fmtcatch.nagasaki(nagasaki), "data.frame")
-# })
+test_that("fmtcatch.nagasaki() works well", {
+  path <- "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls"
+  expect_is(fmtcatch.nagasaki(path, spcs = "katakuchi"), "data.frame")
+})

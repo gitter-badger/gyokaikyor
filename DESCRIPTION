@@ -22,10 +22,11 @@ Imports:
     readxl,
     stringr,
     Nippon,
-    dplyr
+    dplyr,
+    readr
 Suggests: 
     testthat,
     covr
 RoxygenNote: 6.1.1
-Remotes:  
+Remotes: 
     smxshxishxad/tinyplyr

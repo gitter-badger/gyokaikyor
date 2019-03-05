@@ -21,7 +21,8 @@ fmtbl <- function(path, spcs, nest = FALSE) {
 load_alldata <- function(path, sheet) {
   suppressMessages(
     alldata   <- readxl::read_excel(path,
-                                    sheet = sheet, col_names = FALSE)
+                                    sheet = sheet, col_names = FALSE,
+                                    col_types = "text")
   )
 }
 
@@ -58,22 +59,7 @@ fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
 
   out       <- list()
 
-  parse_ym <- function(path, month) {
-    ym_start_match <- stringr::str_match(path, ".+/(\\d{4})\\.((?:0|1)\\d)")
-    year_start     <- ym_start_match[2] %>% as.numeric()
-    month_start    <- ym_start_match[3] %>% as.numeric()
-    ym_end_match   <-
-      stringr::str_match(path, ".+/\\d{4}\\.(?:0|1)\\d-(\\d{4})\\.((?:0|1)\\d)")
-    year_end       <- ym_end_match[2] %>% as.numeric()
-    month_end      <- ym_end_match[3] %>% as.numeric()
-    out <- list()
-    out$year_start  <- year_start
-    out$month_start <- month_start
-    out$year_end    <- year_end
-    out$month_end   <- month_end
-    out
-  }
-  parsedym <- parse_ym(path, month)
+  parsedym <- parse_ym(path)
 
   check_month <- function(months, month_start, month_end) {
     if (!(month_start == months[1]) | (!month_end == rev(months)[1])) {
@@ -142,7 +128,7 @@ fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
     unlist() %>%
     as.vector()
   bl         <- purrr::map(cpos_date, get_measdata,
-                           prefec = "kumamoto", df = alldata)
+                          prefec = "kumamoto", df = alldata)
 
   out        <- list()
   out$date   <- date
