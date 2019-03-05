@@ -714,7 +714,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
              endrow   <- 107
            },
            stop("Unknown prefecture"))
-    out <- get_vector(col, srartrow:endrow, df, na.rm = TRUE)
+    out <- get_vector(col, startrow:endrow, df, na.rm = TRUE) %>%
+      as.numeric()
     out
   }
 
@@ -740,7 +741,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
              class    <- make_blclass(seq(40, 235, 5), seq(45, 240, 5))
            },
            stop("Unknown prefecture"))
-    count <- get_vector(col, startrow:endrow, df, na.rm = FALSE)
+    count <- get_vector(col, startrow:endrow, df, na.rm = FALSE) %>%
+      as.numeric()
     out   <- data.frame(class = class, count = count)
     out
   }
