@@ -1,5 +1,11 @@
 context("Load blhist data from Excel spreadhseet and tidy it up")
 
+test_that("fmtbl() works well", {
+  path <- "ExcelFiles/2017.09-2018.01_test_bl_nagasaki.xls"
+  class(path) <- "nagasaki"
+  expect_is(fmtbl(path, spcs = "katakuchi", nest = TRUE), "data.frame")
+})
+
 test_that("fmtbl.nagasaki() works well", {
   path <- "ExcelFiles/2017.09-2018.01_test_bl_nagasaki.xls"
   expect_is(fmtbl.nagasaki(path, spcs = "katakuchi", nest = TRUE),

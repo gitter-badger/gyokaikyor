@@ -128,7 +128,7 @@ fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
     unlist() %>%
     as.vector()
   bl         <- purrr::map(cpos_date, get_measdata,
-                          prefec = "kumamoto", df = alldata)
+                           prefec = "kumamoto", df = alldata)
 
   out        <- list()
   out$date   <- date
