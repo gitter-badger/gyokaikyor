@@ -530,6 +530,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     expect_is(fmtcatch.kagoshima(path, spcs = "maiwashi",
                                  spread = FALSE, maki.only = TRUE),
               "data.frame")
+  })
 
   test_that("fmtcatch.nagasaki() works well", {
     nagasaki <- "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls"
@@ -1039,6 +1040,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
       }
     }
     out
+  }
 
   fmtcatch.nagasaki <- function(path) {
     sheets <- readxl::excel_sheets(path)
@@ -1096,6 +1098,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 
     spcs_row <- locate_spcsrow("katakuchi", data)
     purrr::map(spcs_row, get_monthcell, df = data)
+ }
 
-  }
 #+END_SRC
