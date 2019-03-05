@@ -17,8 +17,6 @@
  fmtcatch <- function(path, spcs, nest = FALSE) {
    UseMethod("fmtcatch")
  }
-x <- c(1:10, 1)
-x <- 1:10
 alert_decrease <- function(x) {
   if (any(diff(x) < 0)) {
     stop("There is a decrease in number.")
@@ -133,4 +131,62 @@ fmtcatch.kagoshima <- function(path, spcs, spread = TRUE, maki.only = FALSE) {
     }
   }
   out
+
+fmtcatch.nagasaki <- function(path) {
+  sheets <- readxl::excel_sheets(path)
+  sheets
+  sheet <- sheets[42]
+  sheet <- sheets[43]
+  data <- load_alldata(path, sheet)
+
+  locate_spcsrow <- function(spcs, df) {
+    regex <- "カ ?タ ?ク ?チ"
+    spcs_col <- df[,1] %>%
+      dplyr::pull(1)
+    spcs_row <- which((gregexpr(regex, spcs_col) > 0))
+    if (length(spcs_row) == 0) {
+      spcs_str <- spcs_col %>%
+        tidyr::replace_na(" ")
+      spcs_str <- spcs_str[nchar(spcs_str) == 1] %>%
+        stringr::str_c(collapse = "")
+      spcs_row <- unlist(gregexpr(regex, spcs_str))
+    }
+    spcs_row
+  }
+
+  get_monthcol <- function(row, df) {
+    regex <- "^[１-９]+　+月$"
+    col   <- which(gregexpr(regex, df[row, ]) > 0)
+    out   <- data.frame(row = row, col = col)
+    out
+  }
+  rowcol <- purrr::map_dfr(spcs_row, get_monthcol, df = data)
+
+  xtract_numerici <- function(str) {
+    regex <- "\\D+"
+    half <- Nippon::zen2han(str) %>%
+      stringr::str_replace(regex, "") %>%
+      readr::parse_integer()
+    half
+  }
+  xtract_numeric <- function(str) {
+    out <- purrr::map_int(str, xtract_numerici)
+    out
+  }
+
+  get_month <- function(spcs, df, rowcol) {
+    out <- NULL
+    for (i in seq_len(nrow(rowcol))) {
+      r <- rowcol[i, "row"]
+      c <- rowcol[i, "col"]
+      out <- append(out, dplyr::pull(df, c)[r])
+    }
+    out
+  }
+  get_month("foo", data, rowcol) %>%
+    xtract_numeric()
+
+  spcs_row <- locate_spcsrow("katakuchi", data)
+  purrr::map(spcs_row, get_monthcell, df = data)
+
 }
