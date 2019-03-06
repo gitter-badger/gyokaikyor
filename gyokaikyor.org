@@ -1157,7 +1157,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                        "maiwashi" = "マイワシ",
                        "urume" = "ウルメイワシ",
                        "katakuchi" = "カタクチ")
-     spcs_regex <- insert_regex(str = spcs_jp, regex = " ",
+     spcs_regex <- insert_regex(str = spcs_jp, regex = "( |　)",
                                 prefix = FALSE, option = TRUE)
      sheets <- readxl::excel_sheets(path)
      out    <- purrr::map(sheets, fmt_sheet, path = path, regex = spcs_regex) %>%
