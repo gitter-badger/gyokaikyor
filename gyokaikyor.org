@@ -392,7 +392,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 *** テスト/ セル位置取得
 #+BEGIN_SRC R :tangle tests/testthat/test_locate_cellpos.R
   context("Locate cell position")
-  library(tibble)
+  suppressWarnings(library(tibble))
   df <- tribble(~A, ~B, ~C, ~D,
                 NA, NA, NA, 1,
                 NA, "name", "value", 2,
