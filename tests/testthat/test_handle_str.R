@@ -5,7 +5,9 @@ target <-
   "漁獲年月日", "", "2017.5.19", "操業海域", "八代海", "漁法", "まき網",
   "漁獲年月日", "", "2017.6.23", "操業海域", "八代海", "漁法", "まき網")
 
-expect_equal(get_col2load(target,
+test_that("get_col2load() works well",
+          expect_equal(get_col2load(target,
                           regex = "20[0-9]{2}\\.[0-9][0-9]?\\.[0-9][0-9]?",
                           offset = -2),
-             c(1, 8, 15))
+                       c(1, 8, 15))
+          )

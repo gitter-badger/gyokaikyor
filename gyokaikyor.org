@@ -34,12 +34,12 @@
     - [[#テスト-ファイル名操作][テスト/ ファイル名操作]]
     - [[#テスト-セル位置取得][テスト/ セル位置取得]]
     - [[#テスト-文字列操作][テスト/ 文字列操作]]
-    - [[#テスト-種名正規表現生成][テスト/ 種名正規表現生成]]
+    - [[#テスト-種名生成][テスト/ 種名生成]]
     - [[#テスト-計測データ取得][テスト/ 計測データ取得]]
     - [[#テスト-体長データ整形][テスト/ 体長データ整形]]
     - [[#テスト-漁獲量データ整形][テスト/ 漁獲量データ整形]]
   - [[#関数][関数]]
-    - [[#インボート][インボート]]
+    - [[#インポート][インポート]]
     - [[#ファイル名操作][ファイル名操作]]
     - [[#セル位置取得][セル位置取得]]
     - [[#文字列操作][文字列操作]]
@@ -139,22 +139,51 @@ R パッケージのディレクトリは全て GitHub で公開する．
 
 #+END_SRC
 ** 漁獲量
-#+BEGIN_SRC R  library(hash)
+#+BEGIN_SRC R
   library(hash)
   fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/03_漁獲努力量（1804~1903）（熊本県）.xls",
               "data.git/漁海況/2018年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls",
+             "./data.git/漁海況/2019年3月/各県資料/長崎県/橘湾中央漁協ｲﾜｼ類(中小まき)提出とりまとめ.xls",
+             "./data.git/漁海況/2019年3月/各県資料/長崎県/奈留漁協ｲﾜｼ類（中小旋）とりまとめ.xlsx",
+             "./data.git/漁海況/2019年3月/各県資料/長崎県/九十九島漁協ｲﾜｼ類(中小まき)とりまとめ.xlsx",
               "data.git/漁海況/2018年3月/各県資料/鹿児島県/４港月計表（29年度）.xlsx")
-  prefec <- c("kumamoto", "nagasaki", "kagoshima")
+  prefec <- c("kumamoto", rep("nagasaki", 4), "kagoshima")
   tbl_fname <- hash(fname, prefec)
 
   fname2 <- give_class(fname, tbl_fname)
   fname2[[1]]
   fname2[[2]]
   fname2[[3]]
+  fname2[[4]]
+  fname2[[5]]
+  fname2[[6]]
 
-  #fmtcatch(fname2[[1]], spcs = "katakuchi")
-  fmtcatch(fname2[[2]], spcs = "katakuchi")
-  fmtcatch(fname2[[3]], spcs = "katakuchi")
+  spcs <- "katakuchi"
+
+  #fmtcatch(fname2[[1]], spcs = spcs)
+  fmtcatch(fname2[[2]], spcs = spcs)
+  fmtcatch(fname2[[3]], spcs = spcs)
+  fmtcatch(fname2[[4]], spcs = spcs)
+  fmtcatch(fname2[[5]], spcs = spcs)
+  fmtcatch(fname2[[6]], spcs = spcs)
+
+  paths <- c("./data.git/漁海況/2019年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls",
+
+  ngs <- fmtcatch.nagasaki(paths[1], "katakuchi")
+  tbn <- fmtcatch.nagasaki(paths[2], "katakuchi")
+  nr  <- fmtcatch.nagasaki(paths[3], "katakuchi")
+  kjk <- fmtcatch.nagasaki(paths[4], "katakuchi")
+  nagasaki <- dplyr::bind_rows(ngs, tbn, nr, kjk)
+  nagasaki %>% dplyr::filter(year == 1)
+  nagasaki %>% dplyr::filter(is.na(port)) %>% data.frame()
+  unique(nagasaki$port)
+
+  nagasaki %>% ggplot(aes(month, catch, color = port)) +
+    geom_line() +
+    facet_wrap(~ year)
+
+  path <- "./data.git/漁海況/2019年3月/各県資料/長崎県/橘湾中央漁協ｲﾜｼ類(中小まき)提出とりまとめ.xls"
+  sheet <- "2006.02-2006.08"
 #+END_SRC
 * 開発環境の整備
 #+BEGIN_SRC R :results silent
@@ -242,12 +271,12 @@ fresco
 カタクチ測定なし
 ***** 佐賀
 fresco
-***** 長崎
+***** DONE 長崎
 - シートを読み込む．対象は春と秋とで違う．
   - 3月漁海況: 2017.09-2018.01小型まき網体長組成.xls
   - 10月漁海況: 2018.02-2018.08小型まき網体長組成.xls
 - 漁法名をF2から取得
-***** 熊本
+***** DONE 熊本
 列方向に続いた精密測定データ．
 10月漁海況のときには前年ファイルも一緒に送ってくれる．
 - 04 【熊本県】H29まき網＆棒受網 体長組成.xlsx を開く <- *4月始まり*
@@ -261,7 +290,7 @@ fresco
 - 過去のデータベースに df.out を結合
 - 重複除去
 - 新データベースをkumamoto_2018Oct.csv として書き出し
-***** 鹿児島
+***** DONE 鹿児島
 - 体長組成(H29年度).xlsx を開く　<- *4月始まり*
 - 「ｶﾀｸﾁ」シートを読み込み
 - 日付が入った列を取得
@@ -286,7 +315,7 @@ fresco
 ***** parse_jpdate(format = )
 ***** make_regex(spcs = katakuchi)
 *** 漁獲量
-**** 鹿児島
+**** DONE 鹿児島
 ***** 「４港計」「阿久根棒受」「内之浦棒受」シートを読み込み
 ****** 「４港計」シート
 ******* 第3行からスペース含みの魚種名を探し，列を決定
@@ -430,7 +459,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                          c(1, 8, 15))
             )
 #+END_SRC
-*** テスト/ 種名正規表現生成
+*** テスト/ 種名生成
 #+BEGIN_SRC  R :tangle tests/testthat/test_make_shtname.R
   context("Make shtname of prefecture")
 
@@ -577,7 +606,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 :PROPERTIES:
 :header-args: :results silent :exports code
 :END:
-*** インボート
+*** インポート
 #+BEGIN_SRC  R :tangle R/util.R
   ## quiets concerns of R CMD check re: the .'s that appear in pipelines
   if (getRversion() >= "2.15.1") {
@@ -1169,6 +1198,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                       fname = path,
                       sheet = sheet) %>%
          tibble::as_tibble()
+       rm(data)
        out
      }
 
@@ -1183,4 +1213,5 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
        dplyr::bind_rows()
      out
   }
+
 #+END_SRC

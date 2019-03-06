@@ -189,15 +189,33 @@
      out
    }
 
+   get_port <- function(data) {
+     out   <- NULL
+     str   <- dplyr::pull(data, 1)[2]
+     regex <- "(?<=\\）)((長崎|奈留|小佐々|橘))(?=\\w+ )"
+     port  <- stringr::str_extract(str, regex)
+     out   <- switch(port,
+                     "長崎" = "nagasaki",
+                     "奈留" = "naru",
+                     "小佐々" = "kosasa",
+                     "橘" = "tachibana")
+     out
+   }
+
    fmt_sheet <- function(sheet, path, regex) {
      data   <- load_alldata(path, sheet)
+     port   <- get_port(data)
      months <- get_month(regex, data, xtract.digit = TRUE)
      years  <- get_year(sheet, months)
      catch  <- get_month(regex, data, offset.x = 2, offset.y = 5)
      out    <- list(year = years,
                     month = months,
-                    catch = catch) %>%
+                    port = port,
+                    catch = catch,
+                    fname = path,
+                    sheet = sheet) %>%
        tibble::as_tibble()
+     rm(data)
      out
    }
 
@@ -205,7 +223,7 @@
                      "maiwashi" = "マイワシ",
                      "urume" = "ウルメイワシ",
                      "katakuchi" = "カタクチ")
-   spcs_regex <- insert_regex(str = spcs_jp, regex = " ",
+   spcs_regex <- insert_regex(str = spcs_jp, regex = "( |　)",
                               prefix = FALSE, option = TRUE)
    sheets <- readxl::excel_sheets(path)
    out    <- purrr::map(sheets, fmt_sheet, path = path, regex = spcs_regex) %>%
