@@ -1032,7 +1032,9 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
        x
      }
    }
+#+END_SRC
 
+#+BEGIN_SRC R :tangle R/fmtcatch_kagoshima.R
    fmtcatch.kagoshima <- function(path, spcs, spread = TRUE, maki.only = FALSE) {
      get_ym <- function(str, var) {
        split <- stringr::str_split(str, "\\.")
@@ -1132,6 +1134,9 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
      }
      out
    }
+#+END_SRC
+
+#+BEGIN_SRC R :tangle R/fmtcatch_nagasaki.R
    get_port <- function(str) {
      out   <- NULL
      regex <- "(?<=Ｈ(．|\\.)\\d\\d?(\\）|\\))?)((長崎|奈留|小佐々|橘))(?=\\w+ )"
