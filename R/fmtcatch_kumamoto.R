@@ -1,15 +1,16 @@
-fmtcatch.kumamoto <- function(path, spcs) {
-  get_type <- function(path) {
-    out   <- NULL
-    regex <- "(?:H\\d+)(\\w+)(?=網漁獲量)"
-    match <- stringr::str_match(path, regex)[2]
-    match
-    out   <- switch(match,
-                    "まき" = "maki",
-                    "棒受" = "bouuke")
-    out
-  }
-
+#' @param path File path to process
+#' @param spcs Romaji spcs name one of
+#' \itemize {
+#'   \item{"maaji"}
+#'   \item{"maiwashi"}
+#'   \item{"sabarui"}
+#'   \item{"katakuchi"}
+#'   \item{"urume"}
+#' }
+#' @param type Character value either "maki" or "bouke".
+#'   Data processing algorithm is controled by this parameter.
+#' @export
+fmtcatch.kumamoto <- function(path, spcs, type) {
   get_row <- function(str) {
     match <- stringr::str_which(str, "前年比")
     if (length(match) > 0) {
@@ -58,7 +59,6 @@ fmtcatch.kumamoto <- function(path, spcs) {
                     "sabarui" = "サバ類",
                     "katakuchi" = "カタクチイワシ",
                     "urume" = "ウルメイワシ")
-  type    <- get_type(path)
   alldata <- load_alldata(path, sheet)
   out     <- get_data(alldata, type)
   out

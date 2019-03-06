@@ -1,8 +1,8 @@
 context("Load catch data from Excel spreadhseet and tidy it up")
 
 test_that("fmtcatch.kumamoto() process makiami data correctly", {
-  path <- "ExcelFiles/test01_H30まき網漁獲量（熊本県）.xls"
-  df   <- fmtcatch.kumamoto(path, spcs = "katakuchi")
+  path <- "ExcelFiles/test_catch_kumamoto_maki.xls"
+  df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "maki")
   expect_is(df, "data.frame")
   expect_equal(subset(df, year == 1989)$catch, 1:9)
   expect_equal(subset(df, year == 1990)$catch, 10:21)
@@ -11,8 +11,8 @@ test_that("fmtcatch.kumamoto() process makiami data correctly", {
 })
 
 test_that("fmtcatch.kumamoto() process bouukeami data correctly", {
-  path <- "ExcelFiles/test02_H30棒受網漁獲量（熊本県）.xls"
-  df   <- fmtcatch.kumamoto(path, spcs = "katakuchi")
+  path <- "ExcelFiles/test_catch_kumamoto_bouuke.xls"
+  df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "bouuke")
   expect_is(df, "data.frame")
   expect_equal(subset(df, year == 1993)$catch, 1:7)
   expect_equal(subset(df, year == 1994)$catch, 8:14)
