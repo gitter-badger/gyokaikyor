@@ -141,13 +141,17 @@ R パッケージのディレクトリは全て GitHub で公開する．
 ** 漁獲量
 #+BEGIN_SRC R
   library(hash)
-  fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/03_漁獲努力量（1804~1903）（熊本県）.xls",
+  library(ggplot2)
+  fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/01_H30まき網漁獲量（熊本県）.xls",
+              "data.git/漁海況/2019年3月/各県資料/熊本県/02_H30棒受網漁獲量（熊本県）.xls",
               "data.git/漁海況/2019年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls",
              "./data.git/漁海況/2019年3月/各県資料/長崎県/橘湾中央漁協ｲﾜｼ類(中小まき)提出とりまとめ.xls",
              "./data.git/漁海況/2019年3月/各県資料/長崎県/奈留漁協ｲﾜｼ類（中小旋）とりまとめ.xlsx",
              "./data.git/漁海況/2019年3月/各県資料/長崎県/九十九島漁協ｲﾜｼ類(中小まき)とりまとめ.xlsx",
               "data.git/漁海況/2018年3月/各県資料/鹿児島県/４港月計表（29年度）.xlsx")
-  prefec <- c("kumamoto", rep("nagasaki", 4), "kagoshima")
+  prefec <- c(rep("kumamoto", 2),
+             rep("nagasaki", 4),
+             "kagoshima")
   tbl_fname <- hash(fname, prefec)
 
   fname2 <- give_class(fname, tbl_fname)
@@ -157,22 +161,29 @@ R パッケージのディレクトリは全て GitHub で公開する．
   fname2[[4]]
   fname2[[5]]
   fname2[[6]]
+  fname2[[7]]
 
   spcs <- "katakuchi"
 
-  #fmtcatch(fname2[[1]], spcs = spcs)
-  kagoshima <- fmtcatch(fname2[[6]], spcs = spcs)
+  km_maki <- fmtcatch(fname2[[1]], spcs = spcs)
+  km_bou  <- fmtcatch(fname2[[2]], spcs = spcs)
+  kumamoto <- dplyr::bind_rows(km_maki, km_bou)
+  kumamoto %>% ggplot(aes(month, catch, color = type)) +
+    geom_line() +
+    facet_wrap(~ year)
 
-  ngs      <- fmtcatch.nagasaki(fname2[[2]], "katakuchi")
-  tbn      <- fmtcatch.nagasaki(fname2[[3]], "katakuchi")
-  nr       <- fmtcatch.nagasaki(fname2[[4]], "katakuchi")
-  kjk      <- fmtcatch.nagasaki(fname2[[5]], "katakuchi")
+
+  ngs      <- fmtcatch.nagasaki(fname2[[3]], "katakuchi")
+  tbn      <- fmtcatch.nagasaki(fname2[[4]], "katakuchi")
+  nr       <- fmtcatch.nagasaki(fname2[[5]], "katakuchi")
+  kjk      <- fmtcatch.nagasaki(fname2[[6]], "katakuchi")
   nagasaki <- dplyr::bind_rows(ngs, tbn, nr, kjk)
 
-  library(ggplot2)
   nagasaki %>% ggplot(aes(month, catch, color = port)) +
     geom_line() +
     facet_wrap(~ year)
+
+  kagoshima <- fmtcatch(fname2[[7]], spcs = spcs)
 #+END_SRC
 * 開発環境の整備
 #+BEGIN_SRC R :results silent
