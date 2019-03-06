@@ -16,13 +16,8 @@ test_that("fmtbl.nagasaki() works well", {
 
 test_that("check_month() detects bad month data", {
   path     <- "ExcelFiles/2017.09-2018.01_test_bl_nagasaki_month.xls"
-  alldata  <- load_alldata(path, sheet = "カタクチ")
-  colpos   <- get_col2load(target = alldata[4, ],
-                           regex = ".\u6708", # "tsuki" in jp kanji
-                           offset = 0)
-  months   <- jpmonth2num(alldata[4, colpos])
-  parsedym  <- parse_ym(path)
-  check_month(months, parsedym$month_start, parsedym$month_end)
+  expect_error(fmtbl.nagasaki(path, spcs = "katakuchi"),
+               "Check month data", fix = TRUE)
 })
 
 test_that("fmtbl.kumamoto() works well", {
