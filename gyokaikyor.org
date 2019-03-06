@@ -576,6 +576,26 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+BEGIN_SRC  R :tangle tests/testthat/test_fmtcatch.R
   context("Load catch data from Excel spreadhseet and tidy it up")
 
+  test_that("fmtcatch.kumamoto() process makiami data correctly", {
+    path <- "ExcelFiles/test01_H30まき網漁獲量（熊本県）.xls"
+    df   <- fmtcatch.kumamoto(path, spcs = "katakuchi")
+    expect_is(df, "data.frame")
+    expect_equal(subset(df, year == 1989)$catch, 1:9)
+    expect_equal(subset(df, year == 1990)$catch, 10:21)
+    expect_equal(unique(df$type), "maki")
+    expect_setequal(unique(df$month), 1:12)
+  })
+
+  test_that("fmtcatch.kumamoto() process bouukeami data correctly", {
+    path <- "ExcelFiles/test02_H30棒受網漁獲量（熊本県）.xls"
+    df   <- fmtcatch.kumamoto(path, spcs = "katakuchi")
+    expect_is(df, "data.frame")
+    expect_equal(subset(df, year == 1993)$catch, 1:7)
+    expect_equal(subset(df, year == 1994)$catch, 8:14)
+    expect_equal(unique(df$type), "bouuke")
+    expect_setequal(unique(df$month), 6:12)
+  })
+
   test_that("fmtcatch.kagoshima() works well", {
     path <- "ExcelFiles/test_catch_kagoshima.xlsx"
     expect_is(fmtcatch.kagoshima(path, spcs = "katakuchi", spread = TRUE),
@@ -1219,4 +1239,72 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 
+#+END_SRC
+**** 熊本
+#+BEGIN_SRC R :tangle R/fmtcatch_kumamoto.R
+  fmtcatch.kumamoto <- function(path, spcs) {
+    get_type <- function(path) {
+      out   <- NULL
+      regex <- "(?:H\\d+)(\\w+)(?=網漁獲量)"
+      match <- stringr::str_match(path, regex)[2]
+      match
+      out   <- switch(match,
+                      "まき" = "maki",
+                      "棒受" = "bouuke")
+      out
+    }
+
+    get_row <- function(str) {
+      match <- stringr::str_which(str, "前年比")
+      if (length(match) > 0) {
+        out <- 4:(match - 1)
+        out
+      }
+    }
+
+    get_data <- function(df, type) {
+      switch(type,
+             "maki" = {
+               judgecol <- 3
+               cols     <- 4:15
+               months   <- c(4:12, 1:3)
+             },
+             "bouuke" = {
+               judgecol <- 2
+               cols     <- 4:10
+               months   <- 6:12
+             })
+      yrcol         <- 3
+      out           <- NULL
+      ystr          <- dplyr::pull(df, judgecol)
+      rows          <- get_row(ystr)
+      year          <- dplyr::pull(df, yrcol)[rows] %>%
+        as.numeric()
+      out           <- df[rows, cols]
+      colnames(out) <- months
+      out %<>% dplyr::mutate(year = year,
+                             type = type) %>%
+        tidyr::gather(-year, -type, key = month, value = "catch") %>%
+        dplyr::mutate(year = as.integer(year),
+                      month = as.integer(month),
+                      catch = as.double(catch)) %>%
+        dplyr::select(year, month, type, catch) %>%
+        dplyr::mutate(year = ifelse(dplyr::between(month, 1, 3),
+                                    year + 1,
+                                    year)) %>%
+        dplyr::arrange(year, month)
+      out
+    }
+
+    sheet   <- switch(spcs,
+                      "maaji" = "マアジ",
+                      "maiwashi" = "マイワシ",
+                      "sabarui" = "サバ類",
+                      "katakuchi" = "カタクチイワシ",
+                      "urume" = "ウルメイワシ")
+    type    <- get_type(path)
+    alldata <- load_alldata(path, sheet)
+    out     <- get_data(alldata, type)
+    out
+  }
 #+END_SRC
