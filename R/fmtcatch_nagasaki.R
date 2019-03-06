@@ -1,6 +1,10 @@
 get_port <- function(str) {
    out   <- NULL
-   regex <- "(?<=Ｈ(．|\\.)\\d\\d?(\\）|\\))?)((長崎|奈留|小佐々|橘))(?=\\w+ )"
+   regex <- stringi::stri_unescape_unicode(paste0("(?<=\\uff28(\\uff0e|\\\\.)",
+                                         "\\\\d\\\\d?(\\\\\\uff09|\\\\))?)",
+                                         "((\\u9577\\u5d0e|\\u5948\\u7559|",
+                                         "\\u5c0f\\u4f50\\u3005|\\u6a58))",
+                                         "(?=\\\\w+ )"))
    port  <- stringr::str_extract(str, regex)
    out   <- switch(port,
                    "長崎" = "nagasaki",

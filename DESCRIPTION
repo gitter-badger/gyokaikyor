@@ -23,7 +23,8 @@ Imports:
     stringr,
     Nippon,
     dplyr,
-    readr
+    readr,
+    stringi
 Suggests: 
     testthat,
     covr
