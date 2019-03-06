@@ -469,6 +469,18 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     expect_error(parse_ym("foo/bar/20012.01-2012.09") %>% unlist(),
                  "Failed parsing to year", fix = TRUE)
   })
+    test_that("get_port() extract port name correctly", {
+      expect_equal(get_port("地名 ： （Ｈ．14）長崎魚市 漁業種 ： 中小型まき網"),
+                   "nagasaki")
+      expect_equal(get_port("地名 ： （Ｈ．14長崎魚市 漁業種 ： 中小型まき網"),
+                   "nagasaki")
+      expect_equal(
+          get_port("'地名 ： （Ｈ．8)小佐々町漁協 漁業種 ： 中小型まき網"),
+          "kosasa")
+      expect_equal(
+          get_port("地名 ： （Ｈ.29）長崎魚市      漁業種 ：   中小型まき網　　"),
+          "nagasaki")
+    })
 #+END_SRC
 *** テスト/ 種名生成
 #+BEGIN_SRC  R :tangle tests/testthat/test_make_shtname.R
@@ -1120,6 +1132,17 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
      }
      out
    }
+   get_port <- function(str) {
+     out   <- NULL
+     regex <- "(?<=Ｈ(．|\\.)\\d\\d?(\\）|\\))?)((長崎|奈留|小佐々|橘))(?=\\w+ )"
+     port  <- stringr::str_extract(str, regex)
+     out   <- switch(port,
+                     "長崎" = "nagasaki",
+                     "奈留" = "naru",
+                     "小佐々" = "kosasa",
+                     "橘" = "tachibana")
+     out
+   }
 
    fmtcatch.nagasaki <- function(path, spcs) {
      locate_spcsrow <- function(regex, df) {
@@ -1185,22 +1208,9 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
        out
      }
 
-     get_port <- function(data) {
-       out   <- NULL
-       str   <- dplyr::pull(data, 1)[2]
-       regex <- "(?<=\\）)((長崎|奈留|小佐々|橘))(?=\\w+ )"
-       port  <- stringr::str_extract(str, regex)
-       out   <- switch(port,
-                       "長崎" = "nagasaki",
-                       "奈留" = "naru",
-                       "小佐々" = "kosasa",
-                       "橘" = "tachibana")
-       out
-     }
-
      fmt_sheet <- function(sheet, path, regex) {
        data   <- load_alldata(path, sheet)
-       port   <- get_port(data)
+       port   <- get_port(dplyr::pull(data, 1)[2])
        months <- get_month(regex, data, xtract.digit = TRUE)
        years  <- get_year(sheet, months)
        catch  <- get_month(regex, data, offset.x = 2, offset.y = 5)
