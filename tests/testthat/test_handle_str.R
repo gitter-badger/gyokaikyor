@@ -11,3 +11,14 @@ test_that("get_col2load() works well",
                           offset = -2),
                        c(1, 8, 15))
           )
+
+test_that("parse_ym() works well", {
+  expect_setequal(parse_ym("2012.01-2012.09") %>% unlist(),
+                  c(2012, 1, 2012, 9))
+  expect_setequal(parse_ym("foo/bar/2012.01-2012.09") %>% unlist(),
+                  c(2012, 1, 2012, 9))
+  expect_error(parse_ym("20012.01-2012.09") %>% unlist(),
+               "Failed parsing to year", fix = TRUE)
+  expect_error(parse_ym("foo/bar/20012.01-2012.09") %>% unlist(),
+               "Failed parsing to year", fix = TRUE)
+})

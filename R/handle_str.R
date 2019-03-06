@@ -22,13 +22,20 @@ insert_regex <- function(str, regex, prefix = FALSE, option = FALSE) {
 }
 
 parse_ym <- function(path) {
-  ym_start_match <- stringr::str_match(path, ".*/?(\\d{4})\\.((?:0|1)\\d)(?=-)")
+  if (stringr::str_detect(path, "/")) {
+    fname <- stringr::str_extract(path, "(?<=/)[^/]+$")
+  } else {
+    fname <- path
+  }
+  ym_start_match <- stringr::str_match(fname, "(\\d+)\\.((?:0|1)\\d)(?=-)")
   year_start     <- ym_start_match[2] %>% as.numeric()
   month_start    <- ym_start_match[3] %>% as.numeric()
   ym_end_match   <-
-    stringr::str_match(path, ".*/?\\d{4}\\.(?:0|1)\\d-(\\d{4})\\.((?:0|1)\\d)")
+    stringr::str_match(fname, "\\d+\\.(?:0|1)\\d-(\\d+)\\.((?:0|1)\\d)")
   year_end       <- ym_end_match[2] %>% as.numeric()
   month_end      <- ym_end_match[3] %>% as.numeric()
+  if ((nchar(year_start) != 4) | (nchar(year_end) != 4))
+    stop("Failed parsing to year")
   out <- list()
   out$year_start  <- year_start
   out$month_start <- month_start
