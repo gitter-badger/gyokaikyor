@@ -595,8 +595,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   context("Load catch data from Excel spreadhseet and tidy it up")
 
   test_that("fmtcatch.kumamoto() process makiami data correctly", {
-    df   <- fmtcatch.kumamoto(path, spcs = "katakuchi")
     path <- "ExcelFiles/test_catch_kumamoto_maki.xls"
+    df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "maki")
     expect_is(df, "data.frame")
     expect_equal(subset(df, year == 1989)$catch, 1:9)
     expect_equal(subset(df, year == 1990)$catch, 10:21)
@@ -605,8 +605,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   })
 
   test_that("fmtcatch.kumamoto() process bouukeami data correctly", {
-    df   <- fmtcatch.kumamoto(path, spcs = "katakuchi")
     path <- "ExcelFiles/test_catch_kumamoto_bouuke.xls"
+    df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "bouuke")
     expect_is(df, "data.frame")
     expect_equal(subset(df, year == 1993)$catch, 1:7)
     expect_equal(subset(df, year == 1994)$catch, 8:14)
@@ -1035,7 +1035,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     #'   \item urume
     #' }
     #' @export
-    fmtcatch <- function(path, spcs, nest = FALSE) {
+    fmtcatch <- function(path, spcs, nest = FALSE, type = NULL) {
       UseMethod("fmtcatch")
     }
    alert_decrease <- function(x) {
