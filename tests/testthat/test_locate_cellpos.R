@@ -1,5 +1,5 @@
 context("Locate cell position")
-library(tibble)
+suppressWarnings(library(tibble))
 df <- tribble(~A, ~B, ~C, ~D,
               NA, NA, NA, 1,
               NA, "name", "value", 2,

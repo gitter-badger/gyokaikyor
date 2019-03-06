@@ -14,6 +14,12 @@ test_that("fmtbl.nagasaki() works well", {
             "data.frame")
 })
 
+test_that("check_month() detects bad month data", {
+  path     <- "ExcelFiles/2017.09-2018.01_test_bl_nagasaki_month.xls"
+  expect_error(fmtbl.nagasaki(path, spcs = "katakuchi"),
+               "Check month data", fix = TRUE)
+})
+
 test_that("fmtbl.kumamoto() works well", {
   path <- "ExcelFiles/test_bl_kumamoto.xlsx"
   expect_is(fmtbl.kumamoto(path, spcs = "katakuchi", nest = TRUE),

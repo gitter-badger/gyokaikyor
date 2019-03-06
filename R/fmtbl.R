@@ -48,25 +48,12 @@ jpmonth2num <- function(x) {
 }
 
 fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
-  sheet     <- make_shtname(prefecture = "nagasaki", spcs = spcs)
-  alldata   <- load_alldata(path, sheet)
-  colpos    <- get_col2load(target = alldata[4, ],
-                            regex = ".\u6708", # "tsuki" in jp kanji
-                            offset = 0)
-  month     <- jpmonth2num(alldata[4, colpos])
-  histdata  <- purrr::map(colpos, get_histdata, df = alldata,
-                          prefec = "nagasaki")
-
-  out       <- list()
-
-  parsedym <- parse_ym(path)
 
   check_month <- function(months, month_start, month_end) {
     if (!(month_start == months[1]) | (!month_end == rev(months)[1])) {
       stop ("Check month data")
     }
   }
-  check_month(month, parsedym$month_start, parsedym$month_end)
 
   give_yr2month <- function(mvec, year.start) {
     out           <- list()
@@ -90,9 +77,20 @@ fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
     out
   }
 
+  sheet     <- make_shtname(prefecture = "nagasaki", spcs = spcs)
+  alldata   <- load_alldata(path, sheet)
+  colpos    <- get_col2load(target = alldata[4, ],
+                            regex = ".\u6708", # "tsuki" in jp kanji
+                            offset = 0)
+  months    <- jpmonth2num(alldata[4, colpos])
+  histdata  <- purrr::map(colpos, get_histdata, df = alldata,
+                          prefec = "nagasaki")
+  parsedym  <- parse_ym(path)
+  check_month(months, parsedym$month_start, parsedym$month_end)
   year_start <- parsedym$year_start
-  out$year   <- give_yr2month(month, year_start)$year
-  out$month  <- give_yr2month(month, year_start)$month
+  out       <- list()
+  out$year   <- give_yr2month(months, year_start)$year
+  out$month  <- give_yr2month(months, year_start)$month
   out$hist   <- histdata
   out        <- tibble::as_tibble(out)
   if (nest == FALSE) {
