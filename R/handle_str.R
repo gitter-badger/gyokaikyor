@@ -34,7 +34,7 @@ parse_ym <- function(path) {
     stringr::str_match(fname, "\\d+\\.(?:0|1)\\d-(\\d+)\\.((?:0|1)\\d)")
   year_end       <- ym_end_match[2] %>% as.numeric()
   month_end      <- ym_end_match[3] %>% as.numeric()
-  if ((nchar(year_start) != 4) | (nchar(year_end) != 4))
+  if ( (nchar(year_start) != 4) | (nchar(year_end) != 4))
     stop("Failed parsing to year")
   out <- list()
   out$year_start  <- year_start

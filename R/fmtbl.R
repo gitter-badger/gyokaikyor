@@ -89,8 +89,8 @@ fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
   check_month(months, parsedym$month_start, parsedym$month_end)
   year_start <- parsedym$year_start
   out       <- list()
-  out$year   <- give_yr2month(month, year_start)$year
-  out$month  <- give_yr2month(month, year_start)$month
+  out$year   <- give_yr2month(months, year_start)$year
+  out$month  <- give_yr2month(months, year_start)$month
   out$hist   <- histdata
   out        <- tibble::as_tibble(out)
   if (nest == FALSE) {
