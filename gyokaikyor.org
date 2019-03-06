@@ -472,41 +472,14 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   })
 
   test_that("get_port() extract port name correctly", {
-    library(stringi)
-    str1 <- stri_unescape_unicode(paste0("\\u5730\\u540d \\uff1a \\uff08",
-                                         "\\uff28\\uff0e14\\uff09\\u9577",
-                                         "\\u5d0e\\u9b5a\\u5e02 \\u6f01",
-                                         "\\u696d\\u7a2e \\uff1a \\u4e2d",
-                                         "\\u5c0f\\u578b\\u307e\\u304d",
-                                         "\\u7db2"))
-    str2 <- stri_unescape_unicode(paste0("\\u5730\\u540d \\uff1a \\uff08",
-                                         "\\uff28\\uff0e14\\uff09\\u9577",
-                                         "\\u5d0e\\u9b5a\\u5e02 \\u6f01",
-                                         "\\u696d\\u7a2e \\uff1a \\u4e2d",
-                                         "\\u5c0f\\u578b\\u307e\\u304d",
-                                         "\\u7db2"))
-    str3 <- stri_unescape_unicode(paste0("\\u5730\\u540d \\uff1a \\uff08",
-                                         "\\uff28\\uff0e14\\u9577\\u5d0e",
-                                         "\\u9b5a\\u5e02 \\u6f01\\u696d",
-                                         "\\u7a2e \\uff1a \\u4e2d\\u5c0f",
-                                         "\\u578b\\u307e\\u304d\\u7db2"))
-    str4 <- stri_unescape_unicode(paste0("\\u5730\\u540d \\uff1a \\uff08",
-                                         "\\uff28\\uff0e8)\\u5c0f\\u4f50",
-                                         "\\u3005\\u753a\\u6f01\\u5354 ",
-                                         "\\u6f01\\u696d\\u7a2e \\uff1a ",
-                                         "\\u4e2d\\u5c0f\\u578b\\u307e",
-                                         "\\u304d\\u7db2"))
-    str5 <- stri_unescape_unicode(paste0("\\u5730\\u540d \\uff1a \\uff08",
-                                         "\\uff28.29\\uff09\\u9577\\u5d0e",
-                                         "\\u9b5a\\u5e02      \\u6f01",
-                                         "\\u696d\\u7a2e \\uff1a   ",
-                                         "\\u4e2d\\u5c0f\\u578b\\u307e",
-                                         "\\u304d\\u7db2\\u3000\\u3000"))
+    str1 <- "地名 ： （Ｈ．14）長崎魚市 漁業種 ： 中小型まき網"
+    str2 <- "地名 ： （Ｈ．14長崎魚市 漁業種 ： 中小型まき網"
+    str3 <- "地名 ： （Ｈ．8)小佐々町漁協 漁業種 ： 中小型まき網"
+    str4 <- "地名 ： （Ｈ.29）長崎魚市      漁業種 ：   中小型まき網"
     expect_equal(get_port(str1), "nagasaki")
     expect_equal(get_port(str2), "nagasaki")
-    expect_equal(get_port(str3), "nagasaki")
-    expect_equal(get_port(str4), "kosasa")
-    expect_equal(get_port(str5), "nagasaki")
+    expect_equal(get_port(str3), "kosasa")
+    expect_equal(get_port(str4), "nagasaki")
   })
 #+END_SRC
 *** テスト/ 種名生成
