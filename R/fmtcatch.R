@@ -3,6 +3,8 @@
  #' @inheritParams readxl::read_excel
  #' @param spcs Spcs name in romaji, one of
  #' @param nest If \code{TRUE}, data will be shown in rectangle format
+ #' @param type Character value either "maki" or "bouuke" to control
+ #'   data processing algorithm for kumamoto data.
  #'   whith nested catch data for quick overview.
  #' \itemize{
  #'   \item maiwashi
@@ -14,7 +16,7 @@
  #'   \item urume
  #' }
  #' @export
- fmtcatch <- function(path, spcs, nest = FALSE) {
+ fmtcatch <- function(path, spcs, nest = FALSE, type = NULL) {
    UseMethod("fmtcatch")
  }
 alert_decrease <- function(x) {
