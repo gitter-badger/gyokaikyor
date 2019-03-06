@@ -161,29 +161,18 @@ R パッケージのディレクトリは全て GitHub で公開する．
   spcs <- "katakuchi"
 
   #fmtcatch(fname2[[1]], spcs = spcs)
-  fmtcatch(fname2[[2]], spcs = spcs)
-  fmtcatch(fname2[[3]], spcs = spcs)
-  fmtcatch(fname2[[4]], spcs = spcs)
-  fmtcatch(fname2[[5]], spcs = spcs)
-  fmtcatch(fname2[[6]], spcs = spcs)
+  kagoshima <- fmtcatch(fname2[[6]], spcs = spcs)
 
-  paths <- c("./data.git/漁海況/2019年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls",
-
-  ngs <- fmtcatch.nagasaki(paths[1], "katakuchi")
-  tbn <- fmtcatch.nagasaki(paths[2], "katakuchi")
-  nr  <- fmtcatch.nagasaki(paths[3], "katakuchi")
-  kjk <- fmtcatch.nagasaki(paths[4], "katakuchi")
+  ngs      <- fmtcatch.nagasaki(fname2[[2]], "katakuchi")
+  tbn      <- fmtcatch.nagasaki(fname2[[3]], "katakuchi")
+  nr       <- fmtcatch.nagasaki(fname2[[4]], "katakuchi")
+  kjk      <- fmtcatch.nagasaki(fname2[[5]], "katakuchi")
   nagasaki <- dplyr::bind_rows(ngs, tbn, nr, kjk)
-  nagasaki %>% dplyr::filter(year == 1)
-  nagasaki %>% dplyr::filter(is.na(port)) %>% data.frame()
-  unique(nagasaki$port)
 
+  library(ggplot2)
   nagasaki %>% ggplot(aes(month, catch, color = port)) +
     geom_line() +
     facet_wrap(~ year)
-
-  path <- "./data.git/漁海況/2019年3月/各県資料/長崎県/橘湾中央漁協ｲﾜｼ類(中小まき)提出とりまとめ.xls"
-  sheet <- "2006.02-2006.08"
 #+END_SRC
 * 開発環境の整備
 #+BEGIN_SRC R :results silent
@@ -1125,13 +1114,14 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   get_port <- function(str) {
     out   <- NULL
     regex <- paste0("(?<=\uff28(\uff0e|\\.)\\d\\d?(\uff09|\\))?)",
-                    "((\u9577\u5d0e|\u5948\u7559|\u5c0f\u4f50\u3005|\u6a58))",
-                    "(?=\\w+ )")
+                    "((\u9577\u5d0e|\u5948\u7559|\\u4e5d\\u5341\\u4e5d|",
+                    "\u5c0f\u4f50\u3005|\u6a58))(?=\\w+ )")
     port  <- stringr::str_extract(str, regex)
     out   <- switch(stringi::stri_escape_unicode(port),
                     "\\u9577\\u5d0e"        = "nagasaki",
                     "\\u5948\\u7559"        = "naru",
-                    "\\u5c0f\\u4f50\\u3005" = "kosasa",
+                    "\\u4e5d\\u5341\\u4e5d" = "kujuku",
+                    "\\u5c0f\\u4f50\\u3005" = "kujuku",
                     "\\u6a58"               = "tachibana")
     out
   }

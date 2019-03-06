@@ -1,13 +1,14 @@
 get_port <- function(str) {
   out   <- NULL
   regex <- paste0("(?<=\uff28(\uff0e|\\.)\\d\\d?(\uff09|\\))?)",
-                  "((\u9577\u5d0e|\u5948\u7559|\u5c0f\u4f50\u3005|\u6a58))",
-                  "(?=\\w+ )")
+                  "((\u9577\u5d0e|\u5948\u7559|\\u4e5d\\u5341\\u4e5d|",
+                  "\u5c0f\u4f50\u3005|\u6a58))(?=\\w+ )")
   port  <- stringr::str_extract(str, regex)
   out   <- switch(stringi::stri_escape_unicode(port),
                   "\\u9577\\u5d0e"        = "nagasaki",
                   "\\u5948\\u7559"        = "naru",
-                  "\\u5c0f\\u4f50\\u3005" = "kosasa",
+                  "\\u4e5d\\u5341\\u4e5d" = "kujuku",
+                  "\\u5c0f\\u4f50\\u3005" = "kujuku",
                   "\\u6a58"               = "tachibana")
   out
 }
