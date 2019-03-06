@@ -139,6 +139,23 @@ R パッケージのディレクトリは全て GitHub で公開する．
 
 #+END_SRC
 ** 漁獲量
+#+BEGIN_SRC R  library(hash)
+  library(hash)
+  fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/03_漁獲努力量（1804~1903）（熊本県）.xls",
+              "data.git/漁海況/2018年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls",
+              "data.git/漁海況/2018年3月/各県資料/鹿児島県/４港月計表（29年度）.xlsx")
+  prefec <- c("kumamoto", "nagasaki", "kagoshima")
+  tbl_fname <- hash(fname, prefec)
+
+  fname2 <- give_class(fname, tbl_fname)
+  fname2[[1]]
+  fname2[[2]]
+  fname2[[3]]
+
+  #fmtcatch(fname2[[1]], spcs = "katakuchi")
+  fmtcatch(fname2[[2]], spcs = "katakuchi")
+  fmtcatch(fname2[[3]], spcs = "katakuchi")
+#+END_SRC
 * 開発環境の整備
 #+BEGIN_SRC R :results silent
   # usethis::create_package("gyokaikyor")
@@ -486,12 +503,29 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+BEGIN_SRC R :tangle tests/testthat/test_fmtbl.R
   context("Load blhist data from Excel spreadhseet and tidy it up")
 
+  test_that("fmtbl() works well", {
+    path <- "ExcelFiles/2017.09-2018.01_test_bl_nagasaki.xls"
+    class(path) <- "nagasaki"
+    expect_is(fmtbl(path, spcs = "katakuchi", nest = TRUE), "data.frame")
+  })
+
   test_that("fmtbl.nagasaki() works well", {
     path <- "ExcelFiles/2017.09-2018.01_test_bl_nagasaki.xls"
     expect_is(fmtbl.nagasaki(path, spcs = "katakuchi", nest = TRUE),
               "data.frame")
     expect_is(fmtbl.nagasaki(path, spcs = "katakuchi", nest = FALSE),
               "data.frame")
+  })
+
+  test_that("check_month() detects bad month data", {
+    path     <- "ExcelFiles/2017.09-2018.01_test_bl_nagasaki_month.xls"
+    alldata  <- load_alldata(path, sheet = "カタクチ")
+    colpos   <- get_col2load(target = alldata[4, ],
+                             regex = ".\u6708", # "tsuki" in jp kanji
+                             offset = 0)
+    months   <- jpmonth2num(alldata[4, colpos])
+    parsedym  <- parse_ym(path)
+    check_month(months, parsedym$month_start, parsedym$month_end)
   })
 
   test_that("fmtbl.kumamoto() works well", {
@@ -794,25 +828,12 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   }
 
   fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
-    sheet     <- make_shtname(prefecture = "nagasaki", spcs = spcs)
-    alldata   <- load_alldata(path, sheet)
-    colpos    <- get_col2load(target = alldata[4, ],
-                              regex = ".\u6708", # "tsuki" in jp kanji
-                              offset = 0)
-    month     <- jpmonth2num(alldata[4, colpos])
-    histdata  <- purrr::map(colpos, get_histdata, df = alldata,
-                            prefec = "nagasaki")
-
-    out       <- list()
-
-    parsedym <- parse_ym(path)
 
     check_month <- function(months, month_start, month_end) {
       if (!(month_start == months[1]) | (!month_end == rev(months)[1])) {
         stop ("Check month data")
       }
     }
-    check_month(month, parsedym$month_start, parsedym$month_end)
 
     give_yr2month <- function(mvec, year.start) {
       out           <- list()
@@ -836,7 +857,18 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
       out
     }
 
+    sheet     <- make_shtname(prefecture = "nagasaki", spcs = spcs)
+    alldata   <- load_alldata(path, sheet)
+    colpos    <- get_col2load(target = alldata[4, ],
+                              regex = ".\u6708", # "tsuki" in jp kanji
+                              offset = 0)
+    months    <- jpmonth2num(alldata[4, colpos])
+    histdata  <- purrr::map(colpos, get_histdata, df = alldata,
+                            prefec = "nagasaki")
+    parsedym  <- parse_ym(path)
+    check_month(months, parsedym$month_start, parsedym$month_end)
     year_start <- parsedym$year_start
+    out       <- list()
     out$year   <- give_yr2month(month, year_start)$year
     out$month  <- give_yr2month(month, year_start)$month
     out$hist   <- histdata
