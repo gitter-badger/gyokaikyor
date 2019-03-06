@@ -1,7 +1,7 @@
 ## Summary
-This change fixes
-- what
-- benefit
+This change fixes/improves [what]
+
+The benefit is [what]
 
 ## Check
 - [ ] Commits are summarized into appropriate grain size
