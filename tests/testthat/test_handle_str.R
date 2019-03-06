@@ -22,14 +22,3 @@ test_that("parse_ym() works well", {
   expect_error(parse_ym("foo/bar/20012.01-2012.09") %>% unlist(),
                "Failed parsing to year", fix = TRUE)
 })
-
-# test_that("get_port() extract port name correctly", {
-#   str1 <- "地名 ： （Ｈ．14）長崎魚市 漁業種 ： 中小型まき網"
-#   str2 <- "地名 ： （Ｈ．14長崎魚市 漁業種 ： 中小型まき網"
-#   str3 <- "地名 ： （Ｈ．8)小佐々町漁協 漁業種 ： 中小型まき網"
-#   str4 <- "地名 ： （Ｈ.29）長崎魚市      漁業種 ：   中小型まき網"
-#   expect_equal(get_port(str1), "nagasaki")
-#   expect_equal(get_port(str2), "nagasaki")
-#   expect_equal(get_port(str3), "kosasa")
-#   expect_equal(get_port(str4), "nagasaki")
-# })

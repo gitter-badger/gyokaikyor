@@ -17,8 +17,3 @@ test_that("fmtcatch.kagoshima() works well", {
                                spread = FALSE, maki.only = TRUE),
             "data.frame")
 })
-
-# test_that("fmtcatch.nagasaki() works well", {
-#   path <- "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls"
-#   expect_is(fmtcatch.nagasaki(path, spcs = "katakuchi"), "data.frame")
-# })
