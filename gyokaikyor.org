@@ -701,6 +701,11 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   }
 
   parse_ym <- function(path) {
+    if (stringr::str_detect(path, "/")) {
+      fname <- stringr::str_extract(path, "(?<=/)[^/]+$")
+    } else {
+      fname <- path
+    }
     ym_start_match <- stringr::str_match(fname, "(\\d+)\\.((?:0|1)\\d)(?=-)")
     year_start     <- ym_start_match[2] %>% as.numeric()
     month_start    <- ym_start_match[3] %>% as.numeric()
