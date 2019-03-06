@@ -372,6 +372,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   devtools::check(args = "--as-cran")
   covr::package_coverage()
 #+END_SRC
+
 ** テストコード
 :PROPERTIES:
 :header-args: :results silent :exports code
@@ -470,17 +471,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     expect_error(parse_ym("foo/bar/20012.01-2012.09") %>% unlist(),
                  "Failed parsing to year", fix = TRUE)
   })
-
-  # test_that("get_port() extract port name correctly", {
-  #   str1 <- "地名 ： （Ｈ．14）長崎魚市 漁業種 ： 中小型まき網"
-  #   str2 <- "地名 ： （Ｈ．14長崎魚市 漁業種 ： 中小型まき網"
-  #   str3 <- "地名 ： （Ｈ．8)小佐々町漁協 漁業種 ： 中小型まき網"
-  #   str4 <- "地名 ： （Ｈ.29）長崎魚市      漁業種 ：   中小型まき網"
-  #   expect_equal(get_port(str1), "nagasaki")
-  #   expect_equal(get_port(str2), "nagasaki")
-  #   expect_equal(get_port(str3), "kosasa")
-  #   expect_equal(get_port(str4), "nagasaki")
-  # })
 #+END_SRC
 *** テスト/ 種名生成
 #+BEGIN_SRC  R :tangle tests/testthat/test_make_shtname.R
@@ -614,11 +604,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                                  spread = FALSE, maki.only = TRUE),
               "data.frame")
   })
-
-  # test_that("fmtcatch.nagasaki() works well", {
-  #   path <- "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls"
-  #   expect_is(fmtcatch.nagasaki(path, spcs = "katakuchi"), "data.frame")
-  # })
 #+END_SRC
 ** 関数
 :PROPERTIES:
