@@ -1284,7 +1284,13 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
              judgecol <- 2
              cols     <- 4:10
              months   <- 6:12
-           })
+           },
+           "karatsu" & "kennai" & "teichi" & "chumaki"= {
+             judgecol <- 16
+             cols     <- 3:14
+             months   <- c(4:12, 1:3)
+           },
+           message("Unknown type"))
     yrcol         <- 3
     out           <- NULL
     ystr          <- dplyr::pull(df, judgecol)
