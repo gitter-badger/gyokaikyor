@@ -165,8 +165,8 @@ R パッケージのディレクトリは全て GitHub で公開する．
 
   spcs <- "katakuchi"
 
-  km_maki <- fmtcatch(fname2[[1]], spcs = spcs)
-  km_bou  <- fmtcatch(fname2[[2]], spcs = spcs)
+  km_maki <- fmtcatch(fname2[[1]], spcs = spcs, type = "maki")
+  km_bou  <- fmtcatch(fname2[[2]], spcs = spcs, type = "bouuke")
   kumamoto <- dplyr::bind_rows(km_maki, km_bou)
   kumamoto %>% ggplot(aes(month, catch, color = type)) +
     geom_line() +
