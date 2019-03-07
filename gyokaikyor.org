@@ -1441,7 +1441,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #'   \item{"chumaki"}
   #' }
   #'   Data processing algorithm is controled by this parameter.
-  #' @export
   fmtcatch.saga <- function(path, spcs, type) {
     spcs_jp <- switch(spcs,
                       "maaji" = "ﾏｱｼﾞ",
