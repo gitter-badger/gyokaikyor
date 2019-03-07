@@ -1263,7 +1263,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+END_SRC
 **** 熊本 & 佐賀
 #+BEGIN_SRC R :tangle R/fmtcatch_kumamoto_saga.R
-  get_data <- function(df, type) {
+  get_data <- function(df, type, regex) {
     switch(type,
            "maki" = {
              judgecol <- 3
@@ -1278,7 +1278,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     yrcol         <- 3
     out           <- NULL
     ystr          <- dplyr::pull(df, judgecol)
-    rows          <- get_row(ystr)
+    rows          <- get_row(ystr, regex)
     year          <- dplyr::pull(df, yrcol)[rows] %>%
       as.numeric()
     out           <- df[rows, cols]
@@ -1297,8 +1297,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 
-  get_row <- function(str) {
-    match <- stringr::str_which(str, "前年比")
+  get_row <- function(str, regex) {
+    match <- stringr::str_which(str, regex)
     if (length(match) > 0) {
       out <- 4:(match - 1)
       out
@@ -1325,7 +1325,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                       "katakuchi" = "カタクチイワシ",
                       "urume" = "ウルメイワシ")
     alldata <- load_alldata(path, sheet)
-    out     <- get_data(alldata, type)
+    out     <- get_data(alldata, type, "前年比")
     out
   }
     sheet   <- switch(spcs,
