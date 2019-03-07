@@ -594,7 +594,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+BEGIN_SRC  R :tangle tests/testthat/test_fmtcatch.R
   context("Load catch data from Excel spreadhseet and tidy it up")
 
-  test_that("fmtcatch.kumamoto() process makiami data correctly", {
+  test_that("fmtcatch.kumamoto() processes makiami data correctly", {
     path <- "ExcelFiles/test_catch_kumamoto_maki.xls"
     df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "maki")
     expect_is(df, "data.frame")
@@ -604,7 +604,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     expect_setequal(unique(df$month), 1:12)
   })
 
-  test_that("fmtcatch.kumamoto() process bouukeami data correctly", {
+  test_that("fmtcatch.kumamoto() processes bouukeami data correctly", {
     path <- "ExcelFiles/test_catch_kumamoto_bouuke.xls"
     df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "bouuke")
     expect_is(df, "data.frame")
