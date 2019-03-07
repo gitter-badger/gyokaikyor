@@ -1080,7 +1080,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #'   \item urume
   #' }
   #' @export
-  fmtcatch <- function(path, spcs, nest = FALSE, type = NULL) {
+  fmtcatch <- function(path, spcs, type = NULL) {
     UseMethod("fmtcatch")
   }
 
