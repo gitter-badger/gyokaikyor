@@ -2,6 +2,10 @@
 
 language: R
 sudo: false
+addons:
+  apt:
+    packages:
+    - fonts-ipafont
 warnings_are_errors: false
 cache: packages
 r_github_packages:
