@@ -1344,6 +1344,26 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out     <- get_data(alldata, type, "前年比")
     out
   }
+
+  #' @inheritParams fmtcatch.kumamoto
+  #' @param spcs Romaji spcs name one of
+  #' \itemize {
+  #'   \item{"maaji"}
+  #'   \item{"maiwashi"}
+  #'   \item{"masaba"}
+  #'   \item{"katakuchi"}
+  #'   \item{"urume"}
+  #' }
+  #' @param type Character value one of
+  #' \itemize {
+  #'   \item{"karatsu"}
+  #'   \item{"kennai"}
+  #'   \item{"teichi"}
+  #'   \item{"chumaki"}
+  #' }
+  #'   Data processing algorithm is controled by this parameter.
+  #' @export
+  fmtcatch.saga <- function(path, spcs, type) {
     sheet   <- switch(spcs,
                       "maaji" = "マアジ",
                       "maiwashi" = "マイワシ",
