@@ -1261,8 +1261,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   }
 
 #+END_SRC
-**** 熊本
-#+BEGIN_SRC R :tangle R/fmtcatch_kumamoto.R
   #' @param path File path to process
   #' @param spcs Romaji spcs name one of
   #' \itemize {
@@ -1285,6 +1283,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     }
 
     get_data <- function(df, type) {
+**** 熊本 & 佐賀
+#+BEGIN_SRC R :tangle R/fmtcatch_kumamoto_saga.R
       switch(type,
              "maki" = {
                judgecol <- 3
