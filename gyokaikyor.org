@@ -1273,54 +1273,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+END_SRC
 **** 熊本 & 佐賀
 #+BEGIN_SRC R :tangle R/fmtcatch_kumamoto_saga.R
-  get_data <- function(df, type, regex) {
-    switch(type,
-           "maki" = {
-             judgecol <- 3
-             cols     <- 4:15
-             months   <- c(4:12, 1:3)
-           },
-           "bouuke" = {
-             judgecol <- 2
-             cols     <- 4:10
-             months   <- 6:12
-           },
-           "karatsu" & "kennai" & "teichi" & "chumaki"= {
-             judgecol <- 16
-             cols     <- 3:14
-             months   <- c(4:12, 1:3)
-           },
-           message("Unknown type"))
-    yrcol         <- 3
-    out           <- NULL
-    ystr          <- dplyr::pull(df, judgecol)
-    rows          <- get_row(ystr, regex)
-    year          <- dplyr::pull(df, yrcol)[rows] %>%
-      as.numeric()
-    out           <- df[rows, cols]
-    colnames(out) <- months
-    out %<>% dplyr::mutate(year = year,
-                           type = type) %>%
-      tidyr::gather(-year, -type, key = month, value = "catch") %>%
-      dplyr::mutate(year = as.integer(year),
-                    month = as.integer(month),
-                    catch = as.double(catch)) %>%
-      dplyr::select(year, month, type, catch) %>%
-      dplyr::mutate(year = ifelse(dplyr::between(month, 1, 3),
-                                  year + 1,
-                                  year)) %>%
-      dplyr::arrange(year, month)
-    out
-  }
-
-  get_row <- function(str, regex) {
-    match <- stringr::str_which(str, regex)
-    if (length(match) > 0) {
-      out <- 4:(match - 1)
-      out
-    }
-  }
-
   #' @param path File path to process
   #' @param spcs Romaji spcs name one of
   #' \itemize {
@@ -1374,4 +1326,53 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out     <- get_data(alldata, type, "平年値")
     out
   }
+
+  get_data <- function(df, type, regex) {
+    switch(type,
+           "maki" = {
+             judgecol <- 3
+             cols     <- 4:15
+             months   <- c(4:12, 1:3)
+           },
+           "bouuke" = {
+             judgecol <- 2
+             cols     <- 4:10
+             months   <- 6:12
+           },
+           "karatsu" & "kennai" & "teichi" & "chumaki"= {
+             judgecol <- 16
+             cols     <- 3:14
+             months   <- c(4:12, 1:3)
+           },
+           message("Unknown type"))
+    yrcol         <- 3
+    out           <- NULL
+    ystr          <- dplyr::pull(df, judgecol)
+    rows          <- get_row(ystr, regex)
+    year          <- dplyr::pull(df, yrcol)[rows] %>%
+      as.numeric()
+    out           <- df[rows, cols]
+    colnames(out) <- months
+    out %<>% dplyr::mutate(year = year,
+                           type = type) %>%
+      tidyr::gather(-year, -type, key = month, value = "catch") %>%
+      dplyr::mutate(year = as.integer(year),
+                    month = as.integer(month),
+                    catch = as.double(catch)) %>%
+      dplyr::select(year, month, type, catch) %>%
+      dplyr::mutate(year = ifelse(dplyr::between(month, 1, 3),
+                                  year + 1,
+                                  year)) %>%
+      dplyr::arrange(year, month)
+    out
+  }
+
+  get_row <- function(str, regex) {
+    match <- stringr::str_which(str, regex)
+    if (length(match) > 0) {
+      out <- 4:(match - 1)
+      out
+    }
+  }
+
 #+END_SRC
