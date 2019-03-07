@@ -166,6 +166,8 @@ R パッケージのディレクトリは全て GitHub で公開する．
   fname2[[5]]
   fname2[[6]]
   fname2[[7]]
+  fname2[[8]]
+  fname2[[9]]
 
   spcs <- "katakuchi"
 
@@ -177,10 +179,10 @@ R パッケージのディレクトリは全て GitHub で公開する．
     facet_wrap(~ year)
 
 
-  ngs      <- fmtcatch.nagasaki(fname2[[3]], "katakuchi")
-  tbn      <- fmtcatch.nagasaki(fname2[[4]], "katakuchi")
-  nr       <- fmtcatch.nagasaki(fname2[[5]], "katakuchi")
-  kjk      <- fmtcatch.nagasaki(fname2[[6]], "katakuchi")
+  ngs      <- fmtcatch(fname2[[3]], "katakuchi")
+  tbn      <- fmtcatch(fname2[[4]], "katakuchi")
+  nr       <- fmtcatch(fname2[[5]], "katakuchi")
+  kjk      <- fmtcatch(fname2[[6]], "katakuchi")
   nagasaki <- dplyr::bind_rows(ngs, tbn, nr, kjk)
 
   nagasaki %>% ggplot(aes(month, catch, color = port)) +
@@ -326,18 +328,14 @@ fresco
 - 精密タイプ: 熊本
 - 体長タイプ: 長崎，鹿児島
 - fresco タイプ: 山口，佐賀
-**** 必要な部品
-***** DONE get_cols2load(regex = , offset = )
-***** get_top(regex = )
-***** get_left(regex = )
-***** get_topleft(regex = )
-***** get_bottom(regex = )
-***** get_right(regex = )
-***** get_bottomright(regex = )
-***** parse_jpdate(format = )
-***** make_regex(spcs = katakuchi)
 *** 漁獲量
-**** 熊本
+**** 福岡
+***** 全年データが集まったファイルを開く
+***** type = 漁業 としてシートにアクセス
+***** "KEI"が入った月の列をget_datrow()に渡し，データ行を得る
+***** 年と月のベクトルから，データ行だけ抽出して月と年を作る
+***** 魚種の列もデータ行だけ抽出する
+**** DONE 熊本
 ***** 漁業種別（まき網 or 棒受け網）のブックを開く
 ***** ファイル名をパースして漁法を取得
 ***** 魚種シートにアクセス
@@ -345,6 +343,14 @@ fresco
 セルC4から真下に読み，「前年比」が出てきたらストップ
 ***** 月とデータを一気に読む
 ただし年度整理になっているので1〜3月はyear+1年とする
+**** DONE 佐賀
+熊本と似てる．漁業種別もシートに分かれている
+***** シート一覧を取得
+***** 正規表現で魚種シートを絞り込み
+***** シートから漁法を取得
+***** 年を生成
+***** 月とデータを一気に読む
+熊本と同様，年度になっている
 **** DONE 長崎
 ***** 魚種に応じてファイルを読み込み
 ****** マアジ・サバ類
@@ -1406,7 +1412,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #' }
   #' @param type Character value either "maki" or "bouke".
   #'   Data processing algorithm is controled by this parameter.
-  #' @export
   fmtcatch.kumamoto <- function(path, spcs, type) {
     sheet   <- switch(spcs,
                       "maaji" = "マアジ",
@@ -1472,8 +1477,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
              cols           <- 4:10
              months         <- 6:12
              yrcol          <- 3
-           },
-           {
+           }
+         , {
              if (!type %in% c("karatsu", "kennai", "teichi", "chumaki"))
                stop("Unknown type")
              judgecol_start <- 1
@@ -1484,7 +1489,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
            })
     str_judge_start <- dplyr::pull(df, judgecol_start)
     str_judge_end   <- dplyr::pull(df, judgecol_end)
-    str_year        <- dplyr::pull(df, yrcol)
     row_start       <- get_row(str_judge_start, key.start, offset = 1)
     row_end         <- get_row(str_judge_end, key.end, offset = -1)
     rows            <- row_start:row_end
