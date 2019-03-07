@@ -1294,8 +1294,16 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                                   year + 1,
                                   year)) %>%
       dplyr::arrange(year, month)
+    out
+  }
+
+  get_row <- function(str) {
+    match <- stringr::str_which(str, "前年比")
+    if (length(match) > 0) {
+      out <- 4:(match - 1)
       out
     }
+  }
 
   #' @param path File path to process
   #' @param spcs Romaji spcs name one of
