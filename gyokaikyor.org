@@ -1031,26 +1031,28 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 *** 漁獲量データ整形
 **** 総称関数
 #+BEGIN_SRC R :tangle R/fmtcatch.R
-    #' Load and format catch data
-    #'
-    #' @inheritParams readxl::read_excel
-    #' @param spcs Spcs name in romaji, one of
-    #' @param nest If \code{TRUE}, data will be shown in rectangle format
-    #' @param type Character value either "maki" or "bouuke" to control
-    #'   data processing algorithm for kumamoto data.
-    #'   whith nested catch data for quick overview.
-    #' \itemize{
-    #'   \item maiwashi
-    #'   \item maaji
-    #'   \item sabarui
-    #'   \item masaba
-    #'   \item gomasaba
-    #'   \item katakuchi
-    #'   \item urume
-    #' }
-    #' @export
-    fmtcatch <- function(path, spcs, nest = FALSE, type = NULL) {
-      UseMethod("fmtcatch")
+  #' Load and format catch data
+  #'
+  #' @inheritParams readxl::read_excel
+  #' @param spcs Spcs name in romaji, one of
+  #' @param nest If \code{TRUE}, data will be shown in rectangle format
+  #' @param type Character value either "maki" or "bouuke" to control
+  #'   data processing algorithm for kumamoto data.
+  #'   whith nested catch data for quick overview.
+  #' \itemize{
+  #'   \item maiwashi
+  #'   \item maaji
+  #'   \item sabarui
+  #'   \item masaba
+  #'   \item gomasaba
+  #'   \item katakuchi
+  #'   \item urume
+  #' }
+  #' @export
+  fmtcatch <- function(path, spcs, nest = FALSE, type = NULL) {
+    UseMethod("fmtcatch")
+  }
+
   alert_decrease <- function(x) {
     if (any(diff(x) < 0)) {
       message("There is a decrease in number.")
@@ -1058,6 +1060,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     } else {
       x
     }
+  }
+#+END_SRC
 **** 福岡
 #+BEGIN_SRC R :tangle R/fmtcatch_fukuoka.R
   #' Load and format catch data
