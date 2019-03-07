@@ -1316,12 +1316,20 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #'   Data processing algorithm is controled by this parameter.
   #' @export
   fmtcatch.saga <- function(path, spcs, type) {
-    sheet   <- switch(spcs,
-                      "maaji" = "マアジ",
-                      "maiwashi" = "マイワシ",
-                      "sabarui" = "サバ類",
-                      "katakuchi" = "カタクチイワシ",
-                      "urume" = "ウルメイワシ")
+    spcs_jp <- switch(spcs,
+                      "maaji" = "ﾏｱｼﾞ",
+                      "maiwashi" = "ﾏｲﾜｼ",
+                      "masaba" = "ﾏｻﾊﾞ",
+                      "katakuchi" = "ｶﾀｸﾁ",
+                      "urume" = "ｳﾙﾒ")
+    type_jp <- switch(type,
+                      "karatsu" = "（唐津港）",
+                      "kennai" = "（唐津港県内船）",
+                      "teichi" = "（定置）",
+                      "chumaki" = "（中まき）")
+    sheets  <- readxl::excel_sheets(path)
+    regex   <- paste0(spcs_jp, type_jp)
+    sheet   <- sheets[stringr::str_detect(sheets, regex)]
     alldata <- load_alldata(path, sheet)
     out     <- get_data(alldata, type, "平年値")
     out
