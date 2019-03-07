@@ -1335,30 +1335,36 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 
-  get_data <- function(df, type, regex) {
+  get_data <- function(df, type, key.start, key.end) {
     switch(type,
            "maki" = {
              judgecol <- 3
              cols     <- 4:15
              months   <- c(4:12, 1:3)
+             yrcol    <- 3
            },
            "bouuke" = {
              judgecol <- 2
              cols     <- 4:10
              months   <- 6:12
+             yrcol    <- 3
            },
-           "karatsu" & "kennai" & "teichi" & "chumaki"= {
+           {
+             if (!type %in% c("karatsu", "kennai", "teichi", "chumaki"))
+               stop("Unknown type")
              judgecol <- 16
              cols     <- 3:14
              months   <- c(4:12, 1:3)
-           },
-           message("Unknown type"))
-    yrcol         <- 3
-    out           <- NULL
-    ystr          <- dplyr::pull(df, judgecol)
-    rows          <- get_row(ystr, regex)
+             yrcol    <- 1
+           })
+    str_judge     <- dplyr::pull(df, judgecol)
+    str_year      <- dplyr::pull(df, yrcol)
+    row_start     <- get_row(str_year, key.start, offset = 1)
+    row_end       <- get_row(str_judge, key.end, offset = -1)
+    rows          <- row_start:row_end
     year          <- dplyr::pull(df, yrcol)[rows] %>%
       as.numeric()
+    out           <- NULL
     out           <- df[rows, cols]
     colnames(out) <- months
     out %<>% dplyr::mutate(year = year,
