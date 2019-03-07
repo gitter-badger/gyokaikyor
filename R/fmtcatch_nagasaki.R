@@ -1,7 +1,7 @@
 fmtcatch.nagasaki <- function(path, spcs) {
   locate_spcsrow <- function(regex, df) {
     spcs_col <- dplyr::pull(df, 1)
-    spcs_row <- which( (gregexpr(regex, spcs_col) > 0))
+    spcs_row <- which((gregexpr(regex, spcs_col) > 0)) #nolint
     if (length(spcs_row) == 0) {
       spcs_str <- spcs_col %>%
         tidyr::replace_na(" ")

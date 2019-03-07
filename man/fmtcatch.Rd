@@ -4,14 +4,12 @@
 \alias{fmtcatch}
 \title{Load and format catch data}
 \usage{
-fmtcatch(path, spcs, nest = FALSE, type = NULL)
+fmtcatch(path, spcs, type = NULL)
 }
 \arguments{
 \item{path}{Path to the xls/xlsx file.}
 
 \item{spcs}{Spcs name in romaji, one of}
-
-\item{nest}{If \code{TRUE}, data will be shown in rectangle format}
 
 \item{type}{Character value either "maki" or "bouuke" to control
   data processing algorithm for kumamoto data.
@@ -25,6 +23,8 @@ fmtcatch(path, spcs, nest = FALSE, type = NULL)
   \item katakuchi
   \item urume
 }}
+
+\item{nest}{If \code{TRUE}, data will be shown in rectangle format}
 }
 \description{
 Load and format catch data

@@ -1,6 +1,18 @@
 context("Load catch data from Excel spreadhseet and tidy it up")
 
-test_that("fmtcatch.kumamoto() process makiami data correctly", {
+test_that("fmtcatch.fukuoka() work correctly", {
+  path <- "ExcelFiles/test_catch_fukuoka.xlsx"
+  df   <- fmtcatch.fukuoka(path, spcs = "katakuchi", type = "maki")
+  expect_is(df, "data.frame")
+  expect_setequal(subset(df, year == 1977)$catch,
+                  c(18, 51, 84, 117, 150, 183, 216, 249))
+  expect_setequal(subset(df, year == 1978)$catch,
+                  c(315, 348, 381, 414, 447, 480, 513, 546))
+  expect_equal(unique(df$type), "maki")
+  expect_setequal(unique(df$month), 4:12)
+})
+
+test_that("fmtcatch.kumamoto() processes makiami data correctly", {
   path <- "ExcelFiles/test_catch_kumamoto_maki.xls"
   df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "maki")
   expect_is(df, "data.frame")
@@ -10,7 +22,7 @@ test_that("fmtcatch.kumamoto() process makiami data correctly", {
   expect_setequal(unique(df$month), 1:12)
 })
 
-test_that("fmtcatch.kumamoto() process bouukeami data correctly", {
+test_that("fmtcatch.kumamoto() processes bouukeami data correctly", {
   path <- "ExcelFiles/test_catch_kumamoto_bouuke.xls"
   df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "bouuke")
   expect_is(df, "data.frame")
@@ -18,6 +30,16 @@ test_that("fmtcatch.kumamoto() process bouukeami data correctly", {
   expect_equal(subset(df, year == 1994)$catch, 8:14)
   expect_equal(unique(df$type), "bouuke")
   expect_setequal(unique(df$month), 6:12)
+})
+
+test_that("fmtcatch.saga() prosesses saga data correctly", {
+  path <- "ExcelFiles/test_catch_saga.xls"
+  df   <- fmtcatch.saga(path, spcs = "katakuchi", type = "kennai")
+  expect_is(df, "data.frame")
+  expect_equal(subset(df, year == 1975)$catch, 1:9)
+  expect_equal(subset(df, year == 1976)$catch, 10:21)
+  expect_equal(unique(df$type), "kennai")
+  expect_setequal(unique(df$month), 1:12)
 })
 
 test_that("fmtcatch.kagoshima() works well", {
