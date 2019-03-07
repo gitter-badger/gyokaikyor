@@ -1362,15 +1362,15 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
            })
     str_judge_start <- dplyr::pull(df, judgecol_start)
     str_judge_end   <- dplyr::pull(df, judgecol_end)
-    str_year      <- dplyr::pull(df, yrcol)
-    row_start     <- get_row(str_judge_start, key.start, offset = 1)
-    row_end       <- get_row(str_judge_end, key.end, offset = -1)
-    rows          <- row_start:row_end
-    year          <- dplyr::pull(df, yrcol)[rows] %>%
+    str_year        <- dplyr::pull(df, yrcol)
+    row_start       <- get_row(str_judge_start, key.start, offset = 1)
+    row_end         <- get_row(str_judge_end, key.end, offset = -1)
+    rows            <- row_start:row_end
+    year            <- dplyr::pull(df, yrcol)[rows] %>%
       as.numeric()
-    out           <- NULL
-    out           <- df[rows, cols]
-    colnames(out) <- months
+    out             <- NULL
+    out             <- df[rows, cols]
+    colnames(out)   <- months
     out %<>% dplyr::mutate(year = year,
                            type = type) %>%
       tidyr::gather(-year, -type, key = month, value = "catch") %>%
