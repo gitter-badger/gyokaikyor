@@ -1293,7 +1293,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                       "katakuchi" = "カタクチイワシ",
                       "urume" = "ウルメイワシ")
     alldata <- load_alldata(path, sheet)
-    out     <- get_data(alldata, type, "前年比")
+    out     <- get_data(alldata, type, key.start = "年度計", key.end = "前年比")
     out
   }
 
