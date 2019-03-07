@@ -1340,25 +1340,25 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
            "maki" = {
              judgecol_start <- 18
              judgecol_end   <- 3
-             cols     <- 4:15
-             months   <- c(4:12, 1:3)
-             yrcol    <- 3
+             cols           <- 4:15
+             months         <- c(4:12, 1:3)
+             yrcol          <- 3
            },
            "bouuke" = {
-             judgecol_start <- 12
-             judgecol_end   <- 3
-             cols     <- 4:10
-             months   <- 6:12
-             yrcol    <- 3
+             judgecol_start <- 13
+             judgecol_end   <- 2
+             cols           <- 4:10
+             months         <- 6:12
+             yrcol          <- 3
            },
            {
              if (!type %in% c("karatsu", "kennai", "teichi", "chumaki"))
                stop("Unknown type")
              judgecol_start <- 1
              judgecol_end   <- 16
-             cols     <- 3:14
-             months   <- c(4:12, 1:3)
-             yrcol    <- 1
+             cols           <- 3:14
+             months         <- c(4:12, 1:3)
+             yrcol          <- 1
            })
     str_judge_start <- dplyr::pull(df, judgecol_start)
     str_judge_end   <- dplyr::pull(df, judgecol_end)
