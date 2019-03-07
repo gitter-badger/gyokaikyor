@@ -1261,30 +1261,9 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   }
 
 #+END_SRC
-  #' @param path File path to process
-  #' @param spcs Romaji spcs name one of
-  #' \itemize {
-  #'   \item{"maaji"}
-  #'   \item{"maiwashi"}
-  #'   \item{"sabarui"}
-  #'   \item{"katakuchi"}
-  #'   \item{"urume"}
-  #' }
-  #' @param type Character value either "maki" or "bouke".
-  #'   Data processing algorithm is controled by this parameter.
-  #' @export
-  fmtcatch.kumamoto <- function(path, spcs, type) {
-    get_row <- function(str) {
-      match <- stringr::str_which(str, "前年比")
-      if (length(match) > 0) {
-        out <- 4:(match - 1)
-        out
-      }
-    }
-
-    get_data <- function(df, type) {
 **** 熊本 & 佐賀
 #+BEGIN_SRC R :tangle R/fmtcatch_kumamoto_saga.R
+  get_data <- function(df, type) {
       switch(type,
              "maki" = {
                judgecol <- 3
@@ -1318,6 +1297,36 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
       out
     }
 
+  #' @param path File path to process
+  #' @param spcs Romaji spcs name one of
+  #' \itemize {
+  #'   \item{"maaji"}
+  #'   \item{"maiwashi"}
+  #'   \item{"sabarui"}
+  #'   \item{"katakuchi"}
+  #'   \item{"urume"}
+  #' }
+  #' @param type Character value either "maki" or "bouke".
+  #'   Data processing algorithm is controled by this parameter.
+  #' @export
+  fmtcatch.kumamoto <- function(path, spcs, type) {
+    get_row <- function(str) {
+      match <- stringr::str_which(str, "前年比")
+      if (length(match) > 0) {
+        out <- 4:(match - 1)
+        out
+      }
+    }
+    sheet   <- switch(spcs,
+                      "maaji" = "マアジ",
+                      "maiwashi" = "マイワシ",
+                      "sabarui" = "サバ類",
+                      "katakuchi" = "カタクチイワシ",
+                      "urume" = "ウルメイワシ")
+    alldata <- load_alldata(path, sheet)
+    out     <- get_data(alldata, type)
+    out
+  }
     sheet   <- switch(spcs,
                       "maaji" = "マアジ",
                       "maiwashi" = "マイワシ",
