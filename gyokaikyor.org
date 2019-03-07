@@ -1310,13 +1310,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #'   Data processing algorithm is controled by this parameter.
   #' @export
   fmtcatch.kumamoto <- function(path, spcs, type) {
-    get_row <- function(str) {
-      match <- stringr::str_which(str, "前年比")
-      if (length(match) > 0) {
-        out <- 4:(match - 1)
-        out
-      }
-    }
     sheet   <- switch(spcs,
                       "maaji" = "マアジ",
                       "maiwashi" = "マイワシ",
