@@ -148,10 +148,12 @@ R パッケージのディレクトリは全て GitHub で公開する．
              "./data.git/漁海況/2019年3月/各県資料/長崎県/橘湾中央漁協ｲﾜｼ類(中小まき)提出とりまとめ.xls",
              "./data.git/漁海況/2019年3月/各県資料/長崎県/奈留漁協ｲﾜｼ類（中小旋）とりまとめ.xlsx",
              "./data.git/漁海況/2019年3月/各県資料/長崎県/九十九島漁協ｲﾜｼ類(中小まき)とりまとめ.xlsx",
-              "data.git/漁海況/2018年3月/各県資料/鹿児島県/４港月計表（29年度）.xlsx")
+             "data.git/漁海況/2019年3月/各県資料/鹿児島県/４港月計表（30年度）.xlsx",
+             "data.git/漁海況/2019年3月/各県資料/佐賀県/➁佐賀県_予報対象種漁獲量（元データ）.xls")
   prefec <- c(rep("kumamoto", 2),
              rep("nagasaki", 4),
-             "kagoshima")
+             "kagoshima",
+             "saga")
   tbl_fname <- hash(fname, prefec)
 
   fname2 <- give_class(fname, tbl_fname)
