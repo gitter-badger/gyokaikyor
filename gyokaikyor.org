@@ -615,7 +615,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   })
 
   test_that("fmtcatch.saga() prosesses saga data correctly", {
-    path <- "ExcelFiles/test_tach_saga.xls"
+    path <- "ExcelFiles/test_catch_saga.xls"
     df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "karatsu")
     expect_is(df, "data.frame")
     expect_equal(subset(df, year == 1993)$catch, 1:7)
