@@ -614,6 +614,16 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     expect_setequal(unique(df$month), 6:12)
   })
 
+  test_that("fmtcatch.saga() prosesses saga data correctly", {
+    path <- "ExcelFiles/test_tach_saga.xls"
+    df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "karatsu")
+    expect_is(df, "data.frame")
+    expect_equal(subset(df, year == 1993)$catch, 1:7)
+    expect_equal(subset(df, year == 1994)$catch, 8:14)
+    expect_equal(unique(df$type), "karatsu")
+    expect_setequal(unique(df$month), 6:12)
+  })
+
   test_that("fmtcatch.kagoshima() works well", {
     path <- "ExcelFiles/test_catch_kagoshima.xlsx"
     expect_is(fmtcatch.kagoshima(path, spcs = "katakuchi", spread = TRUE),
