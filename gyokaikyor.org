@@ -1375,12 +1375,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 
-  get_row <- function(str, regex) {
-    match <- stringr::str_which(str, regex)
-    if (length(match) > 0) {
-      out <- 4:(match - 1)
-      out
-    }
+  get_row <- function(str, regex, offset = 0) {
+    stringr::str_which(str, regex) + offset
   }
-
 #+END_SRC
