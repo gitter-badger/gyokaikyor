@@ -1051,14 +1051,13 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     #' @export
     fmtcatch <- function(path, spcs, nest = FALSE, type = NULL) {
       UseMethod("fmtcatch")
+  alert_decrease <- function(x) {
+    if (any(diff(x) < 0)) {
+      message("There is a decrease in number.")
+      which(diff(x) < 0)
+    } else {
+      x
     }
-   alert_decrease <- function(x) {
-     if (any(diff(x) < 0)) {
-       stop("There is a decrease in number.")
-     } else {
-       x
-     }
-   }
 **** 福岡
 #+BEGIN_SRC R :tangle R/fmtcatch_fukuoka.R
   #' Load and format catch data
