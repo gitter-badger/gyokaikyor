@@ -149,11 +149,13 @@ R パッケージのディレクトリは全て GitHub で公開する．
              "./data.git/漁海況/2019年3月/各県資料/長崎県/奈留漁協ｲﾜｼ類（中小旋）とりまとめ.xlsx",
              "./data.git/漁海況/2019年3月/各県資料/長崎県/九十九島漁協ｲﾜｼ類(中小まき)とりまとめ.xlsx",
              "data.git/漁海況/2019年3月/各県資料/鹿児島県/４港月計表（30年度）.xlsx",
-             "data.git/漁海況/2019年3月/各県資料/佐賀県/➁佐賀県_予報対象種漁獲量（元データ）.xls")
+             "data.git/漁海況/2019年3月/各県資料/佐賀県/➁佐賀県_予報対象種漁獲量（元データ）.xls",
+             "data.git/漁海況/2019年3月/各県資料/福岡県/2019-3月送付_S51_H30経年福岡漁獲量データ(提出分).xlsx")
   prefec <- c(rep("kumamoto", 2),
              rep("nagasaki", 4),
              "kagoshima",
-             "saga")
+             "saga",
+             "fukuoka")
   tbl_fname <- hash(fname, prefec)
 
   fname2 <- give_class(fname, tbl_fname)
@@ -186,6 +188,23 @@ R パッケージのディレクトリは全て GitHub で公開する．
     facet_wrap(~ year)
 
   kagoshima <- fmtcatch(fname2[[7]], spcs = spcs)
+
+  sg_kennai  <- fmtcatch(fname2[[8]], spcs = spcs, type = "kennai")
+  sg_chumaki <- fmtcatch(fname2[[8]], spcs = spcs, type = "chumaki")
+  sg_teichi  <- fmtcatch(fname2[[8]], spcs = spcs, type = "teichi")
+  saga       <- dplyr::bind_rows(sg_kennai, sg_chumaki, sg_teichi)
+
+  saga %>% ggplot(aes(month, catch, color = type)) +
+    geom_line() +
+    facet_wrap(~ year)
+
+  fk_maki  <- fmtcatch(fname2[[9]], spcs = spcs, type = "maki")
+  fk_bou   <- fmtcatch(fname2[[9]], spcs = spcs, type = "bouuke")
+  fk_other <- fmtcatch(fname2[[9]], spcs = spcs, type = "others")
+  fukuoka  <- dplyr::bind_rows(fk_maki, fk_bou, fk_other)
+  fukuoka %>% ggplot(aes(month, catch, color = type)) +
+    geom_line() +
+    facet_wrap(~ year)
 #+END_SRC
 * 開発環境の整備
 #+BEGIN_SRC R :results silent
