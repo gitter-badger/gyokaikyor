@@ -10,7 +10,7 @@
 \item{path}{File path to process}
 
 \item{spcs}{Romaji spcs name one of
-\itemize {
+\itemize{
   \item{"maaji"}
   \item{"maiwashi"}
   \item{"sabarui"}
