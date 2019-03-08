@@ -840,6 +840,26 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     shtname
   }
 #+END_SRC
+*** 和暦/西暦変換
+#+BEGIN_SRC  R :tangle R/jpyr2ad.R
+  jpyr2ad <- function(x, start) {
+    conv <- vector(mode = "integer")
+    if (start == "showa") {
+     suppressMessages(pos_lastyr <- alert_decrease(x))
+     x[1:96]
+     x[1:97]
+     conv[1:pos_lastyr] <- 1925
+     conv[1:96]
+     conv[1:97]
+     conv[(pos_lastyr + 1):length(x)] <- 1988
+    } else {
+      stop("jpyr2ad")
+    }
+    ad <- x + conv
+    ad
+  }
+
+#+END_SRC
 *** データ取得
 #+BEGIN_SRC R :tangle R/get_data.R
   get_vector <- function(col, row, df, na.rm) {
@@ -1140,7 +1160,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out       <- NULL
     out$year  <- col2data(col = ycol, row = rows,
                           row.pick = datrow, df = alldata) %>%
-      jpyear2ad(start = "showa")
+      jpyr2ad(start = "showa")
     out$month <- col2data(col = mcol, row = rows,
                           row.pick = datrow, df = alldata)
     out$type  <- type
@@ -1168,23 +1188,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 
-  jpyear2ad <- function(x, start) {
-    conv <- vector(mode = "integer")
-    if (start == "showa") {
-     suppressMessages(pos_lastyr <- alert_decrease(x))
-     x[1:96]
-     x[1:97]
-     conv[1:pos_lastyr] <- 1925
-     conv[1:96]
-     conv[1:97]
-     conv[(pos_lastyr + 1):length(x)] <- 1988
-    } else {
-      stop("jpyear2ad")
-    }
-    ad <- conv + x
-    plot(ad)
-    ad
-  }
 #+END_SRC
 **** 鹿児島
 #+BEGIN_SRC R :tangle R/fmtcatch_kagoshima.R
