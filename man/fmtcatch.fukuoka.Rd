@@ -2,7 +2,7 @@
 % Please edit documentation in R/fmtcatch_fukuoka.R
 \name{fmtcatch.fukuoka}
 \alias{fmtcatch.fukuoka}
-\title{Load and format catch data}
+\title{Load and format catch data of fukuoka}
 \usage{
 \method{fmtcatch}{fukuoka}(path, spcs, type)
 }
@@ -10,7 +10,7 @@
 \item{path}{File path to process}
 
 \item{spcs}{Romaji spcs name one of
-\itemize {
+\itemize{
   \item{"maaji"}
   \item{"maiwashi"}
   \item{"sabarui"}
@@ -21,5 +21,5 @@
 \item{type}{Character value either "maki" or "bouuke", and "others".}
 }
 \description{
-Load and format catch data
+Load and format catch data of fukuoka
 }

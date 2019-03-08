@@ -1,5 +1,19 @@
 context("Load catch data from Excel spreadhseet and tidy it up")
 
+test_that("fmtcatch.yamaguchi() work correctly", {
+  path <- "ExcelFiles/test_catch_yamaguchi.xlsx"
+  df   <- fmtcatch.yamaguchi(path, spcs = "katakuchi")
+  expect_is(df, "data.frame")
+
+  expect_setequal(dplyr::filter(df,
+                                year == 2018,
+                                month == 1,
+                                type == "sukui") %>%
+                  dplyr::pull(catch),
+                  seq(33, 36))
+  expect_setequal(unique(df$type), c("sukui", "bouuke"))
+})
+
 test_that("fmtcatch.fukuoka() work correctly", {
   path <- "ExcelFiles/test_catch_fukuoka.xlsx"
   df   <- fmtcatch.fukuoka(path, spcs = "katakuchi", type = "maki")

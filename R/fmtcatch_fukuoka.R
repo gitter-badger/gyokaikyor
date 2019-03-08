@@ -1,8 +1,8 @@
-#' Load and format catch data
+#' Load and format catch data of fukuoka
 #'
 #' @param path File path to process
 #' @param spcs Romaji spcs name one of
-#' \itemize {
+#' \itemize{
 #'   \item{"maaji"}
 #'   \item{"maiwashi"}
 #'   \item{"sabarui"}

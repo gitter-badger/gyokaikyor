@@ -151,12 +151,15 @@ R パッケージのディレクトリは全て GitHub で公開する．
              "./data.git/漁海況/2019年3月/各県資料/長崎県/九十九島漁協ｲﾜｼ類(中小まき)とりまとめ.xlsx",
              "data.git/漁海況/2019年3月/各県資料/鹿児島県/４港月計表（30年度）.xlsx",
              "data.git/漁海況/2019年3月/各県資料/佐賀県/➁佐賀県_予報対象種漁獲量（元データ）.xls",
-             "data.git/漁海況/2019年3月/各県資料/福岡県/2019-3月送付_S51_H30経年福岡漁獲量データ(提出分).xlsx")
+             "data.git/漁海況/2019年3月/各県資料/福岡県/2019-3月送付_S51_H30経年福岡漁獲量データ(提出分).xlsx",
+             "data.git/漁海況/2019年3月/各県資料/山口県/2018-2019湊銘柄別水揚市場調査表.xlsx")
+
   prefec <- c(rep("kumamoto", 2),
              rep("nagasaki", 4),
              "kagoshima",
              "saga",
-             "fukuoka")
+             "fukuoka",
+             "yamaguchi")
   tbl_fname <- hash(fname, prefec)
 
   fname2 <- give_class(fname, tbl_fname)
@@ -169,6 +172,7 @@ R パッケージのディレクトリは全て GitHub で公開する．
   fname2[[7]]
   fname2[[8]]
   fname2[[9]]
+  fname2[[10]]
 
   spcs <- "katakuchi"
 
@@ -208,6 +212,11 @@ R パッケージのディレクトリは全て GitHub で公開する．
   fukuoka %>% ggplot(aes(month, catch, color = type)) +
     geom_line() +
     facet_wrap(~ year)
+
+  yamaguchi <- fmtcatch(fname2[[10]], spcs = spcs)
+  yamaguchi %>% ggplot(aes(month, catch, color = meigara)) +
+    geom_line() +
+    facet_wrap(year ~ type)
 #+END_SRC
 * 開発環境の整備
 #+BEGIN_SRC R :results silent
@@ -330,7 +339,16 @@ fresco
 - 体長タイプ: 長崎，鹿児島
 - fresco タイプ: 山口，佐賀
 *** 漁獲量
-**** 福岡
+**** 山口
+資源評価のデータと，形式が全然違う．
+***** ファイルを開く
+***** 年シートをパースして年を取得
+***** シートを読み込む
+***** 各魚種のデータ列を与えてしまう
+****** 各魚種の4行目から，銘柄を取得
+***** 列Aから月を生成し，各月データの行位置を取得
+****** 「抄網」は行オフセット1，「棒受網」は行オフセット2として，各漁業の漁獲量を取得
+**** DONE 福岡
 ***** 全年データが集まったファイルを開く
 ***** type = 漁業 としてシートにアクセス
 ***** "KEI"が入った月の列をget_datrow()に渡し，データ行を得る
@@ -622,6 +640,20 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+BEGIN_SRC  R :tangle tests/testthat/test_fmtcatch.R
   context("Load catch data from Excel spreadhseet and tidy it up")
 
+  test_that("fmtcatch.yamaguchi() work correctly", {
+    path <- "ExcelFiles/test_catch_yamaguchi.xlsx"
+    df   <- fmtcatch.yamaguchi(path, spcs = "katakuchi")
+    expect_is(df, "data.frame")
+
+    expect_setequal(dplyr::filter(df,
+                                  year == 2018,
+                                  month == 1,
+                                  type == "sukui") %>%
+                    dplyr::pull(catch),
+                    seq(33, 36))
+    expect_setequal(unique(df$type), c("sukui", "bouuke"))
+  })
+
   test_that("fmtcatch.fukuoka() work correctly", {
     path <- "ExcelFiles/test_catch_fukuoka.xlsx"
     df   <- fmtcatch.fukuoka(path, spcs = "katakuchi", type = "maki")
@@ -806,6 +838,19 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out$month_end   <- month_end
     out
   }
+
+  xtract_numeric <- function(str) {
+    xtract_numerici <- function(str) {
+      regex <- "\\D+"
+      half <- Nippon::zen2han(str) %>%
+        stringr::str_replace(regex, "") %>%
+        readr::parse_integer()
+      half
+    }
+    out <- purrr::map_int(str, xtract_numerici)
+    out
+  }
+
 #+END_SRC
 *** 種名シート名生成
 #+BEGIN_SRC  R :tangle R/make_shtname.R
@@ -1124,13 +1169,91 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     }
   }
 #+END_SRC
-**** 福岡
-#+BEGIN_SRC R :tangle R/fmtcatch_fukuoka.R
-  #' Load and format catch data
+**** 山口
+#+BEGIN_SRC R :tangle R/fmtcatch_yamaguchi.R
+  #' Load and format catch data of yamaguchi
   #'
   #' @param path File path to process
   #' @param spcs Romaji spcs name one of
-  #' \itemize {
+  #' \itemize{
+  #'   \item{"maaji"}
+  #'   \item{"maiwashi"}
+  #'   \item{"sabarui"}
+  #'   \item{"katakuchi"}
+  #'   \item{"urume"}
+  #' }
+  #' @param type Character value either "sukui" or "bouuke".
+  fmtcatch.yamaguchi <- function(path, spcs, type = NULL) {
+    switch(spcs,
+           "maaji"    = {
+             spcs_col     <- 5
+             meigara_ofst <- 1:3
+           },
+           "sabarui"  = {
+             spcs_col     <- 9
+             meigara_ofst <- 1:2
+           },
+           "maiwashi" = {
+             spcs_col     <- 12
+             meigara_ofst <- 1:3
+           },
+           "urume"    = {
+             spcs_col     <- 21
+             meigara_ofst <- 1:3
+           },
+           "katakuchi" = {
+             spcs_col     <- 16
+             meigara_ofst <- 1:4
+           })
+
+    get_catch_meigara <- function(cofst, spcs_col, sheet) {
+      alldata     <- load_alldata(path, sheet = sheet)
+      year        <- xtract_numeric(sheet)
+      row_jan     <- 5
+      rows        <- row_jan:38
+      mmatch      <- xtract_numeric(alldata[[1]][rows])
+      mrows       <- which(!is.na(mmatch)) + row_jan - 1
+      ofst_sukui  <- 1
+      ofst_bouuke <- 2
+      out         <- NULL
+      out$year    <- year
+      out$month   <- dplyr::pull(alldata, 1)[mrows] %>%
+        xtract_numeric()
+      out$sukui   <- col2data(col = spcs_col + cofst,
+                        rows = 1:40,
+                        row.pick = mrows + ofst_sukui,
+                        alldata)
+      out$bouuke  <- col2data(col = spcs_col + cofst,
+                        rows = 1:40,
+                        row.pick = mrows + ofst_bouuke,
+                        alldata)
+      out$meigara <- alldata[4, spcs_col + cofst] %>%
+        unlist() %>% as.vector()
+      out %<>% tibble::as_tibble() %>%
+        tidyr::gather("sukui", "bouuke", key = "type", value = "catch")
+      out
+    }
+
+    sheets <- readxl::excel_sheets(path) %>%
+      stringr::str_extract("[0-9]+.+") %>%
+      na.omit()
+
+    dat1   <- purrr::map_df(meigara_ofst, get_catch_meigara,
+                          spcs_col = spcs_col, sheet = sheets[1])
+    dat2   <- purrr::map_df(meigara_ofst, get_catch_meigara,
+                          spcs_col = spcs_col, sheet = sheets[2])
+    out    <- dplyr::bind_rows(dat1, dat2) %>%
+      dplyr::mutate(catch = catch / 1000)
+    out
+  }
+#+END_SRC
+**** 福岡
+#+BEGIN_SRC R :tangle R/fmtcatch_fukuoka.R
+  #' Load and format catch data of fukuoka
+  #'
+  #' @param path File path to process
+  #' @param spcs Romaji spcs name one of
+  #' \itemize{
   #'   \item{"maaji"}
   #'   \item{"maiwashi"}
   #'   \item{"sabarui"}
@@ -1324,19 +1447,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
       out
     }
 
-    xtract_numerici <- function(str) {
-      regex <- "\\D+"
-      half <- Nippon::zen2han(str) %>%
-        stringr::str_replace(regex, "") %>%
-        readr::parse_integer()
-      half
-    }
-
-    xtract_numeric <- function(str) {
-      out <- purrr::map_int(str, xtract_numerici)
-      out
-    }
-
     get_month <- function(regex, df, offset.x = 0, offset.y = 0,
                           xtract.digit = FALSE) {
       spcs_row <- locate_spcsrow(regex, df)
@@ -1445,7 +1555,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #'   \item{"urume"}
   #' }
   #' @param type Character value one of
-  #' \itemize {
+  #' \itemize{
   #'   \item{"karatsu"}
   #'   \item{"kennai"}
   #'   \item{"teichi"}
