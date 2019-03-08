@@ -339,7 +339,16 @@ fresco
 - 体長タイプ: 長崎，鹿児島
 - fresco タイプ: 山口，佐賀
 *** 漁獲量
-**** 福岡
+**** 山口
+資源評価のデータと，形式が全然違う．
+***** ファイルを開く
+***** 年シートをパースして年を取得
+***** シートを読み込む
+***** 各魚種のデータ列を与えてしまう
+****** 各魚種の4行目から，銘柄を取得
+***** 列Aから月を生成し，各月データの行位置を取得
+****** 「抄網」は行オフセット1，「棒受網」は行オフセット2として，各漁業の漁獲量を取得
+**** DONE 福岡
 ***** 全年データが集まったファイルを開く
 ***** type = 漁業 としてシートにアクセス
 ***** "KEI"が入った月の列をget_datrow()に渡し，データ行を得る
@@ -1240,11 +1249,11 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+END_SRC
 **** 福岡
 #+BEGIN_SRC R :tangle R/fmtcatch_fukuoka.R
-  #' Load and format catch data
+  #' Load and format catch data of fukuoka
   #'
   #' @param path File path to process
   #' @param spcs Romaji spcs name one of
-  #' \itemize {
+  #' \itemize{
   #'   \item{"maaji"}
   #'   \item{"maiwashi"}
   #'   \item{"sabarui"}
@@ -1546,7 +1555,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #'   \item{"urume"}
   #' }
   #' @param type Character value one of
-  #' \itemize {
+  #' \itemize{
   #'   \item{"karatsu"}
   #'   \item{"kennai"}
   #'   \item{"teichi"}
