@@ -432,6 +432,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 :END:
 *** テスト/ ファイル名操作
 #+BEGIN_SRC R :tangle tests/testthat/test_handle_fname.R
+  library(gyokaikyor)
   context("Handle file name")
   fn_kumamoto  <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   fn_kagoshima <- "体長組成(H29年度).xlsx"
@@ -445,7 +446,9 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+END_SRC
 *** テスト/ セル位置取得
 #+BEGIN_SRC R :tangle tests/testthat/test_locate_cellpos.R
+  library(gyokaikyor)
   context("Locate cell position")
+
   suppressWarnings(library(tibble))
   df <- tribble(~A, ~B, ~C, ~D,
                 NA, NA, NA, 1,
@@ -500,6 +503,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #+END_SRC
 *** テスト/ 文字列操作
 #+BEGIN_SRC R :tangle tests/testthat/test_handle_str.R
+  library(gyokaikyor)
   context("Handle string")
 
   target <-
@@ -527,6 +531,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+END_SRC
 *** テスト/ 種名生成
 #+BEGIN_SRC  R :tangle tests/testthat/test_make_shtname.R
+  library(gyokaikyor)
   context("Make shtname of prefecture")
 
   test_that("make_shtname() makes sheetname for kumamoto data", {
@@ -567,6 +572,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+END_SRC
 *** テスト/ 計測データ取得
 #+BEGIN_SRC  R :tangle tests/testthat/test_get_measdata.R
+  library(gyokaikyor)
   context("Get measure data vector from data frame")
 
   test_that("get_vector() extracts vector correctly", {
@@ -598,6 +604,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+END_SRC
 *** テスト/ 体長データ整形
 #+BEGIN_SRC R :tangle tests/testthat/test_fmtbl.R
+  library(gyokaikyor)
   context("Load blhist data from Excel spreadhseet and tidy it up")
 
   test_that("fmtbl() works well", {
@@ -638,6 +645,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+END_SRC
 *** テスト/ 漁獲量データ整形
 #+BEGIN_SRC  R :tangle tests/testthat/test_fmtcatch.R
+  library(gyokaikyor)
   context("Load catch data from Excel spreadhseet and tidy it up")
 
   test_that("fmtcatch.yamaguchi() work correctly", {

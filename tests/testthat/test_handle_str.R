@@ -1,3 +1,4 @@
+library(gyokaikyor)
 context("Handle string")
 
 target <-

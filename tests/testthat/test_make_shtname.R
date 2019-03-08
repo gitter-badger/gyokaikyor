@@ -1,3 +1,4 @@
+library(gyokaikyor)
 context("Make shtname of prefecture")
 
 test_that("make_shtname() makes sheetname for kumamoto data", {
