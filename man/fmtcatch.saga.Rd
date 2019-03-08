@@ -19,7 +19,7 @@
 }}
 
 \item{type}{Character value one of
-\itemize {
+\itemize{
   \item{"karatsu"}
   \item{"kennai"}
   \item{"teichi"}

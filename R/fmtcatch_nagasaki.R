@@ -24,19 +24,6 @@ fmtcatch.nagasaki <- function(path, spcs) {
     out
   }
 
-  xtract_numerici <- function(str) {
-    regex <- "\\D+"
-    half <- Nippon::zen2han(str) %>%
-      stringr::str_replace(regex, "") %>%
-      readr::parse_integer()
-    half
-  }
-
-  xtract_numeric <- function(str) {
-    out <- purrr::map_int(str, xtract_numerici)
-    out
-  }
-
   get_month <- function(regex, df, offset.x = 0, offset.y = 0,
                         xtract.digit = FALSE) {
     spcs_row <- locate_spcsrow(regex, df)

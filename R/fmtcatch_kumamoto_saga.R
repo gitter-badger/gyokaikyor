@@ -34,7 +34,7 @@ fmtcatch.kumamoto <- function(path, spcs, type) {
 #'   \item{"urume"}
 #' }
 #' @param type Character value one of
-#' \itemize {
+#' \itemize{
 #'   \item{"karatsu"}
 #'   \item{"kennai"}
 #'   \item{"teichi"}

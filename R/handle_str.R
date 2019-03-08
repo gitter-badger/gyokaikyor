@@ -43,3 +43,15 @@ parse_ym <- function(path) {
   out$month_end   <- month_end
   out
 }
+
+xtract_numeric <- function(str) {
+  xtract_numerici <- function(str) {
+    regex <- "\\D+"
+    half <- Nippon::zen2han(str) %>%
+      stringr::str_replace(regex, "") %>%
+      readr::parse_integer()
+    half
+  }
+  out <- purrr::map_int(str, xtract_numerici)
+  out
+}
