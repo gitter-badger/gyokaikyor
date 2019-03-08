@@ -696,6 +696,17 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     expect_setequal(unique(df$month), 1:12)
   })
 
+  test_that("fmtcatch.nagasaki() prosesses nagasaki data correctly", {
+    path <- "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls"
+    df   <- fmtcatch.nagasaki(path, spcs = "katakuchi")
+    expect_is(df, "data.frame")
+    expect_setequal(dplyr::filter(df,
+                                  year == 2017,
+                                  dplyr::between(month, 2, 4)) %>%
+                    dplyr::pull(catch),
+                    c(0.123, 0.456, 0.789))
+  })
+
   test_that("fmtcatch.kagoshima() works well", {
     path <- "ExcelFiles/test_catch_kagoshima.xlsx"
     expect_is(fmtcatch.kagoshima(path, spcs = "katakuchi", spread = TRUE),
