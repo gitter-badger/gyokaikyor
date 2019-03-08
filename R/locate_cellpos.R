@@ -43,3 +43,7 @@ get_bottomright <- function(df, regex) {
   pos <- locate_patterns(df, regex)
   rev(pos)[1]
 }
+
+get_row <- function(str, regex, offset = 0) {
+  stringr::str_which(str, regex) + offset
+}

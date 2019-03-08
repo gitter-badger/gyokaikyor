@@ -44,6 +44,7 @@
     - [[#セル位置取得][セル位置取得]]
     - [[#文字列操作][文字列操作]]
     - [[#種名シート名生成][種名シート名生成]]
+    - [[#和暦西暦変換][和暦/西暦変換]]
     - [[#データ取得][データ取得]]
     - [[#体長データ整形][体長データ整形]]
     - [[#漁獲量データ整形][漁獲量データ整形]]
@@ -148,10 +149,14 @@ R パッケージのディレクトリは全て GitHub で公開する．
              "./data.git/漁海況/2019年3月/各県資料/長崎県/橘湾中央漁協ｲﾜｼ類(中小まき)提出とりまとめ.xls",
              "./data.git/漁海況/2019年3月/各県資料/長崎県/奈留漁協ｲﾜｼ類（中小旋）とりまとめ.xlsx",
              "./data.git/漁海況/2019年3月/各県資料/長崎県/九十九島漁協ｲﾜｼ類(中小まき)とりまとめ.xlsx",
-              "data.git/漁海況/2018年3月/各県資料/鹿児島県/４港月計表（29年度）.xlsx")
+             "data.git/漁海況/2019年3月/各県資料/鹿児島県/４港月計表（30年度）.xlsx",
+             "data.git/漁海況/2019年3月/各県資料/佐賀県/➁佐賀県_予報対象種漁獲量（元データ）.xls",
+             "data.git/漁海況/2019年3月/各県資料/福岡県/2019-3月送付_S51_H30経年福岡漁獲量データ(提出分).xlsx")
   prefec <- c(rep("kumamoto", 2),
              rep("nagasaki", 4),
-             "kagoshima")
+             "kagoshima",
+             "saga",
+             "fukuoka")
   tbl_fname <- hash(fname, prefec)
 
   fname2 <- give_class(fname, tbl_fname)
@@ -162,21 +167,23 @@ R パッケージのディレクトリは全て GitHub で公開する．
   fname2[[5]]
   fname2[[6]]
   fname2[[7]]
+  fname2[[8]]
+  fname2[[9]]
 
   spcs <- "katakuchi"
 
-  km_maki <- fmtcatch(fname2[[1]], spcs = spcs)
-  km_bou  <- fmtcatch(fname2[[2]], spcs = spcs)
+  km_maki <- fmtcatch(fname2[[1]], spcs = spcs, type = "maki")
+  km_bou  <- fmtcatch(fname2[[2]], spcs = spcs, type = "bouuke")
   kumamoto <- dplyr::bind_rows(km_maki, km_bou)
   kumamoto %>% ggplot(aes(month, catch, color = type)) +
     geom_line() +
     facet_wrap(~ year)
 
 
-  ngs      <- fmtcatch.nagasaki(fname2[[3]], "katakuchi")
-  tbn      <- fmtcatch.nagasaki(fname2[[4]], "katakuchi")
-  nr       <- fmtcatch.nagasaki(fname2[[5]], "katakuchi")
-  kjk      <- fmtcatch.nagasaki(fname2[[6]], "katakuchi")
+  ngs      <- fmtcatch(fname2[[3]], "katakuchi")
+  tbn      <- fmtcatch(fname2[[4]], "katakuchi")
+  nr       <- fmtcatch(fname2[[5]], "katakuchi")
+  kjk      <- fmtcatch(fname2[[6]], "katakuchi")
   nagasaki <- dplyr::bind_rows(ngs, tbn, nr, kjk)
 
   nagasaki %>% ggplot(aes(month, catch, color = port)) +
@@ -184,6 +191,23 @@ R パッケージのディレクトリは全て GitHub で公開する．
     facet_wrap(~ year)
 
   kagoshima <- fmtcatch(fname2[[7]], spcs = spcs)
+
+  sg_kennai  <- fmtcatch(fname2[[8]], spcs = spcs, type = "kennai")
+  sg_chumaki <- fmtcatch(fname2[[8]], spcs = spcs, type = "chumaki")
+  sg_teichi  <- fmtcatch(fname2[[8]], spcs = spcs, type = "teichi")
+  saga       <- dplyr::bind_rows(sg_kennai, sg_chumaki, sg_teichi)
+
+  saga %>% ggplot(aes(month, catch, color = type)) +
+    geom_line() +
+    facet_wrap(~ year)
+
+  fk_maki  <- fmtcatch(fname2[[9]], spcs = spcs, type = "maki")
+  fk_bou   <- fmtcatch(fname2[[9]], spcs = spcs, type = "bouuke")
+  fk_other <- fmtcatch(fname2[[9]], spcs = spcs, type = "others")
+  fukuoka  <- dplyr::bind_rows(fk_maki, fk_bou, fk_other)
+  fukuoka %>% ggplot(aes(month, catch, color = type)) +
+    geom_line() +
+    facet_wrap(~ year)
 #+END_SRC
 * 開発環境の整備
 #+BEGIN_SRC R :results silent
@@ -305,18 +329,14 @@ fresco
 - 精密タイプ: 熊本
 - 体長タイプ: 長崎，鹿児島
 - fresco タイプ: 山口，佐賀
-**** 必要な部品
-***** DONE get_cols2load(regex = , offset = )
-***** get_top(regex = )
-***** get_left(regex = )
-***** get_topleft(regex = )
-***** get_bottom(regex = )
-***** get_right(regex = )
-***** get_bottomright(regex = )
-***** parse_jpdate(format = )
-***** make_regex(spcs = katakuchi)
 *** 漁獲量
-**** 熊本
+**** 福岡
+***** 全年データが集まったファイルを開く
+***** type = 漁業 としてシートにアクセス
+***** "KEI"が入った月の列をget_datrow()に渡し，データ行を得る
+***** 年と月のベクトルから，データ行だけ抽出して月と年を作る
+***** 魚種の列もデータ行だけ抽出する
+**** DONE 熊本
 ***** 漁業種別（まき網 or 棒受け網）のブックを開く
 ***** ファイル名をパースして漁法を取得
 ***** 魚種シートにアクセス
@@ -324,6 +344,14 @@ fresco
 セルC4から真下に読み，「前年比」が出てきたらストップ
 ***** 月とデータを一気に読む
 ただし年度整理になっているので1〜3月はyear+1年とする
+**** DONE 佐賀
+熊本と似てる．漁業種別もシートに分かれている
+***** シート一覧を取得
+***** 正規表現で魚種シートを絞り込み
+***** シートから漁法を取得
+***** 年を生成
+***** 月とデータを一気に読む
+熊本と同様，年度になっている
 **** DONE 長崎
 ***** 魚種に応じてファイルを読み込み
 ****** マアジ・サバ類
@@ -594,7 +622,19 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+BEGIN_SRC  R :tangle tests/testthat/test_fmtcatch.R
   context("Load catch data from Excel spreadhseet and tidy it up")
 
-  test_that("fmtcatch.kumamoto() process makiami data correctly", {
+  test_that("fmtcatch.fukuoka() work correctly", {
+    path <- "ExcelFiles/test_catch_fukuoka.xlsx"
+    df   <- fmtcatch.fukuoka(path, spcs = "katakuchi", type = "maki")
+    expect_is(df, "data.frame")
+    expect_setequal(subset(df, year == 1977)$catch,
+                    c(18, 51, 84, 117, 150, 183, 216, 249))
+    expect_setequal(subset(df, year == 1978)$catch,
+                    c(315, 348, 381, 414, 447, 480, 513, 546))
+    expect_equal(unique(df$type), "maki")
+    expect_setequal(unique(df$month), 4:12)
+  })
+
+  test_that("fmtcatch.kumamoto() processes makiami data correctly", {
     path <- "ExcelFiles/test_catch_kumamoto_maki.xls"
     df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "maki")
     expect_is(df, "data.frame")
@@ -604,7 +644,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     expect_setequal(unique(df$month), 1:12)
   })
 
-  test_that("fmtcatch.kumamoto() process bouukeami data correctly", {
+  test_that("fmtcatch.kumamoto() processes bouukeami data correctly", {
     path <- "ExcelFiles/test_catch_kumamoto_bouuke.xls"
     df   <- fmtcatch.kumamoto(path, spcs = "katakuchi", type = "bouuke")
     expect_is(df, "data.frame")
@@ -612,6 +652,16 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     expect_equal(subset(df, year == 1994)$catch, 8:14)
     expect_equal(unique(df$type), "bouuke")
     expect_setequal(unique(df$month), 6:12)
+  })
+
+  test_that("fmtcatch.saga() prosesses saga data correctly", {
+    path <- "ExcelFiles/test_catch_saga.xls"
+    df   <- fmtcatch.saga(path, spcs = "katakuchi", type = "kennai")
+    expect_is(df, "data.frame")
+    expect_equal(subset(df, year == 1975)$catch, 1:9)
+    expect_equal(subset(df, year == 1976)$catch, 10:21)
+    expect_equal(unique(df$type), "kennai")
+    expect_setequal(unique(df$month), 1:12)
   })
 
   test_that("fmtcatch.kagoshima() works well", {
@@ -704,6 +754,10 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     pos <- locate_patterns(df, regex)
     rev(pos)[1]
   }
+
+  get_row <- function(str, regex, offset = 0) {
+    stringr::str_which(str, regex) + offset
+  }
   #+END_SRC
 *** 文字列操作
 #+BEGIN_SRC R :tangle R/handle_str.R
@@ -790,6 +844,26 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
            )
     shtname
   }
+#+END_SRC
+*** 和暦/西暦変換
+#+BEGIN_SRC  R :tangle R/jpyr2ad.R
+  jpyr2ad <- function(x, start) {
+    conv <- vector(mode = "integer")
+    if (start == "showa") {
+     suppressMessages(pos_lastyr <- alert_decrease(x))
+     x[1:96]
+     x[1:97]
+     conv[1:pos_lastyr] <- 1925
+     conv[1:96]
+     conv[1:97]
+     conv[(pos_lastyr + 1):length(x)] <- 1988
+    } else {
+      stop("jpyr2ad")
+    }
+    ad <- x + conv
+    ad
+  }
+
 #+END_SRC
 *** データ取得
 #+BEGIN_SRC R :tangle R/get_data.R
@@ -1019,34 +1093,106 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 *** 漁獲量データ整形
 **** 総称関数
 #+BEGIN_SRC R :tangle R/fmtcatch.R
-    #' Load and format catch data
-    #'
-    #' @inheritParams readxl::read_excel
-    #' @param spcs Spcs name in romaji, one of
-    #' @param nest If \code{TRUE}, data will be shown in rectangle format
-    #' @param type Character value either "maki" or "bouuke" to control
-    #'   data processing algorithm for kumamoto data.
-    #'   whith nested catch data for quick overview.
-    #' \itemize{
-    #'   \item maiwashi
-    #'   \item maaji
-    #'   \item sabarui
-    #'   \item masaba
-    #'   \item gomasaba
-    #'   \item katakuchi
-    #'   \item urume
-    #' }
-    #' @export
-    fmtcatch <- function(path, spcs, nest = FALSE, type = NULL) {
-      UseMethod("fmtcatch")
+  #' Load and format catch data
+  #'
+  #' @inheritParams readxl::read_excel
+  #' @param spcs Spcs name in romaji, one of
+  #' @param nest If \code{TRUE}, data will be shown in rectangle format
+  #' @param type Character value either "maki" or "bouuke" to control
+  #'   data processing algorithm for kumamoto data.
+  #'   whith nested catch data for quick overview.
+  #' \itemize{
+  #'   \item maiwashi
+  #'   \item maaji
+  #'   \item sabarui
+  #'   \item masaba
+  #'   \item gomasaba
+  #'   \item katakuchi
+  #'   \item urume
+  #' }
+  #' @export
+  fmtcatch <- function(path, spcs, type = NULL) {
+    UseMethod("fmtcatch")
+  }
+
+  alert_decrease <- function(x) {
+    if (any(diff(x) < 0)) {
+      message("There is a decrease in number.")
+      which(diff(x) < 0)
+    } else {
+      x
     }
-   alert_decrease <- function(x) {
-     if (any(diff(x) < 0)) {
-       stop("There is a decrease in number.")
-     } else {
-       x
-     }
-   }
+  }
+#+END_SRC
+**** 福岡
+#+BEGIN_SRC R :tangle R/fmtcatch_fukuoka.R
+  #' Load and format catch data
+  #'
+  #' @param path File path to process
+  #' @param spcs Romaji spcs name one of
+  #' \itemize {
+  #'   \item{"maaji"}
+  #'   \item{"maiwashi"}
+  #'   \item{"sabarui"}
+  #'   \item{"katakuchi"}
+  #'   \item{"urume"}
+  #' }
+  #' @param type Character value either "maki" or "bouuke", and "others".
+  fmtcatch.fukuoka <- function(path, spcs, type) {
+    spcs_jp <- switch(spcs,
+                      "maaji"     = "ﾏｱｼﾞ",
+                      "maiwashi"  = "ﾏｲﾜｼ",
+                      "masaba"    = "ﾏｻﾊﾞ",
+                      "gomasaba"  = "ｺﾞﾏｻﾊﾞ",
+                      "katakuchi" = "ｶﾀｸﾁ",
+                      "urume"     = "ｳﾙﾒ")
+
+    sheet <- switch(type,
+                    "maki"   = "まき網 ",
+                    "bouuke" = "棒受網",
+                    "others" = "その他漁業")
+    alldata <- load_alldata(path, sheet)
+
+    ycol     <- 2
+    mcol     <- 3
+    mstr     <- alldata[[mcol]]
+    startrow <- get_row(mstr, "ﾂｷ", offset = 1)
+    endrow   <- get_row(mstr, "KEI") %>% max()
+    rows     <- startrow:endrow
+    datrow   <- stringr::str_count(mstr[startrow:endrow], "KEI") == 0
+    spcs_col <- get_spcscol(alldata, spcs_jp)
+
+    out       <- NULL
+    out$year  <- col2data(col = ycol, row = rows,
+                          row.pick = datrow, df = alldata) %>%
+      jpyr2ad(start = "showa")
+    out$month <- col2data(col = mcol, row = rows,
+                          row.pick = datrow, df = alldata)
+    out$type  <- type
+    out$catch <- col2data(col = spcs_col, row = rows,
+                          row.pick = datrow, df = alldata)
+    tibble::as_tibble(out)
+  }
+
+  col2data <- function(col, rows, row.pick, df) {
+    out <- df[[col]][rows][row.pick] %>%
+      as.numeric()
+    out
+  }
+
+  get_spcscol <- function(df, spcs_jp) {
+    out <- NULL
+    for (i in 2:5) {
+      str <- df[i, ] %>%
+        unlist() %>%
+        as.vector()
+      out <- stringr::str_which(str, spcs_jp)
+      if (length(out) > 0)
+        break
+    }
+    out
+  }
+
 #+END_SRC
 **** 鹿児島
 #+BEGIN_SRC R :tangle R/fmtcatch_kagoshima.R
@@ -1261,11 +1407,13 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   }
 
 #+END_SRC
-**** 熊本
-#+BEGIN_SRC R :tangle R/fmtcatch_kumamoto.R
+**** 熊本 & 佐賀
+#+BEGIN_SRC R :tangle R/fmtcatch_kumamoto_saga.R
+  #' Load catch data of kumamoto and tidy it up
+  #'
   #' @param path File path to process
   #' @param spcs Romaji spcs name one of
-  #' \itemize {
+  #' \itemize{
   #'   \item{"maaji"}
   #'   \item{"maiwashi"}
   #'   \item{"sabarui"}
@@ -1274,50 +1422,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #' }
   #' @param type Character value either "maki" or "bouke".
   #'   Data processing algorithm is controled by this parameter.
-  #' @export
   fmtcatch.kumamoto <- function(path, spcs, type) {
-    get_row <- function(str) {
-      match <- stringr::str_which(str, "前年比")
-      if (length(match) > 0) {
-        out <- 4:(match - 1)
-        out
-      }
-    }
-
-    get_data <- function(df, type) {
-      switch(type,
-             "maki" = {
-               judgecol <- 3
-               cols     <- 4:15
-               months   <- c(4:12, 1:3)
-             },
-             "bouuke" = {
-               judgecol <- 2
-               cols     <- 4:10
-               months   <- 6:12
-             })
-      yrcol         <- 3
-      out           <- NULL
-      ystr          <- dplyr::pull(df, judgecol)
-      rows          <- get_row(ystr)
-      year          <- dplyr::pull(df, yrcol)[rows] %>%
-        as.numeric()
-      out           <- df[rows, cols]
-      colnames(out) <- months
-      out %<>% dplyr::mutate(year = year,
-                             type = type) %>%
-        tidyr::gather(-year, -type, key = month, value = "catch") %>%
-        dplyr::mutate(year = as.integer(year),
-                      month = as.integer(month),
-                      catch = as.double(catch)) %>%
-        dplyr::select(year, month, type, catch) %>%
-        dplyr::mutate(year = ifelse(dplyr::between(month, 1, 3),
-                                    year + 1,
-                                    year)) %>%
-        dplyr::arrange(year, month)
-      out
-    }
-
     sheet   <- switch(spcs,
                       "maaji" = "マアジ",
                       "maiwashi" = "マイワシ",
@@ -1325,7 +1430,94 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                       "katakuchi" = "カタクチイワシ",
                       "urume" = "ウルメイワシ")
     alldata <- load_alldata(path, sheet)
-    out     <- get_data(alldata, type)
+    out     <- get_data(alldata, type, key.start = "年度計", key.end = "前年比")
+    out
+  }
+  #' Load catch data of saga and tidy it up
+  #'
+  #' @inheritParams fmtcatch.kumamoto
+  #' @param spcs Romaji spcs name one of
+  #' \itemize{
+  #'   \item{"maaji"}
+  #'   \item{"maiwashi"}
+  #'   \item{"masaba"}
+  #'   \item{"katakuchi"}
+  #'   \item{"urume"}
+  #' }
+  #' @param type Character value one of
+  #' \itemize {
+  #'   \item{"karatsu"}
+  #'   \item{"kennai"}
+  #'   \item{"teichi"}
+  #'   \item{"chumaki"}
+  #' }
+  #'   Data processing algorithm is controled by this parameter.
+  fmtcatch.saga <- function(path, spcs, type) {
+    spcs_jp <- switch(spcs,
+                      "maaji" = "ﾏｱｼﾞ",
+                      "maiwashi" = "ﾏｲﾜｼ",
+                      "masaba" = "ﾏｻﾊﾞ",
+                      "katakuchi" = "ｶﾀｸﾁ",
+                      "urume" = "ｳﾙﾒ")
+    type_jp <- switch(type,
+                      "karatsu" = "（唐津港）",
+                      "kennai" = "（唐津港県内船）",
+                      "teichi" = "（定置）",
+                      "chumaki" = "（中まき）")
+    sheets  <- readxl::excel_sheets(path)
+    regex   <- paste0(spcs_jp, type_jp)
+    sheet   <- sheets[stringr::str_detect(sheets, regex)]
+    alldata <- load_alldata(path, sheet)
+    out     <- get_data(alldata, type, key.start = "年度", key.end = "平年値")
+    out
+  }
+
+  get_data <- function(df, type, key.start, key.end) {
+    switch(type,
+           "maki" = {
+             judgecol_start <- 18
+             judgecol_end   <- 3
+             cols           <- 4:15
+             months         <- c(4:12, 1:3)
+             yrcol          <- 3
+           },
+           "bouuke" = {
+             judgecol_start <- 13
+             judgecol_end   <- 2
+             cols           <- 4:10
+             months         <- 6:12
+             yrcol          <- 3
+           }
+         , {
+             if (!type %in% c("karatsu", "kennai", "teichi", "chumaki"))
+               stop("Unknown type")
+             judgecol_start <- 1
+             judgecol_end   <- 16
+             cols           <- 3:14
+             months         <- c(4:12, 1:3)
+             yrcol          <- 1
+           })
+    str_judge_start <- dplyr::pull(df, judgecol_start)
+    str_judge_end   <- dplyr::pull(df, judgecol_end)
+    row_start       <- get_row(str_judge_start, key.start, offset = 1)
+    row_end         <- get_row(str_judge_end, key.end, offset = -1)
+    rows            <- row_start:row_end
+    year            <- dplyr::pull(df, yrcol)[rows] %>%
+      as.numeric()
+    out             <- NULL
+    out             <- df[rows, cols]
+    colnames(out)   <- months
+    out %<>% dplyr::mutate(year = year,
+                           type = type) %>%
+      tidyr::gather(-year, -type, key = month, value = "catch") %>%
+      dplyr::mutate(year = as.integer(year),
+                    month = as.integer(month),
+                    catch = as.double(catch)) %>%
+      dplyr::select(year, month, type, catch) %>%
+      dplyr::mutate(year = ifelse(dplyr::between(month, 1, 3),
+                                  year + 1,
+                                  year)) %>%
+      dplyr::arrange(year, month)
     out
   }
 #+END_SRC
