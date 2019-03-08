@@ -1,6 +1,8 @@
+#' Load catch data of kumamoto and tidy it up
+#'
 #' @param path File path to process
 #' @param spcs Romaji spcs name one of
-#' \itemize {
+#' \itemize{
 #'   \item{"maaji"}
 #'   \item{"maiwashi"}
 #'   \item{"sabarui"}
@@ -20,10 +22,11 @@ fmtcatch.kumamoto <- function(path, spcs, type) {
   out     <- get_data(alldata, type, key.start = "年度計", key.end = "前年比")
   out
 }
-
+#' Load catch data of saga and tidy it up
+#'
 #' @inheritParams fmtcatch.kumamoto
 #' @param spcs Romaji spcs name one of
-#' \itemize {
+#' \itemize{
 #'   \item{"maaji"}
 #'   \item{"maiwashi"}
 #'   \item{"masaba"}
@@ -105,8 +108,4 @@ get_data <- function(df, type, key.start, key.end) {
                                 year)) %>%
     dplyr::arrange(year, month)
   out
-}
-
-get_row <- function(str, regex, offset = 0) {
-  stringr::str_which(str, regex) + offset
 }

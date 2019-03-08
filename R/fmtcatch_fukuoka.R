@@ -37,7 +37,7 @@ fmtcatch.fukuoka <- function(path, spcs, type) {
   out       <- NULL
   out$year  <- col2data(col = ycol, row = rows,
                         row.pick = datrow, df = alldata) %>%
-    jpyear2ad(start = "showa")
+    jpyr2ad(start = "showa")
   out$month <- col2data(col = mcol, row = rows,
                         row.pick = datrow, df = alldata)
   out$type  <- type
@@ -63,22 +63,4 @@ get_spcscol <- function(df, spcs_jp) {
       break
   }
   out
-}
-
-jpyear2ad <- function(x, start) {
-  conv <- vector(mode = "integer")
-  if (start == "showa") {
-   suppressMessages(pos_lastyr <- alert_decrease(x))
-   x[1:96]
-   x[1:97]
-   conv[1:pos_lastyr] <- 1925
-   conv[1:96]
-   conv[1:97]
-   conv[(pos_lastyr + 1):length(x)] <- 1988
-  } else {
-    stop("jpyear2ad")
-  }
-  ad <- conv + x
-  plot(ad)
-  ad
 }
