@@ -829,6 +829,19 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out$month_end   <- month_end
     out
   }
+
+  xtract_numeric <- function(str) {
+    xtract_numerici <- function(str) {
+      regex <- "\\D+"
+      half <- Nippon::zen2han(str) %>%
+        stringr::str_replace(regex, "") %>%
+        readr::parse_integer()
+      half
+    }
+    out <- purrr::map_int(str, xtract_numerici)
+    out
+  }
+
 #+END_SRC
 *** 種名シート名生成
 #+BEGIN_SRC  R :tangle R/make_shtname.R
@@ -1422,19 +1435,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
         col <- which(gregexpr(regex, df[row, ]) > 0)
       }
       out   <- data.frame(row = row, col = col)
-      out
-    }
-
-    xtract_numerici <- function(str) {
-      regex <- "\\D+"
-      half <- Nippon::zen2han(str) %>%
-        stringr::str_replace(regex, "") %>%
-        readr::parse_integer()
-      half
-    }
-
-    xtract_numeric <- function(str) {
-      out <- purrr::map_int(str, xtract_numerici)
       out
     }
 
