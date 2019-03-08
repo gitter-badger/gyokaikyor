@@ -753,6 +753,10 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     pos <- locate_patterns(df, regex)
     rev(pos)[1]
   }
+
+  get_row <- function(str, regex, offset = 0) {
+    stringr::str_which(str, regex) + offset
+  }
   #+END_SRC
 *** 文字列操作
 #+BEGIN_SRC R :tangle R/handle_str.R
@@ -1511,9 +1515,5 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                                   year)) %>%
       dplyr::arrange(year, month)
     out
-  }
-
-  get_row <- function(str, regex, offset = 0) {
-    stringr::str_which(str, regex) + offset
   }
 #+END_SRC
