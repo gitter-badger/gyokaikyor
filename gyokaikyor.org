@@ -38,6 +38,7 @@
     - [[#テスト-計測データ取得][テスト/ 計測データ取得]]
     - [[#テスト-体長データ整形][テスト/ 体長データ整形]]
     - [[#テスト-漁獲量データ整形][テスト/ 漁獲量データ整形]]
+    - [[#テスト-長崎漁獲量][テスト/ 長崎漁獲量]]
   - [[#関数][関数]]
     - [[#インポート][インポート]]
     - [[#ファイル名操作][ファイル名操作]]
@@ -733,6 +734,13 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
               "data.frame")
   })
 #+END_SRC
+*** テスト/ 長崎漁獲量
+#+BEGIN_SRC  R :tangle tests/testthat/test_catch_nagasaki.R
+  library(gyokaikyor)
+  context(Formating nagasaki catch data)
+
+#+END_SRC
+
 ** 関数
 :PROPERTIES:
 :header-args: :results silent :exports code
@@ -1572,11 +1580,19 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     spcs_regex <- insert_regex(str = spcs_jp, regex = "( |　)",
                                prefix = FALSE, option = TRUE)
     sheets <- readxl::excel_sheets(path)
-    out    <- purrr::map(sheets, fmt_sheet, path = path, regex = spcs_regex) %>%
+    out    <- purrr::map(sheets, ngs_fmt_sheet,
+                         path = path, regex = spcs_regex) %>%
       dplyr::bind_rows()
     out
   }
-
+  path <- "data.git/漁海況/2019年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls"
+  test <- fmtcatch.nagasaki(path, spcs)
+  path <- "data.git/漁海況/2019年3月/各県資料/長崎県/九十九島漁協ｲﾜｼ類(中小まき)とりまとめ.xlsx"
+  test <- fmtcatch.nagasaki(path, spcs)
+  path <- "data.git/漁海況/2019年3月/各県資料/長崎県/奈留漁協ｲﾜｼ類（中小旋）とりまとめ.xlsx"
+  test <- fmtcatch.nagasaki(path, spcs)
+  path <- "data.git/漁海況/2019年3月/各県資料/長崎県/橘湾中央漁協ｲﾜｼ類(中小まき)提出とりまとめ.xls"
+  test <- fmtcatch.nagasaki(path, spcs)
 #+END_SRC
 **** 熊本 & 佐賀
 #+BEGIN_SRC R :tangle R/fmtcatch_kumamoto_saga.R
