@@ -1599,7 +1599,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #'   the return value composed only of numerics.
   ngs_get_colvalue <- function(regex, df, offset.x = 0, offset.y = 0,
                             xtract.digit = FALSE) {
-    spcs_col <- dplyr::select(df, 1)
+    spcs_col <- dplyr::pull(df, 1)
     spcs_row <- ngs_locate_spcsrow(regex, spcs_col)
     rowcol   <- purrr::map_dfr(spcs_row, ngs_get_monthcol, df = df)
     out      <- purrr::map2(rowcol$col + offset.x,
