@@ -418,11 +418,11 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 *** get_topleft(key = "FL(mm)")
 ** リロード & 自動テスト
 #+BEGIN_SRC R :results silent
+  devtools::document(roclets=c('rd', 'collate', 'namespace'))
   devtools::load_all()
   system("R CMD INSTALL --preclean --no-multiarch --with-keep.source .")
   devtools::test()
   lintr::lint_package()
-  devtools::document(roclets=c('rd', 'collate', 'namespace'))
   devtools::check(args = "--as-cran")
   covr::package_coverage()
 #+END_SRC
@@ -1566,8 +1566,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     }
     spcs_row
   }
-  regex <- "カ( |　)*タ( |　)*ク( |　)*チ"
-  ngs_locate_spcsrow(regex, str)
 
   #' Detect month column coping with variation in row position of the month cell
   #'
@@ -1703,14 +1701,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
       dplyr::bind_rows()
     out
   }
-  path <- "data.git/漁海況/2019年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls"
-  test <- fmtcatch.nagasaki(path, spcs)
-  path <- "data.git/漁海況/2019年3月/各県資料/長崎県/九十九島漁協ｲﾜｼ類(中小まき)とりまとめ.xlsx"
-  test <- fmtcatch.nagasaki(path, spcs)
-  path <- "data.git/漁海況/2019年3月/各県資料/長崎県/奈留漁協ｲﾜｼ類（中小旋）とりまとめ.xlsx"
-  test <- fmtcatch.nagasaki(path, spcs)
-  path <- "data.git/漁海況/2019年3月/各県資料/長崎県/橘湾中央漁協ｲﾜｼ類(中小まき)提出とりまとめ.xls"
-  test <- fmtcatch.nagasaki(path, spcs)
 #+END_SRC
 **** 熊本 & 佐賀
 #+BEGIN_SRC R :tangle R/fmtcatch_kumamoto_saga.R
