@@ -112,14 +112,6 @@ ngs_make_yrvec <- function(sheet, month) {
 #' name with variants are extracted using regular expression and then
 #' converted to four port names written in ascii characters.
 #' @param str Japanes string which contains port name.
-#' @examples
-#' \dontrun{
-#'   ngs_get_port("stringi::stri_escape_unicode(地名 ：（Ｈ.29）長崎     )")
-#'   ngs_get_port("stringi::stri_escape_unicode(地名 ：（Ｈ.29）奈留     )")
-#'   ngs_get_port("stringi::stri_escape_unicode(地名 ：（Ｈ.29）九十九   )")
-#'   ngs_get_port("stringi::stri_escape_unicode(地名 ：（Ｈ.29）子佐々   )")
-#'   ngs_get_port("stringi::stri_escape_unicode(地名 ：（Ｈ.29）橘       )")
-#' }
 ngs_get_port <- function(str) {
   out   <- NULL
   regex <- "(?<=Ｈ(．|\\.)\\d\\d?(）|\\))?)((長崎|奈留|九十九|小佐々|橘))"
