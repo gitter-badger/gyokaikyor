@@ -16,10 +16,10 @@ converted to four port names written in ascii characters.
 }
 \examples{
 \dontrun{
-  ngs_get_port("地名 ：（Ｈ.29）長崎     漁業種 ：")
-  ngs_get_port("地名 ：（Ｈ.29）奈留     漁業種 ：")
-  ngs_get_port("地名 ：（Ｈ.29）九十九   漁業種 ：")
-  ngs_get_port("地名 ：（Ｈ.29）子佐々   漁業種 ：")
-  ngs_get_port("地名 ：（Ｈ.29）橘       漁業種 ：")
+  ngs_get_port("stringi::stri_escape_unicode(地名 ：（Ｈ.29）長崎     )")
+  ngs_get_port("stringi::stri_escape_unicode(地名 ：（Ｈ.29）奈留     )")
+  ngs_get_port("stringi::stri_escape_unicode(地名 ：（Ｈ.29）九十九   )")
+  ngs_get_port("stringi::stri_escape_unicode(地名 ：（Ｈ.29）子佐々   )")
+  ngs_get_port("stringi::stri_escape_unicode(地名 ：（Ｈ.29）橘       )")
 }
 }
