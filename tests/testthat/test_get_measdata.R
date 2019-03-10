@@ -1,3 +1,4 @@
+library(gyokaikyor)
 context("Get measure data vector from data frame")
 
 test_that("get_vector() extracts vector correctly", {

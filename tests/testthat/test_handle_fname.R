@@ -1,3 +1,4 @@
+library(gyokaikyor)
 context("Handle file name")
 fn_kumamoto  <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 fn_kagoshima <- "体長組成(H29年度).xlsx"

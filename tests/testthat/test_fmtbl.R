@@ -1,3 +1,4 @@
+library(gyokaikyor)
 context("Load blhist data from Excel spreadhseet and tidy it up")
 
 test_that("fmtbl() works well", {

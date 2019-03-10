@@ -1,3 +1,4 @@
+library(gyokaikyor)
 context("Load catch data from Excel spreadhseet and tidy it up")
 
 test_that("fmtcatch.yamaguchi() work correctly", {

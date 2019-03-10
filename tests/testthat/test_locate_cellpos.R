@@ -1,4 +1,6 @@
+library(gyokaikyor)
 context("Locate cell position")
+
 suppressWarnings(library(tibble))
 df <- tribble(~A, ~B, ~C, ~D,
               NA, NA, NA, 1,
