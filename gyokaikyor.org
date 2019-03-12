@@ -1166,6 +1166,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out$month  <- give_yr2month(months, year_start)$month
     out$hist   <- histdata
     out        <- tibble::as_tibble(out)
+    out$prefecture <- "nagasaki"
     if (nest == FALSE) {
       out <- tidyr::unnest(out)
     }
@@ -1207,6 +1208,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out$year   <- lubridate::year(out$date)
     out$month  <- lubridate::month(out$date)
     out$bl     <- bl
+    out$prefecture <- "kumamoto"
 
     out <- tibble::as_tibble(out)
     if (nest == FALSE) {
@@ -1233,6 +1235,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out$year   <- lubridate::year(out$date)
     out$month  <- lubridate::month(out$date)
     out$bl     <- bl
+    out$prefecture <- "kagoshima"
 
     out <- tibble::as_tibble(out)
     if (nest == FALSE) {
@@ -1335,6 +1338,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                         alldata)
       out$meigara <- alldata[4, spcs_col + cofst] %>%
         unlist() %>% as.vector()
+      out$prefecture <- "yamaguchi"
       out %<>% tibble::as_tibble() %>%
         tidyr::gather("sukui", "bouuke", key = "type", value = "catch")
       out
@@ -1400,6 +1404,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out$type  <- type
     out$catch <- col2data(col = spcs_col, row = rows,
                           row.pick = datrow, df = alldata)
+    out$prefecture <- "fukuoka"
     tibble::as_tibble(out)
   }
 
@@ -1667,10 +1672,11 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     catch  <- ngs_get_colvalue(regex, data, offset.x = 2, offset.y = 5)
     out    <- list(year = years,
                    month = months,
-                   por = port,
+                   port = port,
                    catch = catch,
                    fname = path,
-                   sheet = sheet) %>%
+                   sheet = sheet,
+                   prefecture = "nagasaki") %>%
       tibble::as_tibble()
     rm(data)
     out
@@ -1717,6 +1723,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                       "urume" = "ウルメイワシ")
     alldata <- load_alldata(path, sheet)
     out     <- get_data(alldata, type, key.start = "年度計", key.end = "前年比")
+    out$prefecture <- "kumamoto"
     out
   }
   #' Load catch data of saga and tidy it up
@@ -1755,6 +1762,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     sheet   <- sheets[stringr::str_detect(sheets, regex)]
     alldata <- load_alldata(path, sheet)
     out     <- get_data(alldata, type, key.start = "年度", key.end = "平年値")
+    out$catch <- out$catch / 1000
+    out$prefecture <- "saga"
     out
   }
 
