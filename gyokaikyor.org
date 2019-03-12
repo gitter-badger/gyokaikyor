@@ -1161,9 +1161,29 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 #+END_SRC
+*** データ作成
+#+BEGIN_SRC R
+  coltypes_seimitsu <- list("測定部位コード"     = "i",
+                            "生殖腺重量"         = "d",
+                            "体長"               = "i",
+                            "性"                 = "i",
+                            "漁区"               = "i",
+                            "統一大海区農林漁区" = "i",
+                            "開始緯度"           = "d",
+                            "開始経度"           = "d")
+  coltypes_taichou <- list("測定部位コード"     = "i",
+                           "漁区"               = "i",
+                           "統一大海区農林漁区" = "i",
+                           "開始緯度"           = "d",
+                           "開始経度"           = "d")
+  prefec_code <- read.csv("~/Downloads/prefecture_code_eng.csv")
+
+  usethis::use_data(coltypes_seimitsu, internal = TRUE, overwrite = TRUE)
+  usethis::use_data(coltypes_taichou, internal = TRUE, overwrite = TRUE)
+#+END_SRC
 *** 体長データ整形
-#+BEGIN_SRC R :tangle R/fmtbl.R
   #' Load and format bl histogram data
+#+BEGIN_SRC R :tangle R/fmtbl.R
   #'
   #' @inheritParams readxl::read_excel
   #' @param spcs Spcs name in romaji, one of
