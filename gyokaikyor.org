@@ -114,10 +114,9 @@ R パッケージのディレクトリは全て GitHub で公開する．
   library(gyokaikyor)
   library(hash)
   library(ggplot2)
-  fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/04 【熊本県】H29まき網＆棒受網 体長組成.xlsx")
   fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/04_H30_まき網＆棒受網体長組成.xlsx",
-              "data.git/漁海況/2018年3月/各県資料/長崎県/2017.09-2018.01小型まき網体長組成.xls",
-              "data.git/漁海況/2018年3月/各県資料/鹿児島県/体長組成(H29年度).xlsx")
+              "data.git/漁海況/2019年3月/各県資料/長崎県/2018.09-2019.01小型まき網体長組成.xls",
+              "data.git/漁海況/2019年3月/各県資料/鹿児島県/体長組成(H30年度).xlsx")
   prefec <- c("kumamoto", "nagasaki", "kagoshima")
   tbl_fname <- hash(fname, prefec)
 
