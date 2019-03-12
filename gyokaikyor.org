@@ -1694,12 +1694,9 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
       if (spread == FALSE) {
         out %<>% dplyr::select(-"total") %>%
           tidyr::gather("maki4ports", "bou_akune", "bou_uchinoura",
-                 key = "port", value = "catch_ton")
+                 key = "type", value = "catch")
       }
     }
-    out %<>% tidyr::gather("maki4ports", "bou_akune",
-                           "bou_akune", "bou_uchinoura",
-                           key = "type", value = catch)
     out
   }
 #+END_SRC
