@@ -1,4 +1,3 @@
-#' Load and format bl histogram data
 #'
 #' @inheritParams readxl::read_excel
 #' @param spcs Spcs name in romaji, one of
@@ -51,7 +50,7 @@ fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
 
   check_month <- function(months, month_start, month_end) {
     if (!(month_start == months[1]) | (!month_end == rev(months)[1])) {
-      stop ("Check month data")
+      # message ("Check month data")
     }
   }
 
@@ -61,7 +60,6 @@ fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
     for (i in seq_along(mvec)) {
        m            <- mvec[i]
        out$month[i] <- m
-
        if (i >= 2) {
          if (m < out$month[i - 1]) {
          is_yr_changed <- TRUE
@@ -82,17 +80,18 @@ fmtbl.nagasaki  <- function(path, spcs, nest = TRUE) {
   colpos    <- get_col2load(target = alldata[4, ],
                             regex = ".\u6708", # "tsuki" in jp kanji
                             offset = 0)
-  months    <- jpmonth2num(alldata[4, colpos])
-  histdata  <- purrr::map(colpos, get_histdata, df = alldata,
+  months         <- jpmonth2num(alldata[4, colpos])
+  histdata       <- purrr::map(colpos, get_histdata, df = alldata,
                           prefec = "nagasaki")
-  parsedym  <- parse_ym(path)
+  parsedym       <- parse_ym(path)
   check_month(months, parsedym$month_start, parsedym$month_end)
-  year_start <- parsedym$year_start
-  out       <- list()
-  out$year   <- give_yr2month(months, year_start)$year
-  out$month  <- give_yr2month(months, year_start)$month
-  out$hist   <- histdata
-  out        <- tibble::as_tibble(out)
+  year_start     <- parsedym$year_start
+  out            <- list()
+  out$year       <- give_yr2month(months, year_start)$year
+  out$month      <- give_yr2month(months, year_start)$month
+  out$prefecture <- "nagasaki"
+  out$hist       <- histdata
+  out            <- tibble::as_tibble(out)
   if (nest == FALSE) {
     out <- tidyr::unnest(out)
   }
@@ -105,7 +104,7 @@ fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
       fname <- stringr::str_match(path, "^.+/(\\d+\\s?【熊本県】.+)")[2]
     } else {
       fname <- path
-    }
+   }
     match  <- stringr::str_match(fname, "^\\d+\\s?【熊本県】(\\w\\d+)まき")
     wareki <- match[2]
     era    <- stringr::str_sub(wareki, 1, 1)
@@ -128,12 +127,13 @@ fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
   bl         <- purrr::map(cpos_date, get_measdata,
                            prefec = "kumamoto", df = alldata)
 
-  out        <- list()
-  out$date   <- date
-  out$method <- method
-  out$year   <- lubridate::year(out$date)
-  out$month  <- lubridate::month(out$date)
-  out$bl     <- bl
+  out            <- list()
+  out$date       <- date
+  out$method     <- method
+  out$year       <- lubridate::year(out$date)
+  out$month      <- lubridate::month(out$date)
+  out$bl         <- bl
+  out$prefecture <- "kumamoto"
 
   out <- tibble::as_tibble(out)
   if (nest == FALSE) {
@@ -153,17 +153,77 @@ fmtbl.kagoshima <- function(path, spcs, nest = TRUE) {
     as.vector()
   bl         <- purrr::map(cpos_date, get_histdata,
                            df = alldata, prefec = "kagoshima")
-
-  out        <- list()
-  out$date   <- date
-  out$method <- method
-  out$year   <- lubridate::year(out$date)
-  out$month  <- lubridate::month(out$date)
-  out$bl     <- bl
+  out            <- list()
+  out$date       <- date
+  out$method     <- method
+  out$year       <- lubridate::year(out$date)
+  out$month      <- lubridate::month(out$date)
+  out$bl         <- bl
+  out$prefecture <- "kagoshima"
 
   out <- tibble::as_tibble(out)
   if (nest == FALSE) {
     out <- tidyr::unnest(out)
   }
   out
+}
+
+#' Format bldata exported from FRESCO database
+#'
+#' @inheritParams fmtbl
+#' @param type Format of data to load either 'taichou' or 'seimitsu'.
+#' @param date.start The first day of the processed data.
+#' @param date.end The last day of the the processed data
+#' @examples
+#' \dontrun{
+#'   fmtbl_fresco("2019Mar_seikai_taichou_katakuchi.csv", type = "taichou",
+#'                date.start = "20180901", date.end = "20190331")
+#'   fmtbl_fresco("2019Mar_seikai_seimitsu_katakuchi.csv", type = "seimitsu"
+#'                date.start = "20180901", date.end = "20190331")
+#' }
+#' @export
+fmtbl_fresco <- function(path, type, date.start, date.end) {
+  dstart <- lubridate::ymd(date.start)
+  dend   <- lubridate::ymd(date.end)
+  if (type == "seimitsu") {
+    suppressMessages(
+      data <- readr::read_csv(path, locale = readr::locale(encoding = "cp932"),
+                              col_types = coltypes_seimitsu)
+    )
+  } else if (type == "taichou") {
+    suppressMessages(
+      data <- readr::read_csv(path, locale = readr::locale(encoding = "cp932"),
+                              col_types = coltypes_taichou)
+    )
+  }
+  out <- data %>%
+    dplyr::mutate(date  = lubridate::ymd(漁獲年月日),
+                  year  = lubridate::year(date),
+                  month = lubridate::month(date),
+                  day   = lubridate::day(date),
+                  ym    = paste0(year, month) %>% as.numeric()) %>%
+      dplyr::rename(spcs_code = 魚種コード,
+                    prefec_code = 県コード) %>%
+      dplyr::left_join(prefec_code, by = c("prefec_code" = "code"))
+  if (type == "seimitsu") {
+    out %<>%
+      dplyr::rename(scbl = 被鱗体長,
+                    bw = 体重) %>%
+      dplyr::select(date, year, month, day, ym,
+                    spcs_code, prefec_code, prefecture, scbl, bw)
+  } else if (type == "taichou") {
+    out %<>%
+      dplyr::rename(blclass_left = 開始の階級値,
+                    count = 度数) %>%
+      dplyr::mutate(blclass_left = ifelse(階級幅 == 0.5,
+                                          blclass_left * 10,
+                                          ifelse(階級幅 == 5,
+                                                 blclass_left,
+                                                 NA))) %>%
+      tidyr::drop_na(count) %>%
+      tidyr::uncount(count) %>%
+      dplyr::select(date, year, month, day, ym,
+                    spcs_code, prefec_code, prefecture, blclass_left)
+  }
+  dplyr::filter(out, dplyr::between(date, dstart, dend))
 }

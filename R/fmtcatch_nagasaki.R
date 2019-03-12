@@ -138,10 +138,11 @@ ngs_fmt_sheet <- function(sheet, path, regex) {
   catch  <- ngs_get_colvalue(regex, data, offset.x = 2, offset.y = 5)
   out    <- list(year = years,
                  month = months,
-                 por = port,
+                 port = port,
                  catch = catch,
                  fname = path,
-                 sheet = sheet) %>%
+                 sheet = sheet,
+                 prefecture = "nagasaki") %>%
     tibble::as_tibble()
   rm(data)
   out

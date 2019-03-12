@@ -20,6 +20,7 @@ fmtcatch.kumamoto <- function(path, spcs, type) {
                     "urume" = "ウルメイワシ")
   alldata <- load_alldata(path, sheet)
   out     <- get_data(alldata, type, key.start = "年度計", key.end = "前年比")
+  out$prefecture <- "kumamoto"
   out
 }
 #' Load catch data of saga and tidy it up
@@ -58,6 +59,8 @@ fmtcatch.saga <- function(path, spcs, type) {
   sheet   <- sheets[stringr::str_detect(sheets, regex)]
   alldata <- load_alldata(path, sheet)
   out     <- get_data(alldata, type, key.start = "年度", key.end = "平年値")
+  out$catch <- out$catch / 1000
+  out$prefecture <- "saga"
   out
 }
 

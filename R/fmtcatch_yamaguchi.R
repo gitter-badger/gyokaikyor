@@ -56,6 +56,7 @@ fmtcatch.yamaguchi <- function(path, spcs, type = NULL) {
                       alldata)
     out$meigara <- alldata[4, spcs_col + cofst] %>%
       unlist() %>% as.vector()
+    out$prefecture <- "yamaguchi"
     out %<>% tibble::as_tibble() %>%
       tidyr::gather("sukui", "bouuke", key = "type", value = "catch")
     out

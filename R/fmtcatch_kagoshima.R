@@ -1,40 +1,29 @@
 fmtcatch.kagoshima <- function(path, spcs, spread = TRUE, maki.only = FALSE) {
-  get_ym <- function(str, var) {
-    split <- stringr::str_split(str, "\\.")
-    if (var == "year") {
-      out <- split[[1]][1] %>% as.numeric()
-    } else if (var == "month"){
-      out <- split[[1]][2] %>% as.numeric()
-    }
-    out
-  }
-
   make_year <- function(yr_jp, jpera) {
     out <- paste0(jpera, yr_jp, "\u5E74") %>% # "nen" (year) in jp kanji
       Nippon::wareki2AD()
     out
   }
-
-  data  <- load_alldata(path, sheet = "\uFF14\u6E2F\u8A08")
-                                        # "4koukei" (four port sum) in jp kanji
-  str   <- data[5:16, 1] %>%
-    unlist() %>%
-    as.vector()
-  yr_jp <- tryCatch(
-      purrr::map(str, get_ym, var = "year") %>%
-        unlist() %>%
-        alert_decrease(),
-      error = function(c) {
-        stop("fmtcatch.kagoshima() must be modified to follow jpera change.")
-      },
-      warning = function(c) "warning",
-      message = function(c) "message"
-    )
-
-  years <- make_year(yr_jp, "\u5e73\u6210") # "heisei" in jp kanji
-
-  months <- purrr::map(str, get_ym, var = "month") %>%
-    unlist()
+  get_ym <- function(str) {
+    split <- stringr::str_split(str, "\\.")
+    out   <- NULL
+    jpyr.start  <- split[[1]][1] %>% as.numeric()
+    jpyr.end    <- split[[length(str)]][1] %>% as.numeric()
+    if (jpyr.end < jpyr.start)
+      stop("Japanese era changed! Check algorithm")
+    mth.start  <- split[[1]][2] %>% as.numeric()
+    mth.end    <- split[[length(str)]][2] %>% as.numeric()
+    yr.start   <- make_year(jpyr.start, "heisei")
+    yr.end     <- make_year(jpyr.end, "heisei")
+    dstart     <- as.Date(paste(yr.start, mth.start, 1, sep = "-"))
+    dend       <- as.Date(paste(yr.end, mth.end, 1, sep = "-"))
+    dseq       <- seq.Date(dstart, dend, "month")
+    out$years  <- stringr::str_sub(dseq, 1, 4) %>%
+      readr::parse_integer()
+    out$months  <- stringr::str_sub(dseq, 6, 7) %>%
+      readr::parse_integer()
+    out
+  }
 
   load_catch_4ports <- function(path, spcs) {
     spcs_jp <- switch(spcs,
@@ -75,6 +64,15 @@ fmtcatch.kagoshima <- function(path, spcs, spread = TRUE, maki.only = FALSE) {
     out
   }
 
+  data  <- load_alldata(path, sheet = "\uFF14\u6E2F\u8A08")
+                                        # "4koukei" (four port sum) in jp kanji
+  str   <- data[5:16, 1] %>%
+    unlist() %>%
+    as.vector()
+
+  years  <- get_ym(str)$years
+  months <- get_ym(str)$months
+
   catch_4ports        <- load_catch_4ports(path, spcs)
   catch_bou_akune     <- load_catch_bouuke(path, spcs, sheet = "阿久根棒受")
   catch_bou_uchinoura <- load_catch_bouuke(path, spcs, sheet = "内之浦棒受")
@@ -82,7 +80,8 @@ fmtcatch.kagoshima <- function(path, spcs, spread = TRUE, maki.only = FALSE) {
               month = months,
               maki4ports = catch_4ports,
               bou_akune = catch_bou_akune,
-              bou_uchinoura = catch_bou_uchinoura) %>%
+              bou_uchinoura = catch_bou_uchinoura,
+              prefecture = "kagoshima") %>%
     tibble::as_tibble()
   if (maki.only == TRUE) {
     out %<>% dplyr::select(-"bou_akune", -"bou_uchinoura")
@@ -92,7 +91,7 @@ fmtcatch.kagoshima <- function(path, spcs, spread = TRUE, maki.only = FALSE) {
     if (spread == FALSE) {
       out %<>% dplyr::select(-"total") %>%
         tidyr::gather("maki4ports", "bou_akune", "bou_uchinoura",
-               key = "port", value = "catch_ton")
+               key = "type", value = "catch")
     }
   }
   out
