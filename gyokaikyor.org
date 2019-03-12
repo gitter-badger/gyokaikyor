@@ -1155,18 +1155,18 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     colpos    <- get_col2load(target = alldata[4, ],
                               regex = ".\u6708", # "tsuki" in jp kanji
                               offset = 0)
-    months    <- jpmonth2num(alldata[4, colpos])
-    histdata  <- purrr::map(colpos, get_histdata, df = alldata,
+    months         <- jpmonth2num(alldata[4, colpos])
+    histdata       <- purrr::map(colpos, get_histdata, df = alldata,
                             prefec = "nagasaki")
-    parsedym  <- parse_ym(path)
+    parsedym       <- parse_ym(path)
     check_month(months, parsedym$month_start, parsedym$month_end)
-    year_start <- parsedym$year_start
-    out       <- list()
-    out$year   <- give_yr2month(months, year_start)$year
-    out$month  <- give_yr2month(months, year_start)$month
-    out$hist   <- histdata
-    out        <- tibble::as_tibble(out)
+    year_start     <- parsedym$year_start
+    out            <- list()
+    out$year       <- give_yr2month(months, year_start)$year
+    out$month      <- give_yr2month(months, year_start)$month
     out$prefecture <- "nagasaki"
+    out$hist       <- histdata
+    out            <- tibble::as_tibble(out)
     if (nest == FALSE) {
       out <- tidyr::unnest(out)
     }
@@ -1179,7 +1179,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
         fname <- stringr::str_match(path, "^.+/(\\d+\\s?【熊本県】.+)")[2]
       } else {
         fname <- path
-      }
+     }
       match  <- stringr::str_match(fname, "^\\d+\\s?【熊本県】(\\w\\d+)まき")
       wareki <- match[2]
       era    <- stringr::str_sub(wareki, 1, 1)
@@ -1202,12 +1202,12 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     bl         <- purrr::map(cpos_date, get_measdata,
                              prefec = "kumamoto", df = alldata)
 
-    out        <- list()
-    out$date   <- date
-    out$method <- method
-    out$year   <- lubridate::year(out$date)
-    out$month  <- lubridate::month(out$date)
-    out$bl     <- bl
+    out            <- list()
+    out$date       <- date
+    out$method     <- method
+    out$year       <- lubridate::year(out$date)
+    out$month      <- lubridate::month(out$date)
+    out$bl         <- bl
     out$prefecture <- "kumamoto"
 
     out <- tibble::as_tibble(out)
@@ -1228,13 +1228,12 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
       as.vector()
     bl         <- purrr::map(cpos_date, get_histdata,
                              df = alldata, prefec = "kagoshima")
-
-    out        <- list()
-    out$date   <- date
-    out$method <- method
-    out$year   <- lubridate::year(out$date)
-    out$month  <- lubridate::month(out$date)
-    out$bl     <- bl
+    out            <- list()
+    out$date       <- date
+    out$method     <- method
+    out$year       <- lubridate::year(out$date)
+    out$month      <- lubridate::month(out$date)
+    out$bl         <- bl
     out$prefecture <- "kagoshima"
 
     out <- tibble::as_tibble(out)
