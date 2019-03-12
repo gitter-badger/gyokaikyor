@@ -2,6 +2,7 @@
 
 export("%>%")
 export(fmtbl)
+export(fmtbl_fresco)
 export(fmtcatch)
 importFrom(magrittr,"%<>%")
 importFrom(magrittr,"%>%")

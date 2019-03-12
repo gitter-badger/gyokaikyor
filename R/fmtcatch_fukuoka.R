@@ -42,7 +42,8 @@ fmtcatch.fukuoka <- function(path, spcs, type) {
                         row.pick = datrow, df = alldata)
   out$type  <- type
   out$catch <- col2data(col = spcs_col, row = rows,
-                        row.pick = datrow, df = alldata)
+                        row.pick = datrow, df = alldata) / 1000
+  out$prefecture <- "fukuoka"
   tibble::as_tibble(out)
 }
 
