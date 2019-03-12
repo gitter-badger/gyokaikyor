@@ -1124,7 +1124,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 
     check_month <- function(months, month_start, month_end) {
       if (!(month_start == months[1]) | (!month_end == rev(months)[1])) {
-        stop ("Check month data")
+        # message ("Check month data")
       }
     }
 
