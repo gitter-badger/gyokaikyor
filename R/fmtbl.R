@@ -1,4 +1,3 @@
-#' Load and format bl histogram data
 #'
 #' @inheritParams readxl::read_excel
 #' @param spcs Spcs name in romaji, one of

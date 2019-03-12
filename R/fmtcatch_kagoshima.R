@@ -91,11 +91,8 @@ fmtcatch.kagoshima <- function(path, spcs, spread = TRUE, maki.only = FALSE) {
     if (spread == FALSE) {
       out %<>% dplyr::select(-"total") %>%
         tidyr::gather("maki4ports", "bou_akune", "bou_uchinoura",
-               key = "port", value = "catch_ton")
+               key = "type", value = "catch")
     }
   }
-  out %<>% tidyr::gather("maki4ports", "bou_akune",
-                         "bou_akune", "bou_uchinoura",
-                         key = "type", value = catch)
   out
 }
