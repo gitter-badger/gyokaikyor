@@ -1182,8 +1182,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   usethis::use_data(coltypes_taichou, internal = TRUE, overwrite = TRUE)
 #+END_SRC
 *** 体長データ整形
-  #' Load and format bl histogram data
 #+BEGIN_SRC R :tangle R/fmtbl.R
+  #' Load and format bl histogram data
   #'
   #' @inheritParams readxl::read_excel
   #' @param spcs Spcs name in romaji, one of
