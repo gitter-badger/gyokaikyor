@@ -1,3 +1,4 @@
+#' Load and format bl histogram data
 #'
 #' @inheritParams readxl::read_excel
 #' @param spcs Spcs name in romaji, one of
@@ -28,13 +29,11 @@ load_alldata <- function(path, sheet) {
 make_blclass <- function(left, right) {
   left %<>% unlist() %>%
     as.vector() %>%
-    as.numeric() %>%
-    formatC(width = 3, flag = 0)
+    as.numeric()
   right %<>% unlist() %>%
     as.vector() %>%
-    as.numeric() %>%
-    formatC(width = 3, flag = 0)
-  out <- paste(left, right, sep = "-")
+    as.numeric()
+  out <- paste0("[", left, ",", right, ")")
   out
 }
 
@@ -121,7 +120,7 @@ fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
   cpos_date <- get_col2load(alldata[1, ], regex = "[0-9]+", offset = 0)
   date      <- alldata[1, cpos_date] %>%
     purrr::map_chr(tinyplyr::num2date)
-  method    <- alldata[1, cpos_date + 4] %>%
+  type      <- alldata[1, cpos_date + 4] %>%
     unlist() %>%
     as.vector()
   bl         <- purrr::map(cpos_date, get_measdata,
@@ -129,10 +128,10 @@ fmtbl.kumamoto  <- function(path, spcs, nest = TRUE) {
 
   out            <- list()
   out$date       <- date
-  out$method     <- method
+  out$type       <- type
   out$year       <- lubridate::year(out$date)
   out$month      <- lubridate::month(out$date)
-  out$bl         <- bl
+  out$scbl       <- bl
   out$prefecture <- "kumamoto"
 
   out <- tibble::as_tibble(out)
@@ -148,14 +147,14 @@ fmtbl.kagoshima <- function(path, spcs, nest = TRUE) {
   cpos_date <- get_col2load(alldata[3, ], regex = "[0-9]+", offset = 0)
   date      <- alldata[3, cpos_date] %>%
     tinyplyr::num2date()
-  method    <- alldata[6, cpos_date] %>%
+  type      <- alldata[6, cpos_date] %>%
     unlist() %>%
     as.vector()
   bl         <- purrr::map(cpos_date, get_histdata,
                            df = alldata, prefec = "kagoshima")
   out            <- list()
   out$date       <- date
-  out$method     <- method
+  out$type       <- type
   out$year       <- lubridate::year(out$date)
   out$month      <- lubridate::month(out$date)
   out$bl         <- bl
@@ -165,6 +164,11 @@ fmtbl.kagoshima <- function(path, spcs, nest = TRUE) {
   if (nest == FALSE) {
     out <- tidyr::unnest(out)
   }
+  out
+}
+
+rename_class <- function(left, bin) {
+  out <- paste0("[", left, ",", left + bin, ")")
   out
 }
 
@@ -201,7 +205,8 @@ fmtbl_fresco <- function(path, type, date.start, date.end) {
                   year  = lubridate::year(date),
                   month = lubridate::month(date),
                   day   = lubridate::day(date),
-                  ym    = paste0(year, month) %>% as.numeric()) %>%
+                  ym    = paste0(year, formatC(month, width = 2, flag = 0)) %>%
+                    as.numeric()) %>%
       dplyr::rename(spcs_code = 魚種コード,
                     prefec_code = 県コード) %>%
       dplyr::left_join(prefec_code, by = c("prefec_code" = "code"))
@@ -213,17 +218,17 @@ fmtbl_fresco <- function(path, type, date.start, date.end) {
                     spcs_code, prefec_code, prefecture, scbl, bw)
   } else if (type == "taichou") {
     out %<>%
-      dplyr::rename(blclass_left = 開始の階級値,
+      dplyr::rename(blclass = 開始の階級値,
                     count = 度数) %>%
-      dplyr::mutate(blclass_left = ifelse(階級幅 == 0.5,
-                                          blclass_left * 10,
+      dplyr::mutate(blclass = ifelse(階級幅 == 0.5,
+                                          blclass * 10,
                                           ifelse(階級幅 == 5,
-                                                 blclass_left,
+                                                 blclass,
                                                  NA))) %>%
       tidyr::drop_na(count) %>%
-      tidyr::uncount(count) %>%
       dplyr::select(date, year, month, day, ym,
-                    spcs_code, prefec_code, prefecture, blclass_left)
+                    spcs_code, prefec_code, prefecture, blclass, count) %>%
+      dplyr::mutate(blclass = rename_class(blclass, bin = 5))
   }
   dplyr::filter(out, dplyr::between(date, dstart, dend))
 }
