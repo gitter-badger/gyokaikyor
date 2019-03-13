@@ -158,24 +158,6 @@ R パッケージのディレクトリは全て GitHub で公開する．
                                   kumamoto,
                                   uncount_blclass(kagoshima))
 
-  uncount_blclass <- function(df) {
-    out <- df %>%
-      mutate(bl = stringr::str_sub(class, 1, 3) %>%
-               as.numeric()) %>%
-      dplyr::select(-class) %>%
-      tidyr::uncount(count)
-    out
-  }
-  nagasaki
-  kumamoto
-  kagoshima
-
-  taichou_all %>%
-    dplyr::filter((year == 2018 & month >= 9) |
-                  (year == 2019)) %>%
-    ggplot(aes(bl)) +
-    geom_histogram() +
-    facet_grid(prefecture ~ month)
 #+END_SRC
 ** 漁獲量
 #+BEGIN_SRC R
@@ -2078,3 +2060,14 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   }
 #+END_SRC
 
+*** 体長頻度データを擬似精密データに変換
+#+BEGIN_SRC R
+  uncount_blclass <- function(df) {
+    out <- df %>%
+      mutate(bl = stringr::str_sub(class, 1, 3) %>%
+               as.numeric()) %>%
+      dplyr::select(-class) %>%
+      tidyr::uncount(count)
+    out
+  }
+#+END_SRC
