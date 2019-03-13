@@ -1147,17 +1147,18 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                                      startrow:endrow, df = df, na.rm = FALSE)
              class_r   <- get_vector(col = cellranger::letter_to_num("C"),
                                      startrow:endrow, df = df, na.rm = FALSE)
-             class    <- make_blclass(class_l, class_r)
+             blclass   <- make_blclass(class_l, class_r)
            },
            "kagoshima" = {
              startrow <- 9
              endrow   <- 48
-             class    <- make_blclass(seq(40, 235, 5), seq(45, 240, 5))
+             blclass  <- make_blclass(seq(40, 235, 5), seq(45, 240, 5))
            },
            stop("Unknown prefecture"))
     count <- get_vector(col, startrow:endrow, df, na.rm = FALSE) %>%
       as.numeric()
-    out   <- data.frame(class = class, count = count)
+    out   <- data.frame(blclass = blclass, count = count) %>%
+      dplyr::mutate(blclass = as.character(blclass))
     out
   }
 #+END_SRC
@@ -1307,7 +1308,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     cpos_date <- get_col2load(alldata[1, ], regex = "[0-9]+", offset = 0)
     date      <- alldata[1, cpos_date] %>%
       purrr::map_chr(tinyplyr::num2date)
-    method    <- alldata[1, cpos_date + 4] %>%
+    type      <- alldata[1, cpos_date + 4] %>%
       unlist() %>%
       as.vector()
     bl         <- purrr::map(cpos_date, get_measdata,
@@ -1315,10 +1316,10 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 
     out            <- list()
     out$date       <- date
-    out$method     <- method
+    out$type       <- type
     out$year       <- lubridate::year(out$date)
     out$month      <- lubridate::month(out$date)
-    out$bl         <- bl
+    out$scbl       <- bl
     out$prefecture <- "kumamoto"
 
     out <- tibble::as_tibble(out)
@@ -1334,14 +1335,14 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     cpos_date <- get_col2load(alldata[3, ], regex = "[0-9]+", offset = 0)
     date      <- alldata[3, cpos_date] %>%
       tinyplyr::num2date()
-    method    <- alldata[6, cpos_date] %>%
+    type      <- alldata[6, cpos_date] %>%
       unlist() %>%
       as.vector()
     bl         <- purrr::map(cpos_date, get_histdata,
                              df = alldata, prefec = "kagoshima")
     out            <- list()
     out$date       <- date
-    out$method     <- method
+    out$type       <- type
     out$year       <- lubridate::year(out$date)
     out$month      <- lubridate::month(out$date)
     out$bl         <- bl
@@ -1399,17 +1400,17 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                       spcs_code, prefec_code, prefecture, scbl, bw)
     } else if (type == "taichou") {
       out %<>%
-        dplyr::rename(blclass_left = 開始の階級値,
+        dplyr::rename(blclass = 開始の階級値,
                       count = 度数) %>%
-        dplyr::mutate(blclass_left = ifelse(階級幅 == 0.5,
-                                            blclass_left * 10,
+        dplyr::mutate(blclass = ifelse(階級幅 == 0.5,
+                                            blclass * 10,
                                             ifelse(階級幅 == 5,
-                                                   blclass_left,
+                                                   blclass,
                                                    NA))) %>%
         tidyr::drop_na(count) %>%
-        tidyr::uncount(count) %>%
         dplyr::select(date, year, month, day, ym,
-                      spcs_code, prefec_code, prefecture, blclass_left)
+                      spcs_code, prefec_code, prefecture, blclass, count) %>%
+        dplyr::mutate(blclass = rename_class(blclass, bin = 5))
     }
     dplyr::filter(out, dplyr::between(date, dstart, dend))
   }
