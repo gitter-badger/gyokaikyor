@@ -1159,10 +1159,14 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                            "統一大海区農林漁区" = "i",
                            "開始緯度"           = "d",
                            "開始経度"           = "d")
-  prefec_code <- read.csv("~/Downloads/prefecture_code_eng.csv")
+  url <- "https://gist.githubusercontent.com/smxshxishxad/47d898c195e611aa9751f7a3d6f9e611/raw/3f07db9c411fae7b65df3c6e29e9529368c43392/prefec_code_eng.csv"
+  tmp <- RCurl::getURL(url, ssl.verifypeer = FALSE)
+  prefec_code <- read.csv(textConnection(tmp), sep = ",", header = TRUE)
 
-  usethis::use_data(coltypes_seimitsu, internal = TRUE, overwrite = TRUE)
-  usethis::use_data(coltypes_taichou, internal = TRUE, overwrite = TRUE)
+  usethis::use_data(prefec_code,
+                    coltypes_taichou,
+                    coltypes_seimitsu,
+                    internal = TRUE, overwrite = TRUE)
 #+END_SRC
 *** 体長データ整形
 #+BEGIN_SRC R :tangle R/fmtbl.R
