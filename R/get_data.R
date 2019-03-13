@@ -35,16 +35,17 @@ get_histdata <- function(col, df, prefec) {
                                    startrow:endrow, df = df, na.rm = FALSE)
            class_r   <- get_vector(col = cellranger::letter_to_num("C"),
                                    startrow:endrow, df = df, na.rm = FALSE)
-           class    <- make_blclass(class_l, class_r)
+           blclass   <- make_blclass(class_l, class_r)
          },
          "kagoshima" = {
            startrow <- 9
            endrow   <- 48
-           class    <- make_blclass(seq(40, 235, 5), seq(45, 240, 5))
+           blclass  <- make_blclass(seq(40, 235, 5), seq(45, 240, 5))
          },
          stop("Unknown prefecture"))
   count <- get_vector(col, startrow:endrow, df, na.rm = FALSE) %>%
     as.numeric()
-  out   <- data.frame(class = class, count = count)
+  out   <- data.frame(blclass = blclass, count = count) %>%
+    dplyr::mutate(blclass = as.character(blclass))
   out
 }
