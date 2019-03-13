@@ -1201,13 +1201,11 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   make_blclass <- function(left, right) {
     left %<>% unlist() %>%
       as.vector() %>%
-      as.numeric() %>%
-      formatC(width = 3, flag = 0)
+      as.numeric()
     right %<>% unlist() %>%
       as.vector() %>%
-      as.numeric() %>%
-      formatC(width = 3, flag = 0)
-    out <- paste(left, right, sep = "-")
+      as.numeric()
+    out <- paste0("[", left, ",", right, ")")
     out
   }
 
@@ -1341,6 +1339,11 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 
+  rename_class <- function(left, bin) {
+    out <- paste0("[", left, ",", left + bin, ")")
+    out
+  }
+
   #' Format bldata exported from FRESCO database
   #'
   #' @inheritParams fmtbl
@@ -1374,7 +1377,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                     year  = lubridate::year(date),
                     month = lubridate::month(date),
                     day   = lubridate::day(date),
-                    ym    = paste0(year, month) %>% as.numeric()) %>%
+                    ym    = paste0(year, formatC(month, width = 2, flag = 0)) %>%
+                      as.numeric()) %>%
         dplyr::rename(spcs_code = 魚種コード,
                       prefec_code = 県コード) %>%
         dplyr::left_join(prefec_code, by = c("prefec_code" = "code"))
