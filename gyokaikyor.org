@@ -196,7 +196,7 @@ R パッケージのディレクトリは全て GitHub で公開する．
                  export = TRUE, fname = "gkk_2019Mar_bl_kumamoto_all.csv")
   # kagoshima
   kagoshima %>%
-    dplyr::filter(type != "棒受網") %>%
+    dplyr::filter(grepl("まき", type)) %>%
     conv2hoshifile(prefec = "kagoshima",
                    type = "taichou", 201801, 201903,
                    export = TRUE, fname = "gkk_2019Mar_bl_kagoshima_maki.csv")
