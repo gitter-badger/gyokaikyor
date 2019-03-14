@@ -80,7 +80,7 @@ conv2hoshifile <- function(df, prefec, type, ym.start, ym.end,
   }
   out <- extract_count(classes, ymseq, df.count)
   if (export == TRUE) {
-    write.csv(out, fname))
+    write.csv(out, fname)
   }
   out
 }
