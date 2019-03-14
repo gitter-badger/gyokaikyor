@@ -2030,7 +2030,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+END_SRC
 
 *** ★ファイル形式で書き出し
-#+BEGIN_SRC R :tangle R/fmtcatch_yamaguchi.R
+#+BEGIN_SRC R :tangle R/conv2hoshifile.R
   conv2hoshifile <- function(df, prefec, type, ym.start, ym.end,
                              export = FALSE, fname = NULL,
                              class.start = 10, class.end = 160) {
@@ -2113,8 +2113,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     }
     out <- extract_count(classes, ymseq, df.count)
     if (export == TRUE) {
-      write.csv(out, paste0("/Volumes/評価研/個人的データ置き場/hayashi/output/",
-                            fname))
+      write.csv(out, fname))
     }
     out
   }
