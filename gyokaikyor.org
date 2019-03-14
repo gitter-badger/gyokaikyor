@@ -4,29 +4,35 @@
 
 * 目次                                                                :TOC_3:
 - [[#これは何か][これは何か？]]
-- [[#レガシーファイル構成を整理する][レガシーファイル構成を整理する]]
+- [[#レガシーワークフローを整理する][レガシーワークフローを整理する]]
   - [[#カタクチyyxlsx][★カタクチYY.xlsx]]
     - [[#ファイルがやっていること][ファイルがやっていること]]
     - [[#問題点][問題点]]
     - [[#解決策][解決策]]
   - [[#カタクチ月別県別漁獲量xlsx][★カタクチ月別県別漁獲量.xlsx]]
     - [[#ファイル中での作業][ファイル中での作業]]
-  - [[#各県いわし][各県いわし]]
+  - [[#各県いわしファイル][「各県いわし」ファイル]]
+  - [[#水温データの整理][水温データの整理]]
+  - [[#漁況予測][漁況予測]]
+    - [[#glmによる予測][GLMによる予測]]
+    - [[#時系列解析による予測][時系列解析による予測]]
+    - [[#問題点-1][問題点]]
 - [[#ディレクトリの構成][ディレクトリの構成]]
 - [[#パッケージの機能][パッケージの機能]]
   - [[#データ目録の生成][データ目録の生成]]
   - [[#データの統合][データの統合]]
   - [[#グラフ描画][グラフ描画]]
   - [[#予報文案テンプレートの生成][予報文案テンプレートの生成]]
-- [[#デモ][デモ]]
-  - [[#体長組成][体長組成]]
-  - [[#漁獲量][漁獲量]]
+- [[#使い方デモ][使い方デモ]]
+  - [[#体長組成整理][体長組成整理]]
+  - [[#漁獲量整理][漁獲量整理]]
+  - [[#漁況予測-1][漁況予測]]
 - [[#開発環境の整備][開発環境の整備]]
   - [[#本バッケージ内部で使用するパッケージ][本バッケージ内部で使用するパッケージ]]
 - [[#開発][開発]]
   - [[#各県ファイルに対して必要な処理概要][各県ファイルに対して必要な処理概要]]
     - [[#体長][体長]]
-    - [[#漁獲量-1][漁獲量]]
+    - [[#漁獲量][漁獲量]]
   - [[#どう問題を解くか][どう問題を解くか]]
     - [[#get_topleftkey--flmm][get_topleft(key = "FL(mm)")]]
   - [[#リロード--自動テスト][リロード & 自動テスト]]
@@ -51,13 +57,15 @@
     - [[#体長データ整形][体長データ整形]]
     - [[#漁獲量データ整形][漁獲量データ整形]]
     - [[#ファイル形式で書き出し][★ファイル形式で書き出し]]
+    - [[#各県いわしをrで使いやすい形式に変換][「各県いわし」をRで使いやすい形式に変換]]
     - [[#体長頻度データを擬似精密データに変換][体長頻度データを擬似精密データに変換]]
+    - [[#水温データを整理][水温データを整理]]
 
 * これは何か？
 漁海況業務のリポジトリ．
 主にRのパッケージ開発のコミュニケーション用．
 
-* レガシーファイル構成を整理する
+* レガシーワークフローを整理する
 ** ★カタクチYY.xlsx
 *** ファイルがやっていること
 各県の月別体長組成を統合し，
@@ -94,7 +102,316 @@ get_table("./output.git/nagasaki_2018oct.csv", gyokaikyo = TRUE, start = 2016, e
 **** 単位をトンに揃えて農林統計の値で引き伸ばす
 **** 「しらす」については月別には集計せず，農林統計で引き伸ばす
 
-** 各県いわし
+** 「各県いわし」ファイル
+** 水温データの整理
+#+BEGIN_SRC R
+  temp <- get_tw_sst("/Users/ahayashi/Documents/GitHub/gyokaikyor/data.git/水温データ/mgdsst_till201902.xlsx",
+                     year.end = 2019)
+  write.csv(temp, "/Volumes/評価研/個人的データ置き場/hayashi/output/gkk_2019Mar_sst.csv", row.names = FALSE)
+#+END_SRC
+** 漁況予測
+*** GLMによる予測
+どの変数も効いていない
+#+BEGIN_SRC R
+  # 漁海況予報会議のためのコード：カタクチイワシ3月時点の予報（黒田作成・林責任）
+  # 一般化線形モデルを用いて、4–8月の水揚量を説明。漁獲量の予測値±95%信頼区間を表示
+
+  library(MuMIn)
+
+  # データ読み込み
+  data_org <- read.csv("/Users/ahayashi/Documents/work/gyokaikyo_2019_katakuchi_data_190314.csv",
+                       header = TRUE)
+
+  yr2pred <- 2019
+  period2use  <- 10
+  last_row <- which(data_org$year == yr2pred) # 2018
+  first_row <- last_row - period2use
+
+  data        <- data_org[first_row:last_row, ]
+  data_minus1 <- data[1:(nrow(data) - 1), ]
+  data_recent <- data_minus1[(nrow(data_minus1) - 4):(nrow(data_minus1)), ]
+  recent_lower  <- mean(data_recent$catch49) * 0.8
+  recent_upper  <- mean(data_recent$catch49) * 1.2
+
+  resglm <- glm(catch49 ~ catch1 + catch11 + catch12 + catch111 +
+                  temp11 + temp12 + temp1 + temp2 + bio,
+                family = gaussian(link = "identity"),
+                    data = data_minus1)
+  MASS::stepAIC(resglm)
+  summary(resglm)
+
+  prediction  <- predict(resglm, newdata = data.frame(catch1 = data$catch1),
+                         se.fit = TRUE, type = "response",
+                         na.action = "na.fail")
+  uconf  <- prediction$fit + prediction$se.fit * 1.96
+  lconf  <- prediction$fit - prediction$se.fit * 1.96
+  summary(resglm)
+  as.numeric(resglm$fitted.values)
+
+
+  color.model.shade <- hsv( 20/360, 0.2, 0.9)
+  color.model       <- hsv( 20/360, 0.8, 0.9)
+  col.lastyr        <- hsv(200/360, 0.8, 0.9)
+  min.catch         <- 5000
+  max.catch         <- 20000
+
+  # png(paste("/Volumes/評価研/個人的データ置き場/hayashi/output/figs/gkk", yr2pred, "年3月_漁獲量予測.png"),
+  #     width = 1300, height = 800)
+  # plot(data_minus1$year, data_minus1$catch49,
+  #      xlim = c(min(data$year), max(data$year)),
+  #      ylim=c(min.catch, max.catch), type = "n", axes = FALSE, ann = FALSE)
+  # polygon(c(data$year, rev(data$year)),
+  #         c(uconf, rev(lconf)), col = color.model.shade, border = FALSE)
+  # lines(data$year, prediction$fit, col = COLOR.MODEL, lwd = 8)
+  # lines(data.minus1$year, data.minus1$catch49, lwd = 4)
+  # points(data.minus1$year, data.minus1$catch49, pch = 16, cex = 3)
+  # lines(min(data.recent$year):year.to.predict, rep(recent.lower,
+  #                                             nrow(data.recent) + 1), lty = 2, lwd = 4)
+  # lines(min(data.recent$year):year.to.predict, rep(recent.upper,
+  #                                             nrow(data.recent) + 1), lty = 2, lwd = 4)
+  # arrows((year.to.predict - 1), data.minus1[nrow(data.minus1), "catch49"] * 1.2,
+  #        (year.to.predict - 1), data.minus1[nrow(data.minus1), "catch49"] * 0.8,
+  #       length = 0, col = COL.LASTYR, lwd = 4)
+  # points((year.to.predict - 1), data.minus1[nrow(data.minus1), "catch49"]
+  #        , pch = 16, col = COL.LASTYR, cex = 4)
+  # points(max(data$year), prediction$fit[nrow(data)],
+  #        col = COLOR.MODEL, pch = 16, cex = 6)
+  # axis(1, data$year, tcl = -0.6, lwd = 4, labels = FALSE)
+  # axis(1, data$year[(data$year %% 5) == 0], tcl = -1.6, lwd = 4, labels = FALSE)
+  # axis(2, seq(MIN.CATCH, MAX.CATCH, 5000), lwd = 4, tcl = -1.6, labels = FALSE)
+  # dev.off()
+#+END_SRC
+*** 時系列解析による予測
+#+BEGIN_SRC R
+  # load packages ------------------------------------------------------------
+  library(tidyverse)
+  library(zoo)
+  library(xts)
+  library(lubridate)
+  library(urca)
+  library(forecast)
+  library(tseries)
+  library(ggfortify)
+  source("_bk/fmtcatch/R/make_list.R")
+  source("_bk/fmtcatch/R/plot_figs.R")
+  source("_bk/fmtcatch/R/get_temp.R")
+
+  # Load data ------------------------------------------------------------
+  stacdata <- read_csv("/Users/ahayashi/Dropbox/Imported/Stock/Timeseries_TW_Engraulis-japonicus.csv") %>%
+    rename(year = Year,
+           biomass = `B_10^3ton`) %>%
+    dplyr::select(year, biomass)
+
+  sstdata <- get_tw_sst("data.git/水温データ/mgdsst_till201902.xlsx", 2018)
+
+  list_catchdata <- iwashi2list(path = "/Volumes/評価研/漁海況/2019年3月/漁況資料作成/いわし/各県いわし_林20190312.xlsx",
+                                sheet = "カタクチイワシ",
+                                year.end = 2019)
+  seikai <- summarize_seikai(list_catchdata)
+
+  abb2num <- function(abb) {
+    lambda <- function(abb) {
+      which(abb == month.abb)
+    }
+    purrr::map_int(abb, lambda)
+  }
+
+  db   <- seikai %>%
+    tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
+                  key = month, value = catch) %>%
+    dplyr::mutate(month = abb2num(month)) %>%
+    left_join(sstdata, key = c(year, month)) %>%
+    left_join(stacdata, key = year) %>%
+    mutate(day = 1,
+           date = make_date(year, month, day))
+
+  data <- readRDS("_bk/fmtcatch/output/西海ブロック漁獲量2018.rds")
+  db   <- make_database(data) %>%
+  db2 <- left_join(db, sstdata, key = c(year, month))
+  db3 <- left_join(db2, stacdata, key = year)
+
+  blank_data <- data_frame(year = 2019,
+                           month = 1:3,
+                           tw_degc = NA,
+                           biomass = NA)
+
+  seikai_org <- db %>%
+    group_by(year, month, tw_degc, biomass) %>%
+    summarize(logcatch = log(sum(catch, na.rm = TRUE))) %>%
+    as.data.frame()
+
+  seikai <- db %>%
+    filter(year < 2019) %>%
+    group_by(year, month, tw_degc, biomass) %>%
+    summarize(logcatch = log(sum(catch, na.rm = TRUE))) %>%
+    as.data.frame()
+
+  seikai_year <- seikai %>%
+    group_by(year) %>%
+    summarize(sum = sum(logcatch))
+
+  seikai_ts <- seikai %>%
+    dplyr::select(logcatch) %>%
+    unlist() %>%
+    ts(start = min(db$year), frequency = 12)
+
+  seikai_sst <- seikai %>%
+    dplyr::select(tw_degc) %>%
+    unlist() %>%
+    ts(start = min(db$year), frequency = 12)
+
+  seikai_b <- seikai %>%
+    dplyr::select(biomass) %>%
+    unlist() %>%
+    ts(start = min(db$year), frequency = 12)
+  xvars <- cbind(seikai_sst, seikai_b)
+
+  # autoplot(seikai_ts)
+  # autoplot(seikai_sst)
+
+  # analysis ------------------------------------------------------------
+
+  ndiffs(seikai_ts) # No lag is needed
+  ggtsdisplay(seikai_ts)
+
+  ggsubseriesplot(seikai_ts)
+
+  seikai_ts_seas <- diff(seikai_ts, lag = frequency(seikai_ts))
+  ggtsdisplay(seikai_ts_seas)
+  acf(seikai_ts_seas, plot = FALSE, lag.max = 12)
+
+
+  train       <- window(seikai_ts,  end = c(2016, 12))
+  xvars_train <- window(xvars, end = c(2016, 12))
+  test        <- window(seikai_ts,  start = c(2017, 1), end = c(2017, 12))
+  xvars_test  <- window(xvars, start = c(2017, 1), end = c(2017, 12))
+
+  # Build model ----------------------------------------------------------------------
+  model_sarimax <- auto.arima(y = seikai_ts,
+  #                            y = train,
+  #                            xreg = xvars_train,
+                              ic = "aicc",
+                              max.order = 8,
+                              stepwise = FALSE,
+                              approximation = FALSE,
+                              parallel = TRUE,
+                              num.cores = 4)
+  model_sarimax
+
+  abs(polyroot(c(1, -coef(model_sarimax)[c("ar1")]))) # ok
+  abs(polyroot(c(1,  coef(model_sarimax)[c("ma1")]))) # ok
+  checkresiduals(model_sarimax)
+  jarque.bera.test(resid(model_sarimax)) # Not good. Residuals do not distribute normally (p < 0.001).
+
+  # Validation of the model ------------------------------------------------------------
+
+  model_valid <- forecast(model_sarimax,
+  #                           xreg = xvars_test,
+                             h = 24,
+                             level = c(95, 70))
+  model_valid
+  mean(model_valid$mean[11:15])
+  mean(model_valid$lower[11:15])
+  mean(model_valid$upper[11:15])
+  p <- autoplot(model_valid, predict.color = 1)
+  ggsave("../../figs/tsplot.png", family = "Helvetica")
+
+  xvar_mean <- data.frame(tw_degc = rep(mean(xvars_train[,"seikai_sst"], na.rm = TRUE), 12),
+                          biomass = rep(mean(xvars_train[,"seikai_b"])))
+  fc_mean  <- forecast(model_sarimax,
+                       xreg = xvar_mean,
+                       h = 12,
+                       level = c(95, 70))
+  autoplot(fc_mean, predict.color = 1)
+
+  xvar_tail <- data.frame(tw_degc = rep(tail(xvars_train[,"seikai_sst"], n = 1), 12),
+                          biomass = rep(tail(xvars_train[,"seikai_b"], n = 1), 12))
+  fc_tail  <- forecast(model_sarimax,
+                       xreg = xvar_tail,
+                       h = 24,
+                       level = c(95, 70))
+  autoplot(fc_tail, predict.color = 1)
+
+  g <- autoplot(model_valid)
+  real2017 <- data.frame(date = seq.Date(as.Date("2017-01-01"), as.Date("2017-12-01"), by = "month"), logcatch = test)
+  g <- g + geom_point(data = real2017, aes(date, logcatch))
+  real2018 <- data.frame(date = seq.Date(as.Date("2018-01-01"), as.Date("2018-12-01"), by = "month"),
+                         logcatch = window(seikai_ts,  start = c(2018, 1), end = c(2018, 12)))
+  g <- g + geom_point(data = real2018, aes(date, logcatch), color = "red")
+  g
+
+  gm <- autoplot(fc_mean)
+  real2017 <- data.frame(date = seq.Date(as.Date("2017-01-01"), as.Date("2017-12-01"), by = "month"), logcatch = test)
+  gm <- gm + geom_point(data = real2017, aes(date, logcatch))
+  gm
+
+  gt <- autoplot(fc_tail)
+  real2017 <- data.frame(date = seq.Date(as.Date("2017-01-01"), as.Date("2017-12-01"), by = "month"), logcatch = test)
+  gt <- gt + geom_point(data = real2017, aes(date, logcatch))
+  gt
+
+  naive <- meanf(train, h = 12)
+
+  rmse_valid <- sqrt(sum((model_valid$mean - test)^2) / length(model_valid$mean))
+  rmse_valid
+  accuracy(naive, x = test)["Test set", "RMSE"]
+  accuracy(model_valid, x = test)["Test set", "RMSE"] # better than naive model
+  accuracy(fc_mean, x = test)["Test set", "RMSE"]
+  accuracy(fc_tail, x = test)["Test set", "RMSE"] # best
+
+  model_valid$mean
+  str(model_valid)
+
+
+  # Plot by year ------------------------------------------------------------
+  res_valid <- data.frame(year = rep(2017, 12),
+                            month = month.abb,
+                            logcatch = model_valid$mean,
+                            lwr = model_valid$lower,
+                            upr = model_valid$upper) %>%
+    group_by(year) %>%
+    summarize(sum = sum(logcatch),
+              upr = sum(upr.95.),
+              lwr = sum(lwr.95.))
+
+  years <- seikai %>%
+    filter(year < 2017) %>%
+    select(year) %>%
+    unlist()
+  years
+  length(unique(years))
+  nrow(seikai)
+
+  res_train   <- data.frame(year = years,
+                            month = rep(month.abb, length(unique(years))),
+                            logcatch = as.numeric(model_sarimax$fitted),
+                            upper = model_sarimax$fitted + 1.96 * sqrt(model_sarimax$sigma2),
+                            lower = model_sarimax$fitted - 1.96 * sqrt(model_sarimax$sigma2)) %>%
+    group_by(year) %>%
+    summarize(sum = sum(logcatch),
+              upr = sum(upper),
+              lwr = sum(lower))
+
+  res <- bind_rows(res_train, res_valid)
+
+  p <- res %>%
+    ggplot(aes(year, sum)) +
+    geom_ribbon(aes(ymin = lwr, ymax = upr), fill = hsv(200/360, 0.8, 0.8, 0.4)) +
+    geom_line(color = hsv(200/360, 0.8, 0.8))
+  p <- p + geom_point(data = seikai_year, aes(year, sum))
+  p
+
+  dat.forecast <- data.frame(biomass = rep(tail(stacdata$biomass, 1), 24),
+                             tw_degc = rep(filter(sstdata, year==2017)$tw_degc, 2)) %>%
+    ts(start = 2016, frequency = 12)
+  dat.forecast
+
+  ts.plot(model_sarimax$fit, train, col = c(3, 1))
+
+#+END_SRC
+*** 問題点
+各県いわしに依存している．
+catch49など，手作業が介在
 * ディレクトリの構成
 R パッケージのディレクトリは全て GitHub で公開する．
 ただし，以下のディレクトリは GitHub にはアップロードせず，ローカルで管理する（リモートリポジトリを GitHub ではなく，NAS に設定する）．
@@ -111,8 +428,8 @@ R パッケージのディレクトリは全て GitHub で公開する．
 何らかの構造化マークアップ言語の形式で．
 できるだけタグが短いもの．
 マークダウンが有力か？
-* デモ
-** 体長組成
+* 使い方デモ
+** 体長組成整理
 #+BEGIN_SRC R
   library(gyokaikyor)
   library(dplyr)
@@ -207,10 +524,10 @@ R パッケージのディレクトリは全て GitHub で公開する．
 
 
   # seikai
-  no data
+  #no data
 
 #+END_SRC
-** 漁獲量
+** 漁獲量整理
 #+BEGIN_SRC R
   library(hash)
   library(dplyr)
@@ -348,6 +665,10 @@ R パッケージのディレクトリは全て GitHub で公開する．
     group_by(year, month) %>%
     summarize(catch = sum(catch, na.rm = TRUE)) %>%
     export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_kagoshima.csv")
+#+END_SRC
+** 漁況予測
+#+BEGIN_SRC R
+
 #+END_SRC
 * 開発環境の整備
 #+BEGIN_SRC R :results silent
