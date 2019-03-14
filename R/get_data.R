@@ -39,8 +39,15 @@ get_histdata <- function(col, df, prefec) {
          },
          "kagoshima" = {
            startrow <- 9
-           endrow   <- 48
-           blclass  <- make_blclass(seq(40, 235, 5), seq(45, 240, 5))
+           endrow   <- stringr::str_which(dplyr::pull(df, 2), "合　計") - 1
+           class_start <- df[startrow, 2] %>%
+             stringr::str_replace("(?<=\\d\\.\\d)\\D", "") %>%
+             stringr::str_replace("( |　)+", "") %>%
+             as.double()
+           class_end <- df[endrow, 2] %>%
+             as.integer()
+           left     <- seq(class_start * 10, class_end * 10 + 5, 5)
+           blclass  <- make_blclass(left, left + 5)
          },
          stop("Unknown prefecture"))
   count <- get_vector(col, startrow:endrow, df, na.rm = FALSE) %>%
