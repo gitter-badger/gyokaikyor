@@ -77,7 +77,8 @@ iwashi2list <- function(path, sheet, year.start = 1992, year.end) {
   df          <- load_iwashi(path = path, year.end = year.end,
                   sheet = sheet, year.start = year.start)
   prefec_rows <- get_prefec_rows(df[, 1])
-  out <- purrr::map(prefec_rows, make_list, df, year.end = year.end) %>%
+  out <- purrr::map(prefec_rows, make_list, df.iwashi = df,
+                    year.end = year.end) %>%
     purrr::flatten()
   out
 }

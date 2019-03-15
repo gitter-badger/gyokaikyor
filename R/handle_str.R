@@ -55,3 +55,10 @@ xtract_numeric <- function(str) {
   out <- purrr::map_int(str, xtract_numerici)
   out
 }
+
+abb2num <- function(abb) {
+  lambda <- function(abb) {
+    which(abb == month.abb)
+  }
+  purrr::map_int(abb, lambda)
+}
