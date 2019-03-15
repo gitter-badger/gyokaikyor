@@ -40,8 +40,8 @@ get_prefec_rows <- function(str) {
 
 make_list <- function(row.prefec, df.iwashi, year.end, year.start = 1992){
   years      <- year.start:year.end
-  row_prefec <- get_prefec_rows(df[, 1])
-  prefec_name      <- stringr::str_replace(df[row.prefec, 1], "県.+", "")
+  row_prefec <- get_prefec_rows(df.iwashi[, 1])
+  prefec_name      <- stringr::str_replace(df.iwashi[row.prefec, 1], "県.+", "")
   row_start        <- row.prefec + 2
   row_end          <- row_start + length(years) - 1
   data_prefec      <- df.iwashi[row_start:row_end, ] %>%
@@ -76,9 +76,35 @@ summarize_seikai <- function(list) {
 iwashi2list <- function(path, sheet, year.start = 1992, year.end) {
   df          <- load_iwashi(path = path, year.end = year.end,
                   sheet = sheet, year.start = year.start)
-  prefec_rows <- get_prefec_rows(df[, 1])
+  prefec_rows <- get_prefec_rows(dplyr::pull(df, 1))
   out <- purrr::map(prefec_rows, make_list, df.iwashi = df,
                     year.end = year.end) %>%
     purrr::flatten()
+  out
+}
+
+ym_matrix2df <- function(x) {
+  out <- x %>%
+    tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
+                  key = month, value = catch) %>%
+    dplyr::mutate(month = abb2num(month),
+                  ym    = make_ym(year, month))
+  out
+}
+
+make_ymrange <- function(year, gkk.month) {
+  out <- NULL
+  switch(gkk.month,
+         "Mar" = {
+           mstart <- 4
+           mend   <- 3
+         },
+         "Oct" = {
+         },
+         stop("Unknown month"))
+  out$start <- paste0(year - 1, formatC(mstart, width = 2, flag = 0)) %>%
+    as.numeric()
+  out$end   <- paste0(year, formatC(mend, width = 2, flag = 0)) %>%
+    as.numeric()
   out
 }

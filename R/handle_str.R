@@ -62,3 +62,9 @@ abb2num <- function(abb) {
   }
   purrr::map_int(abb, lambda)
 }
+
+make_ym <- function(y, m) {
+  out <- paste0(y, formatC(m, width = 2, flag = 0)) %>%
+    readr::parse_integer()
+  out
+}

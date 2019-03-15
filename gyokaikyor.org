@@ -118,7 +118,9 @@ get_table("./output.git/nagasaki_2018oct.csv", gyokaikyo = TRUE, start = 2016, e
                                 year.end = 2019, year.start = 1992)
   df.seikai <- summarize_seikai(list_catchdata)
 
-  plot_catch_monthvar(df.seikai, 2019, "Mar")
+  plot_catch_monthvar(df.seikai = df.seikai, year = 2019, gkk.month = "Mar")
+
+  plot_catch_prefec(list, 2019, "Mar")
 
   library(XLConnect)
   library(cluster)
@@ -719,46 +721,38 @@ get_table("./output.git/nagasaki_2018oct.csv", gyokaikyo = TRUE, start = 2016, e
   list_catchdata <- iwashi2list(path = "/Volumes/評価研/漁海況/2019年3月/漁況資料作成/いわし/各県いわし_林20190312.xlsx",
                                 sheet = "カタクチイワシ",
                                 year.end = 2019)
-  seikai <- summarize_seikai(list_catchdata)
 
+  # make 'ts' class data
 
-  db   <- seikai %>%
+  db   <- summarize_seikai(list_catchdata) %>%
     tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
                   key = month, value = catch) %>%
     dplyr::mutate(month = abb2num(month)) %>%
     left_join(sstdata, key = c(year, month)) %>%
     left_join(stacdata, key = year) %>%
-    mutate(day = 1,
-           date = make_date(year, month, day))
-
-  data <- readRDS("_bk/fmtcatch/output/西海ブロック漁獲量2018.rds")
-  db   <- make_database(data) %>%
-  db2 <- left_join(db, sstdata, key = c(year, month))
-  db3 <- left_join(db2, stacdata, key = year)
-
-  blank_data <- data_frame(year = 2019,
-                           month = 1:3,
-                           tw_degc = NA,
-                           biomass = NA)
+    mutate(ym = paste0(year, formatC(month, width = 2, flag = 0)) %>%
+             as.numeric()) %>%
+    arrange(ym)
+  db
 
   seikai_org <- db %>%
     group_by(year, month, tw_degc, biomass) %>%
     summarize(logcatch = log(sum(catch, na.rm = TRUE))) %>%
+    mutate(logsst = log(tw_degc),
+           logb = log(biomass)) %>%
     as.data.frame()
 
-  seikai <- db %>%
-    filter(year < 2019) %>%
-    group_by(year, month, tw_degc, biomass) %>%
-    summarize(logcatch = log(sum(catch, na.rm = TRUE))) %>%
-    as.data.frame()
+  # seikai <- db %>%
+  #   filter(year < 2019) %>%
+  #   group_by(year, month, tw_degc, biomass) %>%
+  #   summarize(logcatch = log(sum(catch, na.rm = TRUE))) %>%
+  #   as.data.frame()
 
-  seikai_year <- seikai %>%
-    group_by(year) %>%
-    summarize(sum = sum(logcatch))
+  # seikai_year <- seikai %>%
+  #   group_by(year) %>%
+  #   summarize(sum = sum(logcatch))
 
-  seikai_ts <- seikai %>%
-    dplyr::select(logcatch) %>%
-    unlist() %>%
+  seikai_ts <- seikai_org %>%
     ts(start = min(db$year), frequency = 12)
 
   seikai_sst <- seikai %>%
@@ -787,33 +781,71 @@ get_table("./output.git/nagasaki_2018oct.csv", gyokaikyo = TRUE, start = 2016, e
   acf(seikai_ts_seas, plot = FALSE, lag.max = 12)
 
 
-  train       <- window(seikai_ts,  end = c(2016, 12))
-  xvars_train <- window(xvars, end = c(2016, 12))
-  test        <- window(seikai_ts,  start = c(2017, 1), end = c(2017, 12))
-  xvars_test  <- window(xvars, start = c(2017, 1), end = c(2017, 12))
+  train       <- window(seikai_ts,  end = c(2017, 12))
+  sst_b       <- train[, c("logsst", "logb")]
+  # xvars_train <- window(xvars, end = c(2018, 12))
+  # test        <- window(seikai_ts,  start = c(2018, 1), end = c(2018, 12))
+  # xvars_test  <- window(xvars, start = c(2017, 1), end = c(2017, 12))
 
   # Build model ----------------------------------------------------------------------
-  model_sarimax <- auto.arima(y = seikai_ts,
-  #                            y = train,
-  #                            xreg = xvars_train,
-                              ic = "aicc",
+  model_sarimax1 <- Arima(y = train[, "logcatch"],
+                         order = c(1, 1, 1),
+                         seasonal = list(order = c(1, 0, 0)),
+                         xreg = sst_b)
+  model_sarimax1
+  #   Sst and biomass have positive effect to catch.
+  #   AIC was 750.41.
+  #   --- But model order should be considered.
+
+
+  # Select model order automatically
+  model_sarimax <- auto.arima(y = train[, "logcatch"],
+                              xreg = sst_b,
+                              ic = "aic",
                               max.order = 8,
                               stepwise = FALSE,
                               approximation = FALSE,
                               parallel = TRUE,
                               num.cores = 4)
   model_sarimax
+  #    Regression with ARIMA(2,0,0)(1,0,1) errors were selected.
+  #    AIC was 725.1.
 
-  abs(polyroot(c(1, -coef(model_sarimax)[c("ar1")]))) # ok
-  abs(polyroot(c(1,  coef(model_sarimax)[c("ma1")]))) # ok
-  checkresiduals(model_sarimax)
+  # Check model
+  abs(polyroot(c(1, -coef(model_sarimax)[c("ar1", "ar2")]))) # ok because greater than 1.
+  abs(polyroot(c(1, -coef(model_sarimax)[c("sar1")]))) # ok because greater than 1.
+
+  checkresiduals(model_sarimax)                       # ok mecause p > 0.001
   jarque.bera.test(resid(model_sarimax)) # Not good. Residuals do not distribute normally (p < 0.001).
+
+  # Forcast
+  sst_b_test <- test[, c("logsst", "logb")]
+  sarimax_f <- forecast(model_sarimax,
+                        xreg = sst_b_test,
+                        h = 12,
+                        level = c(95, 70))
+  sarimax_f
+  autoplot(sarimax_f, predict.colour = 1, main = "Prediction by ARIMA")
+  # Forcast completed successfully.
+  # But, x values sould be considered.
+
+  # Forecast using mean- or last x values
+  sst_b_mean <- data.frame(logsst = rep(mean(train[, "logsst"]), 12),
+                           logb   = rep(mean(train[, "logb"]), 12))
+  sarimax_f_mean <- forecast(model_sarimax, xreg = sst_b_mean)
+
+
+  str(sarimax_f)
+  out <- list(mean = exp(sarimax_f$mean),
+              lower = exp(sarimax_f$lower),
+              upper = exp(sarimax_f$upper))
+  out
 
   # Validation of the model ------------------------------------------------------------
 
   model_valid <- forecast(model_sarimax,
   #                           xreg = xvars_test,
-                             h = 24,
+                             h = 12,
                              level = c(95, 70))
   model_valid
   mean(model_valid$mean[11:15])
@@ -839,8 +871,8 @@ get_table("./output.git/nagasaki_2018oct.csv", gyokaikyo = TRUE, start = 2016, e
   autoplot(fc_tail, predict.color = 1)
 
   g <- autoplot(model_valid)
-  real2017 <- data.frame(date = seq.Date(as.Date("2017-01-01"), as.Date("2017-12-01"), by = "month"), logcatch = test)
-  g <- g + geom_point(data = real2017, aes(date, logcatch))
+  # real2017 <- data.frame(date = seq.Date(as.Date("2017-01-01"), as.Date("2017-12-01"), by = "month"), logcatch = test)
+  # g <- g + geom_point(data = real2017, aes(date, logcatch))
   real2018 <- data.frame(date = seq.Date(as.Date("2018-01-01"), as.Date("2018-12-01"), by = "month"),
                          logcatch = window(seikai_ts,  start = c(2018, 1), end = c(2018, 12)))
   g <- g + geom_point(data = real2018, aes(date, logcatch), color = "red")
@@ -1369,7 +1401,6 @@ fresco
 水面下でデータ型式を読みに行き，ファイル名に属性として付与している
 
 fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
-
 
 
 *** get_topleft(key = "FL(mm)")
@@ -1922,7 +1953,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 #+END_SRC
-
 
 *** 種名シート名生成
 #+BEGIN_SRC  R :tangle R/make_shtname.R
@@ -3011,8 +3041,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 
   make_list <- function(row.prefec, df.iwashi, year.end, year.start = 1992){
     years      <- year.start:year.end
-    row_prefec <- get_prefec_rows(df[, 1])
-    prefec_name      <- stringr::str_replace(df[row.prefec, 1], "県.+", "")
+    row_prefec <- get_prefec_rows(df.iwashi[, 1])
+    prefec_name      <- stringr::str_replace(df.iwashi[row.prefec, 1], "県.+", "")
     row_start        <- row.prefec + 2
     row_end          <- row_start + length(years) - 1
     data_prefec      <- df.iwashi[row_start:row_end, ] %>%
@@ -3047,7 +3077,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   iwashi2list <- function(path, sheet, year.start = 1992, year.end) {
     df          <- load_iwashi(path = path, year.end = year.end,
                     sheet = sheet, year.start = year.start)
-    prefec_rows <- get_prefec_rows(df[, 1])
+    prefec_rows <- get_prefec_rows(dplyr::pull(df, 1))
     out <- purrr::map(prefec_rows, make_list, df.iwashi = df,
                       year.end = year.end) %>%
       purrr::flatten()
@@ -3091,7 +3121,6 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 #+END_SRC
-
 *** 水温データを整理
 #+BEGIN_SRC R :tangle R/fmttemp.R
   get_tw_sst <- function(fname, year.end) {
