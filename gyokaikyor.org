@@ -3203,4 +3203,97 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     draw_axes(l)
   }
 
+  plot_catch_prefec <- function(list, year, gkk.month) {
+    get_ysum <- function(yr, prefec, gkk.month, list) {
+      switch(gkk.month,
+             "Mar" = {
+               ym.start <- paste0(yr - 1, "11") %>% as.numeric()
+               ym.end   <- paste0(yr, "01") %>% as.numeric()
+             })
+      out <- list[[prefec]] %>%
+        ym_matrix2df() %>%
+        dplyr::filter(dplyr::between(ym, ym.start, ym.end)) %>%
+        dplyr::select(catch) %>%
+        sum(na.rm = TRUE)
+      out
+    }
+
+    get_prefec_catch <- function(prefec, yr, gkk.month, list) {
+      lastyr     <- yr - 1
+      recentyr   <- (yr - 5):(yr - 1)
+      out        <- NULL
+      out$this   <- get_ysum(yr, prefec, gkk.month, list)
+      out$last   <- get_ysum(lastyr, prefec, gkk.month, list)
+      out$recent <- purrr::map(recentyr, get_ysum, prefec, gkk.month, list) %>%
+        unlist() %>%
+        mean(na.rm = TRUE)
+      out
+    }
+
+    plot_init <- function(sums) {
+      max <- max(unlist(sums), na.rm = TRUE) / 1000
+      min <- min(unlist(sums), na.rm = TRUE) / 1000
+      prefecs <- names(sums)
+      plot(1, 1, xlim = c(0.5, 8), ylim = c(min * 0.8, max * 1.2),
+           type = "n", yaxs = "i",
+           axes = FALSE, ann = FALSE)
+      axis(1, at = c(1:6, 7.5), labels = prefecs)
+      axis(2, at = seq(0, ceiling(max * 1.2), 1))
+    }
+
+    plot_prefec <- function(prefec, sums) {
+      pdata <- sums[[prefec]]
+      prefecs <- names(sums)
+      x       <- which(prefec == prefecs)
+      this <- pdata$this / 1000
+      last <- pdata$last / 1000
+      recent <- pdata$recent / 1000
+
+      x_this <- x + 0.3
+      x_last <- x + 0.1
+      lrecent <- x - 0.2
+      rrecent <- x_last
+
+      rect(lrecent, recent * 0.8, rrecent, recent * 1.2,
+           col = hsv(0, 0, 0.8))
+      lines(c(lrecent, rrecent), c(recent, recent), lwd = 2)
+
+      lines(c(x_last, x_this), c(last, this), lwd = 1.5)
+      points(x_this, this, pch = 16, col = hsv(0, 0.8, 0.8),
+             cex = 1.2, xpd = TRUE)
+      points(x_last, last, pch = 16, col = hsv(200/360, 0.8, 0.8),
+             cex = 1.2, xpd = TRUE)
+    }
+
+    make_sums <- function(sums, which) {
+      out <- NULL
+      for(i in seq_along(sums)) {
+        out <- append(out, sums[[i]][which])
+      }
+      out %<>% unlist %>%
+        sum(na.rm = TRUE)
+      out
+    }
+
+    prefecs <- names(list)
+    sums <- purrr::map(prefecs, get_prefec_catch, 2019, "Mar", list) %>%
+      purrr::set_names(prefecs)
+    sum_this <- make_sums(sums, "this")
+    sum_last <- make_sums(sums, "last")
+    sum_recent <- make_sums(sums, "recent")
+    sums$計$this <- sum_this
+    sums$計$last <- sum_last
+    sums$計$recent <- sum_recent
+    sums
+
+    plot_init(sums)
+    plot_prefec("山口", sums)
+    plot_prefec("福岡", sums)
+    plot_prefec("佐賀", sums)
+    plot_prefec("長崎", sums)
+    plot_prefec("熊本", sums)
+    plot_prefec("鹿児島", sums)
+    plot_prefec("鹿児島", sums)
+    plot_prefec("計", sums)
+  }
 #+END_SRC
