@@ -139,86 +139,6 @@ get_table("./output.git/nagasaki_2018oct.csv", gyokaikyo = TRUE, start = 2016, e
   }
   make_ymrange(2019, "Mar")
 
-  plot_catch_monthvar <- function(df.seikai, year, gkk.month) {
-    get_catch <- function(year, gkk.month, df.seikai) {
-      ym.start <- make_ymrange(year, gkk.month)$start
-      ym.end   <- make_ymrange(year, gkk.month)$end
-      out  <- ym_matrix2df(df.seikai) %>%
-        dplyr::filter(dplyr::between(ym,
-                                     ym.start,
-                                     ym.end)) %>%
-        dplyr::arrange(ym) %>%
-        dplyr::pull(catch)
-      out
-    }
-
-    draw_catch <- function(l, var, year) {
-      catch <- l[[var]]
-      ofst  <- 0.5
-      switch(var,
-             "recent" = {
-               polygon(c(1:12, 12:1), c(catch * 0.8, rev(catch * 1.2)),
-                       col = hsv(0, 0, 0.8), border = FALSE)
-               lines(1:12, catch, lwd = 2)
-               points(1:12, catch, pch = 16)
-               text(12, catch[12], "平年±20%", pos = 4, offset = ofst, cex = 1.5)
-             },
-             "last" = {
-               col <- hsv(200/360, 0.8, 0.8)
-               lines(1:12, catch, col = col, lwd = 2)
-               points(1:12, catch, col = col , pch = 16)
-               arrows(1:12, catch * 0.8, 1:12, catch * 1.2,
-                      col = col, length = 0)
-               text(12, catch[12], "前年±20%",
-                    col = col, pos = 4, offset = ofst, cex = 1.5)
-             },
-             "this" = {
-               catch <- catch[1:11]
-               col <- hsv(0/360, 0.8, 0.8)
-               lines(1:11, catch, col = col, lwd = 3)
-               points(1:11, catch, col = col, pch = 16, cex = 1.5)
-               text(11, catch[11], paste0(year - 1, "年度"),
-                    col = col, pos = 4, offset = ofst, cex = 2)
-             })
-    }
-
-    init_plot <- function(l, gkk.month) {
-      max <- l$max
-      min <- l$min
-      plot(1, 1, xlim = c(1, 16), ylim = c(min, max * 1.2), type = "n",
-           axes = FALSE, ann = FALSE, yaxs = "i")
-      switch(gkk.month,
-             "Mar" = {
-               rect(7.8, -10, 12.2, max * 1.1, col = hsv(20/360, 0.2, 1),
-                           border = FALSE)
-               axis(1, at = 1:12, labels = month.abb[c(4:12, 1:3)])
-             })
-    }
-
-    draw_axes <- function(l) {
-      axis(2, at = l$min:l$max)
-      mtext("漁獲量 (千トン)", side = 2, line = 2.5, cex = 1.5)
-    }
-
-    lastyr   <- year - 1
-    recentyr <- (year - 4):year
-    l        <- list()
-    l$this   <- get_catch(year, "Mar", l) / 1000
-    l$last   <- get_catch(lastyr, "Mar", df.seikai) / 1000
-    l$recent <- purrr::map_dfc(recentyr, get_catch, "Mar", df.seikai) %>%
-      rowMeans() / 1000
-    max      <- max(unlist(l)) * 1.2
-    min      <- min(unlist(l)) * 0.8
-    l$max    <- max
-    l$min    <- min
-
-    init_plot(l, gkk.month)
-    draw_catch(l, var = "recent", year)
-    draw_catch(l, var = "last", year)
-    draw_catch(l, var = "this", year)
-    draw_axes(l)
-  }
-
   list_catchdata <- iwashi2list(path = "../../../Google Drive/gkk/各県いわし_林20190312.xlsx",
                                 sheet = "カタクチイワシ",
                                 year.end = 2019, year.start = 1992)
@@ -3201,5 +3121,86 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 #+END_SRC
 
 *** 作図
-#+BEGIN_SRC R
+#+BEGIN_SRC R tangle R/plot.R
+  plot_catch_monthvar <- function(df.seikai, year, gkk.month) {
+    get_catch  <- function(year, gkk.month, df.seikai) {
+      out      <- NULL
+      ym.start <- make_ymrange(year, gkk.month)$start
+      ym.end   <- make_ymrange(year, gkk.month)$end
+      out      <- ym_matrix2df(df.seikai) %>%
+        dplyr::filter(dplyr::between(ym,
+                                     ym.start,
+                                     ym.end)) %>%
+        dplyr::arrange(ym) %>%
+        dplyr::pull(catch)
+      out
+    }
+
+    draw_catch <- function(l, var, year) {
+      catch <- l[[var]]
+      ofst  <- 0.5
+      switch(var,
+             "recent" = {
+               polygon(c(1:12, 12:1), c(catch * 0.8, rev(catch * 1.2)),
+                       col = hsv(0, 0, 0.8), border = FALSE)
+               lines(1:12, catch, lwd = 2)
+               points(1:12, catch, pch = 16)
+               text(12, catch[12], "平年±20%", pos = 4, offset = ofst, cex = 1.5)
+             },
+             "last" = {
+               col <- hsv(200/360, 0.8, 0.8)
+               lines(1:12, catch, col = col, lwd = 2)
+               points(1:12, catch, col = col , pch = 16)
+               arrows(1:12, catch * 0.8, 1:12, catch * 1.2,
+                      col = col, length = 0)
+               text(12, catch[12], "前年±20%",
+                    col = col, pos = 4, offset = ofst, cex = 1.5)
+             },
+             "this" = {
+               catch <- catch[1:11]
+               col <- hsv(0/360, 0.8, 0.8)
+               lines(1:11, catch, col = col, lwd = 3)
+               points(1:11, catch, col = col, pch = 16, cex = 1.5)
+               text(11, catch[11], paste0(year - 1, "年度"),
+                    col = col, pos = 4, offset = ofst, cex = 2)
+             })
+    }
+
+    init_plot <- function(l, gkk.month) {
+      max <- l$max
+      min <- l$min
+      plot(1, 1, xlim = c(1, 16), ylim = c(min, max * 1.2), type = "n",
+           axes = FALSE, ann = FALSE, yaxs = "i")
+      switch(gkk.month,
+             "Mar" = {
+               rect(7.8, -10, 12.2, max * 1.1, col = hsv(20/360, 0.2, 1),
+                           border = FALSE)
+               axis(1, at = 1:12, labels = month.abb[c(4:12, 1:3)])
+             })
+    }
+
+    draw_axes <- function(l) {
+      axis(2, at = l$min:l$max)
+      mtext("漁獲量 (千トン)", side = 2, line = 2.5, cex = 1.5)
+    }
+
+    lastyr   <- year - 1
+    recentyr <- (year - 4):year
+    l        <- list()
+    l$this   <- get_catch(year, "Mar", df.seikai) / 1000
+    l$last   <- get_catch(lastyr, "Mar", df.seikai) / 1000
+    l$recent <- purrr::map_dfc(recentyr, get_catch, "Mar", df.seikai) %>%
+      rowMeans() / 1000
+    max      <- max(unlist(l)) * 1.2
+    min      <- min(unlist(l)) * 0.8
+    l$max    <- max
+    l$min    <- min
+
+    init_plot(l, gkk.month)
+    draw_catch(l, var = "recent", year)
+    draw_catch(l, var = "last", year)
+    draw_catch(l, var = "this", year)
+    draw_axes(l)
+  }
+
 #+END_SRC
