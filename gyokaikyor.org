@@ -113,32 +113,6 @@ get_table("./output.git/nagasaki_2018oct.csv", gyokaikyo = TRUE, start = 2016, e
 #+END_SRC
 ** 作図
 #+BEGIN_SRC R
-  ym_matrix2df <- function(x) {
-    out <- x %>%
-      tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
-                    key = month, value = catch) %>%
-      dplyr::mutate(month = abb2num(month),
-                    ym    = make_ym(year, month))
-    out
-  }
-
-  make_ymrange <- function(year, gkk.month) {
-    switch(gkk.month,
-           "Mar" = {
-             mstart <- 4
-             mend   <- 3
-           },
-           "Oct" = {
-           },
-           stop("Unknown month"))
-    out$start <- paste0(year - 1, formatC(mstart, width = 2, flag = 0)) %>%
-      as.numeric()
-    out$end   <- paste0(year, formatC(mend, width = 2, flag = 0)) %>%
-      as.numeric()
-    out
-  }
-  make_ymrange(2019, "Mar")
-
   list_catchdata <- iwashi2list(path = "../../../Google Drive/gkk/各県いわし_林20190312.xlsx",
                                 sheet = "カタクチイワシ",
                                 year.end = 2019, year.start = 1992)
@@ -3077,6 +3051,32 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out <- purrr::map(prefec_rows, make_list, df.iwashi = df,
                       year.end = year.end) %>%
       purrr::flatten()
+    out
+  }
+
+  ym_matrix2df <- function(x) {
+    out <- x %>%
+      tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
+                    key = month, value = catch) %>%
+      dplyr::mutate(month = abb2num(month),
+                    ym    = make_ym(year, month))
+    out
+  }
+
+  make_ymrange <- function(year, gkk.month) {
+    out <- NULL
+    switch(gkk.month,
+           "Mar" = {
+             mstart <- 4
+             mend   <- 3
+           },
+           "Oct" = {
+           },
+           stop("Unknown month"))
+    out$start <- paste0(year - 1, formatC(mstart, width = 2, flag = 0)) %>%
+      as.numeric()
+    out$end   <- paste0(year, formatC(mend, width = 2, flag = 0)) %>%
+      as.numeric()
     out
   }
 #+END_SRC
