@@ -825,12 +825,6 @@ get_table("./output.git/nagasaki_2018oct.csv", gyokaikyo = TRUE, start = 2016, e
                                 year.end = 2019)
   seikai <- summarize_seikai(list_catchdata)
 
-  abb2num <- function(abb) {
-    lambda <- function(abb) {
-      which(abb == month.abb)
-    }
-    purrr::map_int(abb, lambda)
-  }
 
   db   <- seikai %>%
     tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
@@ -2019,7 +2013,21 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 
+  abb2num <- function(abb) {
+    lambda <- function(abb) {
+      which(abb == month.abb)
+    }
+    purrr::map_int(abb, lambda)
+  }
+
+  make_ym <- function(y, m) {
+    out <- paste0(y, formatC(m, width = 2, flag = 0)) %>%
+      readr::parse_integer()
+    out
+  }
 #+END_SRC
+
+
 *** 種名シート名生成
 #+BEGIN_SRC  R :tangle R/make_shtname.R
   make_shtname <- function(prefecture, spcs) {
