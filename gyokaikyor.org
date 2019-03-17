@@ -2992,14 +2992,7 @@ cat NAMESPACE
     out
   }
 #+END_SRC
-*** 体長頻度データを擬似精密データに変換
 #+BEGIN_SRC R
-  uncount_blclass <- function(df) {
-    out <- df %>%
-      mutate(bl = stringr::str_sub(class, 1, 3) %>%
-               as.numeric()) %>%
-      dplyr::select(-class) %>%
-      tidyr::uncount(count)
     out
   }
 #+END_SRC
