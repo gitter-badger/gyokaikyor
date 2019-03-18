@@ -1107,6 +1107,12 @@ cat NAMESPACE
                                  spread = FALSE, maki.only = TRUE),
               "data.frame")
   })
+
+  test_that("format_catch() call fmtcatch() and use method of each prefec", {
+    path <- "ExcelFiles/test_catch_kagoshima.xlsx"
+    df   <- format_catch(path, prefec = "kagoshima", spcs = "katakuchi")
+    expect_is(df, "data.frame")
+  })
 #+END_SRC
 *** テスト/ 長崎漁獲量
 #+BEGIN_SRC  R :tangle tests/testthat/test_catch_nagasaki.R
