@@ -1,8 +1,8 @@
-    #+TITLE: gyokaikyor プロジェクトノート
-    #+PROPERTY: header-args :exports code :results scalar :session *R:gyokaikyor*
-    #+STARTUP: contents
+#+TITLE: gyokaikyor プロジェクトノート
+#+PROPERTY: header-args :exports code :results scalar :session *R:gyokaikyor*
+#+STARTUP: contents
 
-    * 目次                                                                :TOC_3:
+   * 目次                                                                :TOC_3:
     - [[#使い方デモ][使い方デモ]]
     - [[#体長組成整理][体長組成整理]]
     - [[#漁獲量整理][漁獲量整理]]
@@ -42,9 +42,9 @@
         - [[#水温データを整理][水温データを整理]]
         - [[#作図-1][作図]]
 
-    * 使い方デモ
-    ** 体長組成整理
-    #+BEGIN_SRC R
+* 使い方デモ
+** 体長組成整理
+ #+BEGIN_SRC R
     library(gyokaikyor)
     library(dplyr)
     library(hash)
@@ -113,7 +113,7 @@
     bl_all <- bl_yamaguchi + bl_fukuoka + bl_saga +
         bl_nagasaki + bl_kumamoto + bl_kagoshima + bl_seikai
     #+END_SRC
-    ** 漁獲量整理
+** 漁獲量整理
     #+BEGIN_SRC R
       library(hash)
       library(dplyr)
