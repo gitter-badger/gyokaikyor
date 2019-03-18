@@ -44,73 +44,72 @@
 * 使い方デモ
 ** 体長組成整理
  #+BEGIN_SRC R
-    library(gyokaikyor)
-    library(dplyr)
-    library(hash)
-    library(ggplot2)
+   library(gyokaikyor)
+   library(dplyr)
+   library(ggplot2)
 
-    seikai_seimitsu   <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_seimitsu_katakuchi.csv", type = "seimitsu",
-                                        date.start = "20180101", date.end = "20190331")
-    nihonkai_seimitsu <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_seimitsu_katakuchi.csv", type = "seimitsu",
-                                        date.start = "20180101", date.end = "20190331")
-    seikai_taichou    <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_taichou_katakuchi.csv", type = "taichou",
-                                        date.start = "20180101", date.end = "20190331")
-    nihonkai_taichou  <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_taichou_katakuchi.csv", type = "taichou",
-                                        date.start = "20180101", date.end = "20190331")
-    fresco_seimitsu   <- dplyr::bind_rows(seikai_seimitsu, nihonkai_seimitsu)
-    fresco_taichou    <- dplyr::bind_rows(seikai_taichou, nihonkai_taichou)
+   seikai_seimitsu   <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_seimitsu_katakuchi.csv", type = "seimitsu",
+                                       date.start = "20180101", date.end = "20190331")
+   nihonkai_seimitsu <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_seimitsu_katakuchi.csv", type = "seimitsu",
+                                       date.start = "20180101", date.end = "20190331")
+   seikai_taichou    <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_taichou_katakuchi.csv", type = "taichou",
+                                       date.start = "20180101", date.end = "20190331")
+   nihonkai_taichou  <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_taichou_katakuchi.csv", type = "taichou",
+                                       date.start = "20180101", date.end = "20190331")
+   fresco_seimitsu   <- dplyr::bind_rows(seikai_seimitsu, nihonkai_seimitsu)
+   fresco_taichou    <- dplyr::bind_rows(seikai_taichou, nihonkai_taichou)
 
-    fname_kumamoto_oct  <- "data.git/漁海況/2018年10月/各県資料/熊本県/05 H29体長組成 まき網＆棒受網（熊本県）.xlsx"
-    fname_kumamoto_mar  <- "data.git/漁海況/2019年3月/各県資料/熊本県/04_H30_まき網＆棒受網体長組成.xlsx"
-    fname_nagasaki_1    <- "data.git/漁海況/2018年3月/各県資料/長崎県/2017.09-2018.01小型まき網体長組成.xls"
-    fname_nagasaki_2    <- "data.git/漁海況/2018年10月/各県資料/長崎県/2018.02-2018.08小型まき網体長組成.xls"
-    fname_nagasaki_3    <- "data.git/漁海況/2019年3月/各県資料/長崎県/2018.09-2019.01小型まき網体長組成.xls"
-    fname_kagoshima_oct <- "data.git/漁海況/2018年10月/各県資料/鹿児島県/体長組成(H29年度).xlsx"
-    fname_kagoshima_mar <- "data.git/漁海況/2019年3月/各県資料/鹿児島県/体長組成(H30年度).xlsx"
+   fname_kumamoto_oct  <- "data.git/漁海況/2018年10月/各県資料/熊本県/05 H29体長組成 まき網＆棒受網（熊本県）.xlsx"
+   fname_kumamoto_mar  <- "data.git/漁海況/2019年3月/各県資料/熊本県/04_H30_まき網＆棒受網体長組成.xlsx"
+   fname_nagasaki_1    <- "data.git/漁海況/2018年3月/各県資料/長崎県/2017.09-2018.01小型まき網体長組成.xls"
+   fname_nagasaki_2    <- "data.git/漁海況/2018年10月/各県資料/長崎県/2018.02-2018.08小型まき網体長組成.xls"
+   fname_nagasaki_3    <- "data.git/漁海況/2019年3月/各県資料/長崎県/2018.09-2019.01小型まき網体長組成.xls"
+   fname_kagoshima_oct <- "data.git/漁海況/2018年10月/各県資料/鹿児島県/体長組成(H29年度).xlsx"
+   fname_kagoshima_mar <- "data.git/漁海況/2019年3月/各県資料/鹿児島県/体長組成(H30年度).xlsx"
 
-    kumamoto <- bind_rows(format_bl(fname_kumamoto_oct,
-                                    prefec = "kumamoto", spcs = "katakuchi"),
-                            format_bl(fname_kumamoto_mar,
-                                    prefec = "kumamoto", spcs = "katakuchi"))
-    nagasaki <- bind_rows(format_bl(fname_nagasaki_1,
-                                    prefec = "nagasaki", spcs = "katakuchi"),
-                            format_bl(fname_nagasaki_2,
-                                    prefec = "nagasaki", spcs = "katakuchi"),
-                            format_bl(fname_nagasaki_3,
-                                    prefec = "nagasaki", spcs = "katakuchi"))
-    nagasaki <- bind_rows(format_bl(fname_kagoshima_oct,
-                                    prefec = "kagoshima", spcs = "katakuchi"),
-                            format_bl(fname_kagoshima_mar,
-                                    prefec = "kagoshima", spcs = "katakuchi"))
+   kumamoto <- bind_rows(format_bl(fname_kumamoto_oct,
+                                   prefec = "kumamoto", spcs = "katakuchi"),
+                           format_bl(fname_kumamoto_mar,
+                                   prefec = "kumamoto", spcs = "katakuchi"))
+   nagasaki <- bind_rows(format_bl(fname_nagasaki_1,
+                                   prefec = "nagasaki", spcs = "katakuchi"),
+                           format_bl(fname_nagasaki_2,
+                                   prefec = "nagasaki", spcs = "katakuchi"),
+                           format_bl(fname_nagasaki_3,
+                                   prefec = "nagasaki", spcs = "katakuchi"))
+   kagoshima <- bind_rows(format_bl(fname_kagoshima_oct,
+                                   prefec = "kagoshima", spcs = "katakuchi"),
+                           format_bl(fname_kagoshima_mar,
+                                   prefec = "kagoshima", spcs = "katakuchi"))
 
-    bl_yamaguchi <- conv2hoshifile(df = fresco_seimitsu, prefec = "yamaguchi",
-                                    type = "seimitsu",
-                                    ym.start = 201801, ym.end = 201903,
-                                    export = TRUE, fname = "gkk_2019Mar_bl_yamaguchi.csv")
-    bl_fukuoka   <- 0
-    bl_saga      <- 0
-    bl_nagasaki  <- conv2hoshifile(df = nagasaki, prefec = "nagasaki",
-                                    type = "taichou",
-                                    ym.start = 201801, ym.end = 201903,
-                                    export = TRUE, fname = "gkk_2019Mar_bl_nagasaki.csv")
+   bl_yamaguchi <- conv2hoshifile(df = fresco_seimitsu, prefec = "yamaguchi",
+                                   type = "seimitsu",
+                                   ym.start = 201801, ym.end = 201903,
+                                   export = TRUE, fname = "gkk_2019Mar_bl_yamaguchi.csv")
+   bl_fukuoka   <- 0
+   bl_saga      <- 0
+   bl_nagasaki  <- conv2hoshifile(df = nagasaki, prefec = "nagasaki",
+                                   type = "taichou",
+                                   ym.start = 201801, ym.end = 201903,
+                                   export = TRUE, fname = "gkk_2019Mar_bl_nagasaki.csv")
 
-    bl_kumamoto  <- kumamoto %>%
-        dplyr::filter(type == "まき網") %>%
-        conv2hoshifile(prefec = "kumamoto",
-                    type = "seimitsu",
-                    ym.start = 201801, ym.end = 201903,
-                    export = TRUE, fname = "gkk_2019Mar_bl_kumamoto_maki.csv")
+   bl_kumamoto  <- kumamoto %>%
+       dplyr::filter(type == "まき網") %>%
+       conv2hoshifile(prefec = "kumamoto",
+                   type = "seimitsu",
+                   ym.start = 201801, ym.end = 201903,
+                   export = TRUE, fname = "gkk_2019Mar_bl_kumamoto_maki.csv")
 
-    bl_kagoshima <- kagoshima %>%
-        dplyr::filter(grepl("まき", type)) %>%
-        conv2hoshifile(prefec = "kagoshima",
-                    type = "taichou",
-                    ym.start = 201801, ym.end = 201903,
-                    export = TRUE, fname = "gkk_2019Mar_bl_kagoshima_maki.csv")
-    bl_seikai    <- 0
+   bl_kagoshima <- kagoshima %>%
+       dplyr::filter(grepl("まき", type)) %>%
+       conv2hoshifile(prefec = "kagoshima",
+                   type = "taichou",
+                   ym.start = 201801, ym.end = 201903,
+                   export = TRUE, fname = "gkk_2019Mar_bl_kagoshima_maki.csv")
+   bl_seikai    <- 0
 
-    bl_all <- bl_yamaguchi + bl_fukuoka + bl_saga +
-        bl_nagasaki + bl_kumamoto + bl_kagoshima + bl_seikai
+   bl_all <- bl_yamaguchi + bl_fukuoka + bl_saga +
+       bl_nagasaki + bl_kumamoto + bl_kagoshima + bl_seikai
     #+END_SRC
 ** 漁獲量整理
     #+BEGIN_SRC R
