@@ -84,3 +84,16 @@ conv2hoshifile <- function(df, prefec, type, ym.start, ym.end,
   }
   out
 }
+
+export2kakuken_iwashi <- function(df, export.csv = FALSE, fname = NULL) {
+  out <- tribble(~year,
+                 ~`1`, ~`2`, ~`3`, ~`4`, ~`5`, ~`6`,
+                 ~`7`, ~`8`, ~`9`, ~`10`, ~`11`, ~`12`)
+  df2 <- df %>%
+    tidyr::spread(key = month, value = catch)
+  out %<>% right_join(df2)
+  if (export.csv == TRUE) {
+    write.csv(out, fname, row.names = FALSE)
+  }
+  out
+}

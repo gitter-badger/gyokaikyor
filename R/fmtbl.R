@@ -1,9 +1,16 @@
 #' Load and format bl histogram data
 #'
 #' @inheritParams readxl::read_excel
-#' @param spcs Spcs name in romaji, one of
-#' @param nest If \code{TRUE}, data will be shown in rectangle format
-#'   whith nested bl datafor quick overview.
+#' @param prefec Name of prefecture as string, oneof
+#' \itemize{
+#'   \item "yamaguchi"
+#'   \item "fukuoka"
+#'   \item "saga"
+#'   \item "nagasaki"
+#'   \item "kumamoto"
+#'   \item "kagoshima"
+#' }
+#' @param spcs Spcs name as string, one of
 #' \itemize{
 #'   \item maiwashi
 #'   \item maaji
@@ -13,7 +20,14 @@
 #'   \item katakuchi
 #'   \item urume
 #' }
+#' @param nest If \code{TRUE}, data will be shown in rectangle format
+#'   whith nested bl datafor quick overview.
 #' @export
+format_bl <- function(path, prefec, spcs, nest = FALSE) {
+  class(path) <- prefec
+  fmtbl(path, spcs, nest)
+}
+
 fmtbl <- function(path, spcs, nest = FALSE) {
   UseMethod("fmtbl")
 }

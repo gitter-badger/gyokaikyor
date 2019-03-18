@@ -4,12 +4,7 @@
 \alias{fmtcatch.nagasaki}
 \title{Make catch data reading multiple Excel worksheets}
 \usage{
-\method{fmtcatch}{nagasaki}(path, spcs)
-}
-\arguments{
-\item{path}{Path to the xls/xlsx file.}
-
-\item{spcs}{Spcs name in romaji, one of}
+\method{fmtcatch}{nagasaki}(path, spcs, type = NULL)
 }
 \description{
 Make catch data reading multiple Excel worksheets

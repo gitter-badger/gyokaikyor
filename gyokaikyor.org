@@ -3,38 +3,16 @@
 #+STARTUP: contents
 
 * 目次                                                                :TOC_3:
-- [[#これは何か][これは何か？]]
-- [[#レガシーワークフローを整理する][レガシーワークフローを整理する]]
-  - [[#カタクチyyxlsx][★カタクチYY.xlsx]]
-    - [[#ファイルがやっていること][ファイルがやっていること]]
-    - [[#問題点][問題点]]
-    - [[#解決策][解決策]]
-  - [[#カタクチ月別県別漁獲量xlsx][★カタクチ月別県別漁獲量.xlsx]]
-    - [[#ファイル中での作業][ファイル中での作業]]
-  - [[#各県いわしファイル][「各県いわし」ファイル]]
-  - [[#水温データの整理][水温データの整理]]
-  - [[#漁況予測][漁況予測]]
-    - [[#glmによる予測][GLMによる予測]]
-    - [[#時系列解析による予測][時系列解析による予測]]
-    - [[#問題点-1][問題点]]
-- [[#ディレクトリの構成][ディレクトリの構成]]
-- [[#パッケージの機能][パッケージの機能]]
-  - [[#データ目録の生成][データ目録の生成]]
-  - [[#データの統合][データの統合]]
-  - [[#グラフ描画][グラフ描画]]
-  - [[#予報文案テンプレートの生成][予報文案テンプレートの生成]]
 - [[#使い方デモ][使い方デモ]]
   - [[#体長組成整理][体長組成整理]]
   - [[#漁獲量整理][漁獲量整理]]
-  - [[#漁況予測-1][漁況予測]]
+  - [[#漁況予測][漁況予測]]
+    - [[#時系列解析による予測][時系列解析による予測]]
+  - [[#作図][作図]]
+  - [[#水温データの整理][水温データの整理]]
 - [[#開発環境の整備][開発環境の整備]]
   - [[#本バッケージ内部で使用するパッケージ][本バッケージ内部で使用するパッケージ]]
 - [[#開発][開発]]
-  - [[#各県ファイルに対して必要な処理概要][各県ファイルに対して必要な処理概要]]
-    - [[#体長][体長]]
-    - [[#漁獲量][漁獲量]]
-  - [[#どう問題を解くか][どう問題を解くか]]
-    - [[#get_topleftkey--flmm][get_topleft(key = "FL(mm)")]]
   - [[#リロード--自動テスト][リロード & 自動テスト]]
   - [[#テストコード][テストコード]]
     - [[#テスト-ファイル名操作][テスト/ ファイル名操作]]
@@ -45,6 +23,7 @@
     - [[#テスト-体長データ整形][テスト/ 体長データ整形]]
     - [[#テスト-漁獲量データ整形][テスト/ 漁獲量データ整形]]
     - [[#テスト-長崎漁獲量][テスト/ 長崎漁獲量]]
+    - [[#テスト-レガシーファイル連携][テスト/ レガシーファイル連携]]
   - [[#関数][関数]]
     - [[#インポート][インポート]]
     - [[#ファイル名操作][ファイル名操作]]
@@ -56,134 +35,201 @@
     - [[#データ作成][データ作成]]
     - [[#体長データ整形][体長データ整形]]
     - [[#漁獲量データ整形][漁獲量データ整形]]
-    - [[#ファイル形式で書き出し][★ファイル形式で書き出し]]
+    - [[#レガシーファイル形式で書き出し][レガシーファイル形式で書き出し]]
     - [[#各県いわしをrで使いやすい形式に変換][「各県いわし」をRで使いやすい形式に変換]]
-    - [[#体長頻度データを擬似精密データに変換][体長頻度データを擬似精密データに変換]]
+    - [[#漁獲量データ操作][漁獲量データ操作]]
     - [[#水温データを整理][水温データを整理]]
+    - [[#作図-1][作図]]
 
-* これは何か？
-漁海況業務のリポジトリ．
-主にRのパッケージ開発のコミュニケーション用．
+* 使い方デモ
+** 体長組成整理
+ #+BEGIN_SRC R
+   library(gyokaikyor)
+   library(dplyr)
+   library(ggplot2)
 
-* レガシーワークフローを整理する
-** ★カタクチYY.xlsx
-*** ファイルがやっていること
-各県の月別体長組成を統合し，
-- 東シナ海
-- 日本海
-- 計
-というシートで統合する Excel ファイル．
-*** 問題点
-- バイナリなのでバージョン管理ができない
-- 資源評価と漁海況の両方で使用されるが，両業務で集計方法が異なるので紛らわしい．
-*** 解決策
-2段階の抽象度（精密測定 & 体長組成）で体長整理する．
-- 精密データを提出する県については，県ごとに csv 形式の精密測定データベースを作成する．
-- 精密はなく，体長組成データを提出する県については，県ごとにcsv 型式の体長組成データベースを作成する．
-- 精密・体長各データベースから範囲を指定して体長階級×月形式のテーブルを作成できるようにする．
+   seikai_seimitsu   <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_seimitsu_katakuchi.csv", type = "seimitsu",
+                                       date.start = "20180101", date.end = "20190331")
+   nihonkai_seimitsu <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_seimitsu_katakuchi.csv", type = "seimitsu",
+                                       date.start = "20180101", date.end = "20190331")
+   seikai_taichou    <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_taichou_katakuchi.csv", type = "taichou",
+                                       date.start = "20180101", date.end = "20190331")
+   nihonkai_taichou  <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_taichou_katakuchi.csv", type = "taichou",
+                                       date.start = "20180101", date.end = "20190331")
+   fresco_seimitsu   <- dplyr::bind_rows(seikai_seimitsu, nihonkai_seimitsu)
+   fresco_taichou    <- dplyr::bind_rows(seikai_taichou, nihonkai_taichou)
 
-使用イメージ
-#+BEGIN_SRC R :exports code :results silent
-kumamoto    <- fmt_bl("./data.git/漁海況/2018年10月/各県資料/熊本県", gyokaikyo = TRUE, plot = TRUE)
-db_kumamoto <- read_csv("./output.git/kumamoto_2018oct.csv")
-out         <- bind_rows(db_kumamoto, kumamoto)
-write.csv(out, "./output.git/kumamoto_2019mar.csv", row.names = FALSE)
+   fname_kumamoto_oct  <- "data.git/漁海況/2018年10月/各県資料/熊本県/05 H29体長組成 まき網＆棒受網（熊本県）.xlsx"
+   fname_kumamoto_mar  <- "data.git/漁海況/2019年3月/各県資料/熊本県/04_H30_まき網＆棒受網体長組成.xlsx"
+   fname_nagasaki_1    <- "data.git/漁海況/2018年3月/各県資料/長崎県/2017.09-2018.01小型まき網体長組成.xls"
+   fname_nagasaki_2    <- "data.git/漁海況/2018年10月/各県資料/長崎県/2018.02-2018.08小型まき網体長組成.xls"
+   fname_nagasaki_3    <- "data.git/漁海況/2019年3月/各県資料/長崎県/2018.09-2019.01小型まき網体長組成.xls"
+   fname_kagoshima_oct <- "data.git/漁海況/2018年10月/各県資料/鹿児島県/体長組成(H29年度).xlsx"
+   fname_kagoshima_mar <- "data.git/漁海況/2019年3月/各県資料/鹿児島県/体長組成(H30年度).xlsx"
 
-get_table("./output.git/nagasaki_2018oct.csv", gyokaikyo = TRUE, start = 2016, end = 2017)
-#+END_SRC
-**** なぜデータベースか？
-過去のデータが報告なしに更新されていた場合に対処するため
-**** なぜ県ごとか？
-差分管理を確実に実施するため
-** ★カタクチ月別県別漁獲量.xlsx
-*** ファイル中での作業
-**** 各県の月別漁獲量データを手作業で整形
-**** "集計"というシートに各県のデータを貼り付け，月別組成を得る
-**** 単位をトンに揃えて農林統計の値で引き伸ばす
-**** 「しらす」については月別には集計せず，農林統計で引き伸ばす
+   kumamoto <- bind_rows(format_bl(fname_kumamoto_oct,
+                                   prefec = "kumamoto", spcs = "katakuchi"),
+                           format_bl(fname_kumamoto_mar,
+                                   prefec = "kumamoto", spcs = "katakuchi"))
+   nagasaki <- bind_rows(format_bl(fname_nagasaki_1,
+                                   prefec = "nagasaki", spcs = "katakuchi"),
+                           format_bl(fname_nagasaki_2,
+                                   prefec = "nagasaki", spcs = "katakuchi"),
+                           format_bl(fname_nagasaki_3,
+                                   prefec = "nagasaki", spcs = "katakuchi"))
+   kagoshima <- bind_rows(format_bl(fname_kagoshima_oct,
+                                   prefec = "kagoshima", spcs = "katakuchi"),
+                           format_bl(fname_kagoshima_mar,
+                                   prefec = "kagoshima", spcs = "katakuchi"))
 
-** 「各県いわし」ファイル
-** 水温データの整理
-#+BEGIN_SRC R
-  temp <- get_tw_sst("/Users/ahayashi/Documents/GitHub/gyokaikyor/data.git/水温データ/mgdsst_till201902.xlsx",
-                     year.end = 2019)
-  write.csv(temp, "/Volumes/評価研/個人的データ置き場/hayashi/output/gkk_2019Mar_sst.csv", row.names = FALSE)
+   bl_yamaguchi <- conv2hoshifile(df = fresco_seimitsu, prefec = "yamaguchi",
+                                   type = "seimitsu",
+                                   ym.start = 201801, ym.end = 201903,
+                                   export = TRUE, fname = "gkk_2019Mar_bl_yamaguchi.csv")
+   bl_fukuoka   <- 0
+   bl_saga      <- 0
+   bl_nagasaki  <- conv2hoshifile(df = nagasaki, prefec = "nagasaki",
+                                   type = "taichou",
+                                   ym.start = 201801, ym.end = 201903,
+                                   export = TRUE, fname = "gkk_2019Mar_bl_nagasaki.csv")
+
+   bl_kumamoto  <- kumamoto %>%
+       dplyr::filter(type == "まき網") %>%
+       conv2hoshifile(prefec = "kumamoto",
+                   type = "seimitsu",
+                   ym.start = 201801, ym.end = 201903,
+                   export = TRUE, fname = "gkk_2019Mar_bl_kumamoto_maki.csv")
+
+   bl_kagoshima <- kagoshima %>%
+       dplyr::filter(grepl("まき", type)) %>%
+       conv2hoshifile(prefec = "kagoshima",
+                   type = "taichou",
+                   ym.start = 201801, ym.end = 201903,
+                   export = TRUE, fname = "gkk_2019Mar_bl_kagoshima_maki.csv")
+   bl_seikai    <- 0
+
+   bl_all <- bl_yamaguchi + bl_fukuoka + bl_saga +
+       bl_nagasaki + bl_kumamoto + bl_kagoshima + bl_seikai
+    #+END_SRC
+** 漁獲量整理
+    #+BEGIN_SRC R
+      library(hash)
+      library(dplyr)
+      library(ggplot2)
+
+      fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/01_H30まき網漁獲量（熊本県）.xls",
+                  "data.git/漁海況/2019年3月/各県資料/熊本県/02_H30棒受網漁獲量（熊本県）.xls",
+                  "data.git/漁海況/2019年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls",
+                  "./data.git/漁海況/2019年3月/各県資料/長崎県/橘湾中央漁協ｲﾜｼ類(中小まき)提出とりまとめ.xls",
+                  "./data.git/漁海況/2019年3月/各県資料/長崎県/奈留漁協ｲﾜｼ類（中小旋）とりまとめ.xlsx",
+                  "./data.git/漁海況/2019年3月/各県資料/長崎県/九十九島漁協ｲﾜｼ類(中小まき)とりまとめ.xlsx",
+                  "data.git/漁海況/2019年3月/各県資料/鹿児島県/４港月計表（30年度）.xlsx",
+                  "data.git/漁海況/2019年3月/各県資料/佐賀県/➁佐賀県_予報対象種漁獲量（元データ）.xls",
+                  "data.git/漁海況/2019年3月/各県資料/福岡県/2019-3月送付_S51_H30経年福岡漁獲量データ(提出分).xlsx",
+                  "data.git/漁海況/2019年3月/各県資料/山口県/2018-2019湊銘柄別水揚市場調査表.xlsx")
+
+      prefec <- c(rep("kumamoto", 2),
+                 rep("nagasaki", 4),
+                 "kagoshima",
+                 "saga",
+                 "fukuoka",
+                 "yamaguchi")
+      tbl_fname <- hash(fname, prefec)
+
+      fname2 <- give_class(fname, tbl_fname)
+      fname2[[1]]
+      fname2[[2]]
+      fname2[[3]]
+      fname2[[4]]
+      fname2[[5]]
+      fname2[[6]]
+      fname2[[7]]
+      fname2[[8]]
+      fname2[[9]]
+      fname2[[10]]
+
+      spcs <- "katakuchi"
+
+      fname_yamaguchi       <- "data.git/漁海況/2019年3月/各県資料/山口県/2018-2019湊銘柄別水揚市場調査表.xlsx"
+      fname_fukuoka         <- "data.git/漁海況/2019年3月/各県資料/福岡県/2019-3月送付_S51_H30経年福岡漁獲量データ(提出分).xlsx"
+      fname_saga            <- "data.git/漁海況/2019年3月/各県資料/佐賀県/➁佐賀県_予報対象種漁獲量（元データ）.xls"
+      fname_kumamoto_maki   <- "data.git/漁海況/2019年3月/各県資料/熊本県/01_H30まき網漁獲量（熊本県）.xls"
+      fname_kumamoto_bouuke <- "data.git/漁海況/2019年3月/各県資料/熊本県/02_H30棒受網漁獲量（熊本県）.xls"
+      fname_nagasaki_ngs    <- "data.git/漁海況/2019年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls"
+      fname_nagasaki_tbn    <- "./data.git/漁海況/2019年3月/各県資料/長崎県/橘湾中央漁協ｲﾜｼ類(中小まき)提出とりまとめ.xls"
+      fname_nagasaki_nr     <- "./data.git/漁海況/2019年3月/各県資料/長崎県/奈留漁協ｲﾜｼ類（中小旋）とりまとめ.xlsx"
+      fname_nagasaki_kjk    <- "./data.git/漁海況/2019年3月/各県資料/長崎県/九十九島漁協ｲﾜｼ類(中小まき)とりまとめ.xlsx"
+      fname_kagoshima       <- "data.git/漁海況/2019年3月/各県資料/鹿児島県/４港月計表（30年度）.xlsx"
+
+      yamaguchi <- format_catch(fname_yamaguchi, prefec = "yamaguchi", spcs = spcs)
+      fukuoka   <- bind_rows(format_catch(fname_fukuoka, prefec = "fukuoka",
+                                          spcs = spcs, type = "maki"),
+                             format_catch(fname_fukuoka, prefec = "fukuoka",
+                                          spcs = spcs, type= "bouuke"),
+                             format_catch(fname_fukuoka, prefec = "fukuoka",
+                                          spcs = spcs, type = "others"))
+      saga     <- bind_rows(format_catch(fname_saga, prefec = "saga",
+                                         spcs = spcs, type = "kennai"),
+                            format_catch(fname_saga, prefec = "saga",
+                                         spcs = spcs, type = "chumaki"),
+                            format_catch(fname_saga, prefec = "saga",
+                                         spcs = spcs, type = "teichi"))
+      kumamoto <- bind_rows(format_catch(fname_kumamoto_maki, prefec = "kumamoto",
+                                         spcs = spcs, type = "maki"),
+                            format_catch(fname_kumamoto_bou, prefec = "kumamoto",
+                                         spcs = spcs, type = "bouuke"))
+
+      nagasaki <- bind_rows(format_catch(fname_nagasaki_ngs, prefec = "nagasaki",
+                                         spcs = spcs, type = NULL),
+                            format_catch(fname_nagasaki_tbn, prefec = "nagasaki",
+                                         spcs = spcs),
+                            format_catch(fname_nagasaki_nr, prefec = "nagasaki",
+                                         spcs = spcs),
+                            format_catch(fname_nagasaki_kjk, prefec = "nagasaki",
+                                         spcs = spcs))
+      kagoshima <- format_catch(fname_kagoshima, prefec = "kagoshima", spcs = spcs)
+
+
+      catch_all <- dplyr::bind_rows(yamaguchi, fukuoka, saga,
+                                    nagasaki, kumamoto, kagoshima)
+
+
+      yamaguchi %>%
+        group_by(year, month) %>%
+        summarize(catch = sum(catch, na.rm = TRUE)) %>%
+        export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_yamaguchi.csv")
+
+      fukuoka %>%
+        group_by(year, month) %>%
+        summarize(catch = sum(catch, na.rm = TRUE)) %>%
+        export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_fukuoka.csv")
+
+      saga %>%
+        dplyr::filter(type == "kennai") %>%
+        group_by(year, month) %>%
+        summarize(catch = sum(catch, na.rm = TRUE)) %>%
+        export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_saga.csv")
+
+      nagasaki %>%
+        group_by(year, month) %>%
+        summarize(catch = sum(catch, na.rm = TRUE)) %>%
+        export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_nagasaki.csv")
+
+      kumamoto %>%
+        dplyr::filter(type == "maki") %>%
+        group_by(year, month) %>%
+        summarize(catch = sum(catch, na.rm = TRUE)) %>%
+        export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_kumamoto.csv")
+
+      kagoshima %>%
+        dplyr::filter(type == "maki4ports") %>%
+        group_by(year, month) %>%
+        summarize(catch = sum(catch, na.rm = TRUE)) %>%
+        export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_kagoshima.csv")
 #+END_SRC
 ** 漁況予測
-*** GLMによる予測
-どの変数も効いていない
-#+BEGIN_SRC R
-  # 漁海況予報会議のためのコード：カタクチイワシ3月時点の予報（黒田作成・林責任）
-  # 一般化線形モデルを用いて、4–8月の水揚量を説明。漁獲量の予測値±95%信頼区間を表示
-
-  library(MuMIn)
-
-  # データ読み込み
-  data_org <- read.csv("/Users/ahayashi/Documents/work/gyokaikyo_2019_katakuchi_data_190314.csv",
-                       header = TRUE)
-
-  yr2pred <- 2019
-  period2use  <- 10
-  last_row <- which(data_org$year == yr2pred) # 2018
-  first_row <- last_row - period2use
-
-  data        <- data_org[first_row:last_row, ]
-  data_minus1 <- data[1:(nrow(data) - 1), ]
-  data_recent <- data_minus1[(nrow(data_minus1) - 4):(nrow(data_minus1)), ]
-  recent_lower  <- mean(data_recent$catch49) * 0.8
-  recent_upper  <- mean(data_recent$catch49) * 1.2
-
-  resglm <- glm(catch49 ~ catch1 + catch11 + catch12 + catch111 +
-                  temp11 + temp12 + temp1 + temp2 + bio,
-                family = gaussian(link = "identity"),
-                    data = data_minus1)
-  MASS::stepAIC(resglm)
-  summary(resglm)
-
-  prediction  <- predict(resglm, newdata = data.frame(catch1 = data$catch1),
-                         se.fit = TRUE, type = "response",
-                         na.action = "na.fail")
-  uconf  <- prediction$fit + prediction$se.fit * 1.96
-  lconf  <- prediction$fit - prediction$se.fit * 1.96
-  summary(resglm)
-  as.numeric(resglm$fitted.values)
-
-
-  color.model.shade <- hsv( 20/360, 0.2, 0.9)
-  color.model       <- hsv( 20/360, 0.8, 0.9)
-  col.lastyr        <- hsv(200/360, 0.8, 0.9)
-  min.catch         <- 5000
-  max.catch         <- 20000
-
-  # png(paste("/Volumes/評価研/個人的データ置き場/hayashi/output/figs/gkk", yr2pred, "年3月_漁獲量予測.png"),
-  #     width = 1300, height = 800)
-  # plot(data_minus1$year, data_minus1$catch49,
-  #      xlim = c(min(data$year), max(data$year)),
-  #      ylim=c(min.catch, max.catch), type = "n", axes = FALSE, ann = FALSE)
-  # polygon(c(data$year, rev(data$year)),
-  #         c(uconf, rev(lconf)), col = color.model.shade, border = FALSE)
-  # lines(data$year, prediction$fit, col = COLOR.MODEL, lwd = 8)
-  # lines(data.minus1$year, data.minus1$catch49, lwd = 4)
-  # points(data.minus1$year, data.minus1$catch49, pch = 16, cex = 3)
-  # lines(min(data.recent$year):year.to.predict, rep(recent.lower,
-  #                                             nrow(data.recent) + 1), lty = 2, lwd = 4)
-  # lines(min(data.recent$year):year.to.predict, rep(recent.upper,
-  #                                             nrow(data.recent) + 1), lty = 2, lwd = 4)
-  # arrows((year.to.predict - 1), data.minus1[nrow(data.minus1), "catch49"] * 1.2,
-  #        (year.to.predict - 1), data.minus1[nrow(data.minus1), "catch49"] * 0.8,
-  #       length = 0, col = COL.LASTYR, lwd = 4)
-  # points((year.to.predict - 1), data.minus1[nrow(data.minus1), "catch49"]
-  #        , pch = 16, col = COL.LASTYR, cex = 4)
-  # points(max(data$year), prediction$fit[nrow(data)],
-  #        col = COLOR.MODEL, pch = 16, cex = 6)
-  # axis(1, data$year, tcl = -0.6, lwd = 4, labels = FALSE)
-  # axis(1, data$year[(data$year %% 5) == 0], tcl = -1.6, lwd = 4, labels = FALSE)
-  # axis(2, seq(MIN.CATCH, MAX.CATCH, 5000), lwd = 4, tcl = -1.6, labels = FALSE)
-  # dev.off()
-#+END_SRC
 *** 時系列解析による予測
 #+BEGIN_SRC R
-  # load packages ------------------------------------------------------------
   library(tidyverse)
   library(zoo)
   library(xts)
@@ -196,479 +242,492 @@ get_table("./output.git/nagasaki_2018oct.csv", gyokaikyo = TRUE, start = 2016, e
   source("_bk/fmtcatch/R/plot_figs.R")
   source("_bk/fmtcatch/R/get_temp.R")
 
-  # Load data ------------------------------------------------------------
-  stacdata <- read_csv("/Users/ahayashi/Dropbox/Imported/Stock/Timeseries_TW_Engraulis-japonicus.csv") %>%
+  stacdata       <- read_csv("/Users/ahayashi/Dropbox/Imported/Stock/Timeseries_TW_Engraulis-japonicus.csv") %>%
     rename(year = Year,
            biomass = `B_10^3ton`) %>%
     dplyr::select(year, biomass)
 
-  sstdata <- get_tw_sst("data.git/水温データ/mgdsst_till201902.xlsx", 2018)
+  sstdata        <- get_tw_sst("data.git/水温データ/mgdsst_till201902.xlsx", 2018)
 
-  list_catchdata <- iwashi2list(path = "/Volumes/評価研/漁海況/2019年3月/漁況資料作成/いわし/各県いわし_林20190312.xlsx",
+  list_catchdata <- iwashi2list(path = "../../../Google Drive/gkk/各県いわし_林20190312.xlsx",
                                 sheet = "カタクチイワシ",
                                 year.end = 2019)
-  seikai <- summarize_seikai(list_catchdata)
 
-  abb2num <- function(abb) {
-    lambda <- function(abb) {
-      which(abb == month.abb)
-    }
-    purrr::map_int(abb, lambda)
-  }
-
-  db   <- seikai %>%
+  # make 'ts' class data
+  db <- summarize_seikai(list_catchdata) %>%
     tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
                   key = month, value = catch) %>%
     dplyr::mutate(month = abb2num(month)) %>%
     left_join(sstdata, key = c(year, month)) %>%
     left_join(stacdata, key = year) %>%
-    mutate(day = 1,
-           date = make_date(year, month, day))
-
-  data <- readRDS("_bk/fmtcatch/output/西海ブロック漁獲量2018.rds")
-  db   <- make_database(data) %>%
-  db2 <- left_join(db, sstdata, key = c(year, month))
-  db3 <- left_join(db2, stacdata, key = year)
-
-  blank_data <- data_frame(year = 2019,
-                           month = 1:3,
-                           tw_degc = NA,
-                           biomass = NA)
-
-  seikai_org <- db %>%
-    group_by(year, month, tw_degc, biomass) %>%
-    summarize(logcatch = log(sum(catch, na.rm = TRUE))) %>%
+    mutate(ym = paste0(year, formatC(month, width = 2, flag = 0)) %>%
+             as.numeric()) %>%
+    arrange(ym) %>%
+    mutate(logcatch = log(catch),
+           logsst = log(tw_degc),
+           logb = log(biomass)) %>%
+    select(year, month, logcatch, logsst, logb) %>%
     as.data.frame()
 
-  seikai <- db %>%
-    filter(year < 2019) %>%
-    group_by(year, month, tw_degc, biomass) %>%
-    summarize(logcatch = log(sum(catch, na.rm = TRUE))) %>%
-    as.data.frame()
 
-  seikai_year <- seikai %>%
-    group_by(year) %>%
-    summarize(sum = sum(logcatch))
-
-  seikai_ts <- seikai %>%
-    dplyr::select(logcatch) %>%
-    unlist() %>%
+  dbts <- db %>%
     ts(start = min(db$year), frequency = 12)
 
-  seikai_sst <- seikai %>%
-    dplyr::select(tw_degc) %>%
-    unlist() %>%
-    ts(start = min(db$year), frequency = 12)
+  # Make data for model ------------------------------------------------------------
 
-  seikai_b <- seikai %>%
-    dplyr::select(biomass) %>%
-    unlist() %>%
-    ts(start = min(db$year), frequency = 12)
-  xvars <- cbind(seikai_sst, seikai_b)
-
-  # autoplot(seikai_ts)
-  # autoplot(seikai_sst)
-
-  # analysis ------------------------------------------------------------
-
-  ndiffs(seikai_ts) # No lag is needed
-  ggtsdisplay(seikai_ts)
-
-  ggsubseriesplot(seikai_ts)
-
-  seikai_ts_seas <- diff(seikai_ts, lag = frequency(seikai_ts))
-  ggtsdisplay(seikai_ts_seas)
-  acf(seikai_ts_seas, plot = FALSE, lag.max = 12)
-
-
-  train       <- window(seikai_ts,  end = c(2016, 12))
-  xvars_train <- window(xvars, end = c(2016, 12))
-  test        <- window(seikai_ts,  start = c(2017, 1), end = c(2017, 12))
-  xvars_test  <- window(xvars, start = c(2017, 1), end = c(2017, 12))
+  train <- window(dbts,  end = c(2017, 12))
+  sst_b <- train[, c("logsst", "logb")]
+  test  <- window(dbts,  start = c(2018, 1), end = c(2018, 12))
 
   # Build model ----------------------------------------------------------------------
-  model_sarimax <- auto.arima(y = seikai_ts,
-  #                            y = train,
-  #                            xreg = xvars_train,
-                              ic = "aicc",
+  model_sarimax1 <- Arima(y = train[, "logcatch"],
+                         order = c(1, 1, 1),
+                         seasonal = list(order = c(1, 0, 0)),
+                         xreg = sst_b)
+  model_sarimax1
+  #   Sst and biomass have positive effect to catch.
+  #   AIC was 750.41.
+  #   --- But model order should be considered.
+
+
+  # Select model order automatically
+  model_sarimax <- auto.arima(y = train[, "logcatch"],
+                              xreg = sst_b,
+                              ic = "aic",
                               max.order = 8,
                               stepwise = FALSE,
                               approximation = FALSE,
                               parallel = TRUE,
                               num.cores = 4)
   model_sarimax
+  #    Regression with ARIMA(2,0,0)(1,0,1) errors were selected.
+  #    AIC was 725.1.
 
-  abs(polyroot(c(1, -coef(model_sarimax)[c("ar1")]))) # ok
-  abs(polyroot(c(1,  coef(model_sarimax)[c("ma1")]))) # ok
-  checkresiduals(model_sarimax)
+  # Check model
+  abs(polyroot(c(1, -coef(model_sarimax)[c("ar1", "ar2")]))) # ok because greater than 1.
+  abs(polyroot(c(1, -coef(model_sarimax)[c("sar1")]))) # ok because greater than 1.
+
+  checkresiduals(model_sarimax)                       # ok mecause p > 0.001
   jarque.bera.test(resid(model_sarimax)) # Not good. Residuals do not distribute normally (p < 0.001).
 
-  # Validation of the model ------------------------------------------------------------
+  # Forcast
+  sst_b_test <- test[, c("logsst", "logb")]
+  sarimax_f <- forecast(model_sarimax,
+                        xreg = sst_b_test,
+                        h = 12,
+                        level = c(95, 70))
+  sarimax_f
+  autoplot(sarimax_f, predict.colour = 1, main = "Prediction by ARIMA")
+  # Forcast completed successfully.
+  # But, x values sould be considered.
 
-  model_valid <- forecast(model_sarimax,
-  #                           xreg = xvars_test,
-                             h = 24,
-                             level = c(95, 70))
-  model_valid
-  mean(model_valid$mean[11:15])
-  mean(model_valid$lower[11:15])
-  mean(model_valid$upper[11:15])
-  p <- autoplot(model_valid, predict.color = 1)
-  ggsave("../../figs/tsplot.png", family = "Helvetica")
+  # Forecast using mean- or last x values
+  sst_b_mean <- data.frame(logsst = rep(mean(train[, "logsst"]), 12),
+                           logb   = rep(mean(train[, "logb"]), 12)) %>%
+    as.matrix()
+  sarimax_f_mean <- forecast(model_sarimax, xreg = sst_b_mean)
+  autoplot(sarimax_f_mean, predict.colour = 1, main = "Prediction by ARIMA, using mean SST and Biomass")
 
-  xvar_mean <- data.frame(tw_degc = rep(mean(xvars_train[,"seikai_sst"], na.rm = TRUE), 12),
-                          biomass = rep(mean(xvars_train[,"seikai_b"])))
-  fc_mean  <- forecast(model_sarimax,
-                       xreg = xvar_mean,
-                       h = 12,
-                       level = c(95, 70))
-  autoplot(fc_mean, predict.color = 1)
-
-  xvar_tail <- data.frame(tw_degc = rep(tail(xvars_train[,"seikai_sst"], n = 1), 12),
-                          biomass = rep(tail(xvars_train[,"seikai_b"], n = 1), 12))
-  fc_tail  <- forecast(model_sarimax,
-                       xreg = xvar_tail,
-                       h = 24,
-                       level = c(95, 70))
-  autoplot(fc_tail, predict.color = 1)
-
-  g <- autoplot(model_valid)
-  real2017 <- data.frame(date = seq.Date(as.Date("2017-01-01"), as.Date("2017-12-01"), by = "month"), logcatch = test)
-  g <- g + geom_point(data = real2017, aes(date, logcatch))
-  real2018 <- data.frame(date = seq.Date(as.Date("2018-01-01"), as.Date("2018-12-01"), by = "month"),
-                         logcatch = window(seikai_ts,  start = c(2018, 1), end = c(2018, 12)))
-  g <- g + geom_point(data = real2018, aes(date, logcatch), color = "red")
-  g
-
-  gm <- autoplot(fc_mean)
-  real2017 <- data.frame(date = seq.Date(as.Date("2017-01-01"), as.Date("2017-12-01"), by = "month"), logcatch = test)
-  gm <- gm + geom_point(data = real2017, aes(date, logcatch))
-  gm
-
-  gt <- autoplot(fc_tail)
-  real2017 <- data.frame(date = seq.Date(as.Date("2017-01-01"), as.Date("2017-12-01"), by = "month"), logcatch = test)
-  gt <- gt + geom_point(data = real2017, aes(date, logcatch))
-  gt
-
-  naive <- meanf(train, h = 12)
-
-  rmse_valid <- sqrt(sum((model_valid$mean - test)^2) / length(model_valid$mean))
-  rmse_valid
-  accuracy(naive, x = test)["Test set", "RMSE"]
-  accuracy(model_valid, x = test)["Test set", "RMSE"] # better than naive model
-  accuracy(fc_mean, x = test)["Test set", "RMSE"]
-  accuracy(fc_tail, x = test)["Test set", "RMSE"] # best
-
-  model_valid$mean
-  str(model_valid)
+  sst_b_tail <- data.frame(logsst = rep(tail(train[, "logsst"], 1), 12),
+                           logb   = rep(tail(train[, "logb"], 1), 12)) %>%
+    as.matrix()
+  sarimax_f_tail <- forecast(model_sarimax, xreg = sst_b_tail)
+  autoplot(sarimax_f_tail, predict.colour = 1, main = "Prediction by ARIMA, using last SST and Biomass")
 
 
-  # Plot by year ------------------------------------------------------------
-  res_valid <- data.frame(year = rep(2017, 12),
-                            month = month.abb,
-                            logcatch = model_valid$mean,
-                            lwr = model_valid$lower,
-                            upr = model_valid$upper) %>%
-    group_by(year) %>%
-    summarize(sum = sum(logcatch),
-              upr = sum(upr.95.),
-              lwr = sum(lwr.95.))
+  ##################################################################### end
+  str(sarimax_f)
+  out <- list(mean = exp(sarimax_f$mean),
+              lower = exp(sarimax_f$lower),
+              upper = exp(sarimax_f$upper))
+  out
 
-  years <- seikai %>%
-    filter(year < 2017) %>%
-    select(year) %>%
-    unlist()
-  years
-  length(unique(years))
-  nrow(seikai)
+  # Naive forecast
+  naive_f_mean   <- meanf(train[, "logcatch"], h = 12)
+  naive_f_latest <- rwf(train[, "logcatch"], h = 12)
 
-  res_train   <- data.frame(year = years,
-                            month = rep(month.abb, length(unique(years))),
-                            logcatch = as.numeric(model_sarimax$fitted),
-                            upper = model_sarimax$fitted + 1.96 * sqrt(model_sarimax$sigma2),
-                            lower = model_sarimax$fitted - 1.96 * sqrt(model_sarimax$sigma2)) %>%
-    group_by(year) %>%
-    summarize(sum = sum(logcatch),
-              upr = sum(upper),
-              lwr = sum(lower))
+  # Validation of forecast
+  sarimax_rmse <- sqrt(
+    sum((sarimax_f$mean - test[, "logcatch"])^2) / length(sarimax_f$mean)
+  )
+  sarimax_rmse
+  accuracy(sarimax_f, x = test[, "logcatch"])
+  accuracy(sarimax_f_mean, x = test[, "logcatch"])
+  accuracy(sarimax_f_tail, x = test[, "logcatch"]) # Best
+  # ---------------All three forecasts were found to be good because RMSEs of
+  #   ---------------test sets were smaller than those of training sets.
+  #   -------------Forecast using TAIL DATA was the best.
+  accuracy(naive_f_mean, x = test[, "logcatch"]) # Not bad but worse than ARIMA
+  accuracy(naive_f_latest, x = test[, "logcatch"]) # Bad!
 
-  res <- bind_rows(res_train, res_valid)
+  model_best <- sarimax_f_tail
+  model_best <- sarimax_f_tail
+  plot_forecast_real(model_best, list_catchdata, 2018, 12)
 
-  p <- res %>%
-    ggplot(aes(year, sum)) +
-    geom_ribbon(aes(ymin = lwr, ymax = upr), fill = hsv(200/360, 0.8, 0.8, 0.4)) +
-    geom_line(color = hsv(200/360, 0.8, 0.8))
-  p <- p + geom_point(data = seikai_year, aes(year, sum))
-  p
+  # Forcast for next period
+  sarimax_f <- forecast(model_sarimax,
+                        xreg = sst_b_test,
+                        h = 12,
+                        level = c(95, 70))
 
-  dat.forecast <- data.frame(biomass = rep(tail(stacdata$biomass, 1), 24),
-                             tw_degc = rep(filter(sstdata, year==2017)$tw_degc, 2)) %>%
-    ts(start = 2016, frequency = 12)
-  dat.forecast
+  train2           <- window(dbts,  end = c(2018, 12))
+  sst_b2           <- train2[, c("logsst", "logb")]
+  sarimax_forecast <- auto.arima(y = train2[, "logcatch"],
+                              xreg = sst_b2,
+                              ic = "aic",
+                              max.order = 8,
+                              stepwise = FALSE,
+                              approximation = FALSE,
+                              parallel = TRUE,
+                              num.cores = 4)
+  sst_b_tail2 <- data.frame(logsst = rep(tail(train2[, "logsst"], 1), 12),
+                            logb   = rep(tail(train2[, "logb"], 1), 12)) %>%
+    as.matrix()
+  sarimax_f_future <- forecast(sarimax_forecast, xreg = sst_b_tail2)
 
-  ts.plot(model_sarimax$fit, train, col = c(3, 1))
 
+  png("forecast.png", width = 1400, height = 1000)
+  par(mai = c(2, 2, 0, 2), family = "HiraKakuProN-W3")
+  plot_forecast(sarimax_f_future, list_catchdata, 2019, 1)
+  dev.off()
 #+END_SRC
-*** 問題点
-各県いわしに依存している．
-catch49など，手作業が介在
-* ディレクトリの構成
-R パッケージのディレクトリは全て GitHub で公開する．
-ただし，以下のディレクトリは GitHub にはアップロードせず，ローカルで管理する（リモートリポジトリを GitHub ではなく，NAS に設定する）．
-- data.git/: 各県から提供されたデータ．
-- docs.git/: 予報文案など．
-  
-* パッケージの機能
-** データ目録の生成
-** データの統合
-** グラフ描画
-- 漁獲量
-- 体長組成
-** 予報文案テンプレートの生成
-何らかの構造化マークアップ言語の形式で．
-できるだけタグが短いもの．
-マークダウンが有力か？
-* 使い方デモ
-** 体長組成整理
+** 作図
 #+BEGIN_SRC R
-  library(gyokaikyor)
-  library(dplyr)
-  library(hash)
-  library(ggplot2)
-  fname  <- c("data.git/漁海況/2018年10月/各県資料/熊本県/05 H29体長組成 まき網＆棒受網（熊本県）.xlsx",
-              "data.git/漁海況/2019年3月/各県資料/熊本県/04_H30_まき網＆棒受網体長組成.xlsx",
-              "data.git/漁海況/2018年3月/各県資料/長崎県/2017.09-2018.01小型まき網体長組成.xls",
-              "data.git/漁海況/2018年10月/各県資料/長崎県/2018.02-2018.08小型まき網体長組成.xls",
-              "data.git/漁海況/2019年3月/各県資料/長崎県/2018.09-2019.01小型まき網体長組成.xls",
-              "data.git/漁海況/2018年10月/各県資料/鹿児島県/体長組成(H29年度).xlsx",
-              "data.git/漁海況/2019年3月/各県資料/鹿児島県/体長組成(H30年度).xlsx")
-  prefec <- c(rep("kumamoto", 2), rep("nagasaki", 3), rep("kagoshima", 2))
-  tbl_fname <- hash(fname, prefec)
-  fname2 <- give_class(fname, tbl_fname)
+  list_catchdata <- iwashi2list(path = "../../../Google Drive/gkk/各県いわし_林20190312.xlsx",
+                                sheet = "カタクチイワシ",
+                                year.end = 2019, year.start = 1992)
+  df.seikai <- summarize_seikai(list_catchdata)
 
-  kumamoto_nested <- dplyr::bind_rows(fmtbl(fname2[[1]], spcs = "katakuchi"),
-                                      fmtbl(fname2[[2]], spcs = "katakuchi"))
-  kumamoto        <- dplyr::bind_rows(fmtbl(fname2[[1]], spcs = "katakuchi",
-                                            nest = FALSE),
-                                      fmtbl(fname2[[2]], spcs = "katakuchi",
-                                            nest = FALSE))
-  # kumamoto        <- fmtbl(fname2[[1]], spcs = "maiwashi", nest = FALSE)
-  nagasaki_nested  <- dplyr::bind_rows(fmtbl(fname2[[3]], spcs = "katakuchi"),
-                                       fmtbl(fname2[[4]], spcs = "katakuchi"),
-                                       fmtbl(fname2[[5]], spcs = "katakuchi"))
-  nagasaki  <- dplyr::bind_rows(fmtbl(fname2[[3]], spcs = "katakuchi",
-                                      nest = FALSE),
-                                fmtbl(fname2[[4]], spcs = "katakuchi",
-                                      nest = FALSE),
-                                fmtbl(fname2[[5]], spcs = "katakuchi",
-                                      nest = FALSE))
-  kagoshima_nested <- dplyr::bind_rows(fmtbl(fname2[[6]], spcs = "katakuchi"),
-                                      fmtbl(fname2[[7]], spcs = "katakuchi"))
-  kagoshima        <- dplyr::bind_rows(fmtbl(fname2[[6]], spcs = "katakuchi",
-                                            nest = FALSE),
-                                      fmtbl(fname2[[7]], spcs = "katakuchi",
-                                            nest = FALSE))
+  png("catch_monthvar.png", width = 1300, height = 1000)
+  par(mai = c(2, 2, 2, 2), family = "HiraKakuProN-W3")
+  plot_catch_monthvar(df.seikai = df.seikai, year = 2019, gkk.month = "Mar")
+  dev.off()
 
-  kumamoto %>%
-    ggplot(aes(bl, fill = as.factor(month))) +
-    geom_histogram() +
-    facet_grid(month ~ year, scale = "free_y")
+  png("catch_prefec.png", width = 1500, height = 1000)
+  par(mai = c(2, 2, 2, 2), family = "HiraKakuProN-W3")
+  plot_catch_prefec(list_catchdata, 2019, "Mar")
+  dev.off()
 
+  library(XLConnect)
+  library(cluster)
+  # mathematical parameters
+  YMAX_INIT   <- 0; ymax_updated <- YMAX_INIT
+  MONTHS      <- 1:12
+  SHEETNAME   <- "計"
+  BLBIN       <- 5
+  CLASS_LEFT  <- seq(0, 295, BLBIN)
+  CLASS_RIGHT <- CLASS_LEFT + BLBIN
+  CLASS_NAME  <- paste(formatC(CLASS_LEFT, width=3, flag=0), "_",
+                       formatC(CLASS_RIGHT, width=3, flag=0), sep="")
+  CLASS00_10_AGE0   <- data.frame(matrix(1, nrow=2, ncol=12), 
+                                  row.names=c("000-005", "005-010"))
+  CLASS00_10_AGE12  <- data.frame(matrix(0, nrow=2, ncol=12), 
+                                  row.names=c("000-005", "005-010"))
+  CLASS155_300   <- data.frame(matrix(0, nrow=length(seq(155, 295, 5)), ncol=12), 
+                                  row.names=paste(seq(155, 295, 5), 
+                                                    seq(160, 300, 5), sep = "_"))
+  colnames(CLASS00_10_AGE0)   <- month.abb
+  colnames(CLASS00_10_AGE12)  <- month.abb
+  colnames(CLASS155_300)      <- month.abb
+  AGE_LENGTH_KEY_0  <- read.csv("../_Library/ageLengthKey0.csv", row.names=1)
+  AGE_LENGTH_KEY_0  <- rbind(CLASS00_10_AGE0, AGE_LENGTH_KEY_0, CLASS155_300)
+  AGE_LENGTH_KEY_1  <- read.csv("../_Library/ageLengthKey1.csv", row.names=1)
+  AGE_LENGTH_KEY_1  <- rbind(CLASS00_10_AGE12, AGE_LENGTH_KEY_1, CLASS155_300)
+  AGE_LENGTH_KEY_2  <- read.csv("../_Library/ageLengthKey2.csv", row.names=1)
+  AGE_LENGTH_KEY_2  <- rbind(CLASS00_10_AGE12, AGE_LENGTH_KEY_2, CLASS155_300)
+  CLASS_LEFT_AL     <- as.numeric(substr(rownames(AGE_LENGTH_KEY_0), 1,3))
+  STARTROW    <- 6 # Start from 0-5 mm but it is OK
+  ENDROW      <- STARTROW + length(CLASS_LEFT) - 1
 
-  seikai_seimitsu   <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_seimitsu_katakuchi.csv", type = "seimitsu",
-                                    date.start = "20180101", date.end = "20190331")
-  nihonkai_seimitsu <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_seimitsu_katakuchi.csv", type = "seimitsu",
-                                    date.start = "20180101", date.end = "20190331")
-  seikai_taichou    <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_taichou_katakuchi.csv", type = "taichou",
-                                    date.start = "20180101", date.end = "20190331")
-  nihonkai_taichou  <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_taichou_katakuchi.csv", type = "taichou",
-                                    date.start = "20180101", date.end = "20190331")
-  fresco_seimitsu   <- dplyr::bind_rows(seikai_seimitsu, nihonkai_seimitsu)
-  fresco_taichou    <- dplyr::bind_rows(seikai_taichou, nihonkai_taichou)
-
-
-  # yamaguchi
-  conv2hoshifile(df = fresco_seimitsu, prefec = "yamaguchi",
-                 type = "seimitsu", 201801, 201903,
-                 export = TRUE, fname = "gkk_2019Mar_bl_yamaguchi.csv")
-  # conv2hoshifile(df = fresco_taichou, prefec = "yamaguchi",
-  #                type = "taichou", 201801, 201903)
-
-  # fukuoka & saga
-  # no data
-
-  # nagasaki
-  conv2hoshifile(df = nagasaki, prefec = "nagasaki",
-                 type = "taichou", 201801, 201903,
-                 export = TRUE, fname = "gkk_2019Mar_bl_nagasaki.csv")
-
-  # kumamoto
-  kumamoto %>%
-    dplyr::filter(type == "まき網") %>%
-    conv2hoshifile(prefec = "kumamoto",
-                 type = "seimitsu", 201801, 201903,
-                 export = TRUE, fname = "gkk_2019Mar_bl_kumamoto_maki.csv")
-  conv2hoshifile(df = kumamoto, prefec = "kumamoto",
-                 type = "seimitsu", 201801, 201903,
-                 export = TRUE, fname = "gkk_2019Mar_bl_kumamoto_all.csv")
-  # kagoshima
-  kagoshima %>%
-    dplyr::filter(grepl("まき", type)) %>%
-    conv2hoshifile(prefec = "kagoshima",
-                   type = "taichou", 201801, 201903,
-                   export = TRUE, fname = "gkk_2019Mar_bl_kagoshima_maki.csv")
-
-  conv2hoshifile(df = kagoshima, prefec = "kagoshima",
-                 type = "taichou", 201801, 201903,
-                 export = TRUE, fname = "gkk_2019Mar_bl_kagoshima_all.csv")
-
-
-  # seikai
-  #no data
-
-#+END_SRC
-** 漁獲量整理
-#+BEGIN_SRC R
-  library(hash)
-  library(dplyr)
-  library(ggplot2)
-  fname  <- c("data.git/漁海況/2019年3月/各県資料/熊本県/01_H30まき網漁獲量（熊本県）.xls",
-              "data.git/漁海況/2019年3月/各県資料/熊本県/02_H30棒受網漁獲量（熊本県）.xls",
-              "data.git/漁海況/2019年3月/各県資料/長崎県/長崎魚市ｲﾜｼ類（中小旋）とりまとめ.xls",
-              "./data.git/漁海況/2019年3月/各県資料/長崎県/橘湾中央漁協ｲﾜｼ類(中小まき)提出とりまとめ.xls",
-              "./data.git/漁海況/2019年3月/各県資料/長崎県/奈留漁協ｲﾜｼ類（中小旋）とりまとめ.xlsx",
-              "./data.git/漁海況/2019年3月/各県資料/長崎県/九十九島漁協ｲﾜｼ類(中小まき)とりまとめ.xlsx",
-              "data.git/漁海況/2019年3月/各県資料/鹿児島県/４港月計表（30年度）.xlsx",
-              "data.git/漁海況/2019年3月/各県資料/佐賀県/➁佐賀県_予報対象種漁獲量（元データ）.xls",
-              "data.git/漁海況/2019年3月/各県資料/福岡県/2019-3月送付_S51_H30経年福岡漁獲量データ(提出分).xlsx",
-              "data.git/漁海況/2019年3月/各県資料/山口県/2018-2019湊銘柄別水揚市場調査表.xlsx")
-
-  prefec <- c(rep("kumamoto", 2),
-             rep("nagasaki", 4),
-             "kagoshima",
-             "saga",
-             "fukuoka",
-             "yamaguchi")
-  tbl_fname <- hash(fname, prefec)
-
-  fname2 <- give_class(fname, tbl_fname)
-  fname2[[1]]
-  fname2[[2]]
-  fname2[[3]]
-  fname2[[4]]
-  fname2[[5]]
-  fname2[[6]]
-  fname2[[7]]
-  fname2[[8]]
-  fname2[[9]]
-  fname2[[10]]
-
-  spcs <- "katakuchi"
-
-  km_maki <- fmtcatch(fname2[[1]], spcs = spcs, type = "maki")
-  km_bou  <- fmtcatch(fname2[[2]], spcs = spcs, type = "bouuke")
-  kumamoto <- dplyr::bind_rows(km_maki, km_bou)
-  kumamoto %>% ggplot(aes(month, catch, color = type)) +
-    geom_line() +
-    facet_wrap(~ year)
-
-
-  ngs      <- fmtcatch(fname2[[3]], "katakuchi")
-  tbn      <- fmtcatch(fname2[[4]], "katakuchi")
-  nr       <- fmtcatch(fname2[[5]], "katakuchi")
-  kjk      <- fmtcatch(fname2[[6]], "katakuchi")
-  nagasaki <- dplyr::bind_rows(ngs, tbn, nr, kjk)
-
-  nagasaki %>% ggplot(aes(month, catch, color = port)) +
-    geom_line() +
-    facet_wrap(~ year)
-
-  kagoshima <- fmtcatch(fname2[[7]], spcs = spcs)
-
-  sg_kennai  <- fmtcatch(fname2[[8]], spcs = spcs, type = "kennai")
-  sg_chumaki <- fmtcatch(fname2[[8]], spcs = spcs, type = "chumaki")
-  sg_teichi  <- fmtcatch(fname2[[8]], spcs = spcs, type = "teichi")
-  saga       <- dplyr::bind_rows(sg_kennai, sg_chumaki, sg_teichi)
-
-  saga %>% ggplot(aes(month, catch, color = type)) +
-    geom_line() +
-    facet_wrap(~ year)
-
-  fk_maki  <- fmtcatch(fname2[[9]], spcs = spcs, type = "maki")
-  fk_bou   <- fmtcatch(fname2[[9]], spcs = spcs, type = "bouuke")
-  fk_other <- fmtcatch(fname2[[9]], spcs = spcs, type = "others")
-  fukuoka  <- dplyr::bind_rows(fk_maki, fk_bou, fk_other)
-  fukuoka %>% ggplot(aes(month, catch, color = type)) +
-    geom_line() +
-    facet_wrap(~ year)
-
-  yamaguchi <- fmtcatch(fname2[[10]], spcs = spcs)
-  yamaguchi %>% ggplot(aes(month, catch, color = meigara)) +
-    geom_line() +
-    facet_wrap(year ~ type)
-
-  catch_all <- dplyr::bind_rows(yamaguchi, fukuoka, saga,
-                                nagasaki, kumamoto, kagoshima)
-
-  catch_all %>%
-    filter(year >= 2018) %>%
-    ggplot(aes(month, catch)) +
-    geom_line() +
-    facet_grid(year ~ prefecture)
-
-
-  export2kakuken_iwashi <- function(df, export.csv = FALSE, fname = NULL) {
-    out <- tribble(~year,
-                   ~`1`, ~`2`, ~`3`, ~`4`, ~`5`, ~`6`,
-                   ~`7`, ~`8`, ~`9`, ~`10`, ~`11`, ~`12`)
-    df2 <- df %>%
-      tidyr::spread(key = month, value = catch)
-    out %<>% right_join(df2)
-    if (export.csv == TRUE) {
-      write.csv(out,
-                paste0("/Volumes/評価研/個人的データ置き場/hayashi/output/",
-                       fname),
-                row.names = FALSE)
+  plot.blhist <- function()
+  # 体長組成
+  # graphic parameters
+  BORDER_KAERI_KOBA <- 50
+  BORDER_KOBA_CHUBA <- 80
+  BORDER_CHUBA_OHBA <- 100
+  BARWIDTH      <- 4
+  COL_FILL      <- hsv(0, 0, 0)
+  COL0          <- hsv(200/360, 0.8, 0.9)
+  COL1          <- hsv(200/360, 0.8, 0.6)
+  COL2          <- hsv(200/360, 0.8, 0.1)
+  COL_KAERI     <- hsv( 60/360, 0.9, 0.9, 0.1)
+  COL_KOBA      <- hsv( 60/360, 0.9, 0.9, 0.35)
+  COL_CHUBA     <- hsv( 60/360, 0.9, 0.9, 0.65)
+  COL_OHBA      <- hsv( 60/360, 0.9, 0.9, 1)
+  XMAX          <- 150
+  YMAX_INIT     <- 100 # decide value by refering to ymax_init
+  ymax_updated  <- 0
+  TICKBIN_X     <- 1
+  TICKBIN_Y     <- 10
+  TICKLEN_X     <- 0.25
+  TICKLEN_Y     <- 0.25
+  LABELBIN_X    <- 5 # in cm
+  LABELBIN_Y    <- 20
+  pdf(paste("../output/gyokaikyo_", YEAR, "年3月_体長組成.pdf", sep=""), family="Helvetica", width=9, height=6)
+  par(mfcol=c(12, 3), mai=c(0.1, 0.4, 0.05, 0.1), ps=20, oma=c(0, 0, 0.5, 0))
+  for(y in (YEAR - 2):YEAR){ # To plot blhist of recent three years
+    ychar     <- substr(y, 3, 4)
+    if (y != YEAR){
+      yfilename <- paste("★カタクチ", ychar, ".xls", sep="")
+      wb        <- loadWorkbook(yfilename)
+      data      <- readWorksheetFromFile(yfilename, sheet=SHEETNAME)
+    }else{
+      # No need to read file
     }
-    out
+    out       <- NULL
+    for(m in MONTHS){
+      if (y != YEAR){
+        startcol    <- 3
+      }else{
+        if (m == 3){
+          break
+        }
+        startcol    <- 15
+      }
+      mdata       <- as.numeric(as.character(data[STARTROW:ENDROW, startcol + m - 1]))
+      out         <- cbind(out, mdata)
+      n_mdata     <- sum(mdata)
+      mdata_pcnt  <- mdata / n_mdata * 100
+      if(sum(mdata)!=0){
+        max_pcnt    <- max(mdata_pcnt, na.rm=T) 
+        if(max_pcnt > ymax_updated){
+          ymax_updated <- max_pcnt
+        }
+      }
+      ymax      <- YMAX_INIT
+      ymax_int  <- ceiling(max(mdata)/100) * 100
+      if(ymax_int > ymax){
+        ymax <- ymax_int
+      }
+      tickbin_y   <- ymax/2
+      labelbin_y  <- ymax/1
+      plot(1, 1, xlim=c(0, XMAX), ylim=c(0, ymax), 
+           type="n", xaxs="i", yaxs="i", axes=F, ann=F)
+      polygon(c(0, BORDER_KAERI_KOBA, BORDER_KAERI_KOBA, 0),
+              c(0, 0, ymax, ymax), col=COL_KAERI, border=F)
+      polygon(c(BORDER_KAERI_KOBA, BORDER_KOBA_CHUBA, BORDER_KOBA_CHUBA, BORDER_KAERI_KOBA), 
+              c(0, 0, ymax, ymax), col=COL_KOBA, border=F)
+      polygon(c(BORDER_KOBA_CHUBA, BORDER_CHUBA_OHBA, BORDER_CHUBA_OHBA, BORDER_KOBA_CHUBA),
+              c(0, 0, ymax, ymax), col=COL_CHUBA, border=F)
+      polygon(c(BORDER_CHUBA_OHBA, XMAX, XMAX, BORDER_CHUBA_OHBA), 
+              c(0, 0, ymax, ymax), col=COL_OHBA, border=F)
+      m_alkey0  <- AGE_LENGTH_KEY_0[, m]
+      m_alkey1  <- AGE_LENGTH_KEY_1[, m]
+      m_alkey2  <- AGE_LENGTH_KEY_2[, m]
+      bottom0   <- rep(0, length(m_alkey0))
+      top0      <- m_alkey0 * mdata
+      bottom1   <- top0
+      top1      <- (bottom1 + m_alkey1 * mdata)
+      bottom2   <- top1 
+      top2      <- (bottom2 + m_alkey2 * mdata)
+      rect(CLASS_LEFT, bottom0, CLASS_LEFT + BARWIDTH, top0, col=COL0, border=F)
+      rect(CLASS_LEFT, bottom1, CLASS_LEFT + BARWIDTH, top1, col=COL1, border=F)
+      rect(CLASS_LEFT, bottom2, CLASS_LEFT + BARWIDTH, top2, col=COL2, border=F)
+      # rect(CLASS_LEFT, rep(0, length(CLASS_LEFT)), CLASS_LEFT + BARWIDTH, mdata_pcnt, col=COL_FILL, border=F)
+      axis(1, at=seq(0, XMAX, TICKBIN_X * 10), labels=F, tcl=TICKLEN_X)
+      # axis(1, at=seq(0, XMAX * 10, LABELBIN_X * 10), labels=seq(0, XMAX, LABELBIN_X))
+      axis(1, at=seq(0, XMAX * 10, LABELBIN_X * 10), labels=F, tcl=-0.3)
+      axis(2, at=seq(0, ymax), tcl=0, labels=F)
+      axis(2, at=seq(0, ymax, tickbin_y), labels=F, tcl=TICKLEN_Y)
+      axis(2, at=seq(0, ymax, labelbin_y), labels=F, tcl=-0.3)
+      axis(2, at=seq(0, ymax, labelbin_y), labels=T, las=2, pos=4, col="transparent")
+    }
+    out           <- as.data.frame(out)
+    colnames(out) <- month.abb[1:ncol(out)]
+    rownames(out) <- CLASS_NAME
+    if (exists("wb") == TRUE){
+      rm(wb)
+    }
+    gc(); gc()
+  }
+  dev.off()
+  print(paste("max % is", ceiling(ymax_updated)))
+
+  pdf(paste("../output/gyokaikyo_", YEAR, "年3月_体長組成_4月スタート.pdf", sep=""), family="Helvetica", width=9, height=6)
+  par(mfcol=c(12, 3), mai=c(0.1, 0.4, 0.05, 0.1), ps=20, oma=c(0, 0, 0.5, 0))
+  for(y in (YEAR - 2):YEAR - 1){
+    ychar     <- substr(y, 3, 4)
+    yfilename <- paste("★カタクチ", ychar, ".xls", sep = "")
+    wb        <- loadWorkbook(yfilename)
+    data      <- readWorksheetFromFile(yfilename, sheet = SHEETNAME)
+    out       <- NULL
+    for(m in 4:12){
+      mdata       <- as.numeric(as.character(data[STARTROW:ENDROW, 3 + m - 1]))
+      out         <- cbind(out, mdata)
+      n_mdata     <- sum(mdata)
+      mdata_pcnt  <- mdata / n_mdata * 100
+      if(sum(mdata)!=0){
+        max_pcnt    <- max(mdata_pcnt, na.rm=T) 
+        if(max_pcnt > ymax_updated){
+          ymax_updated <- max_pcnt
+        }
+      }
+      ymax      <- YMAX_INIT
+      ymax_int  <- ceiling(max(mdata)/100) * 100
+      if(ymax_int > ymax){
+        ymax <- ymax_int
+      }
+      tickbin_y   <- ymax/2
+      labelbin_y  <- ymax/1
+      plot(1, 1, xlim=c(0, XMAX), ylim=c(0, ymax), type="n", xaxs="i", yaxs="i", axes=F, ann=F)
+      polygon(c(0, BORDER_KAERI_KOBA, BORDER_KAERI_KOBA, 0), c(0, 0, ymax, ymax), col=COL_KAERI, border=F)
+      polygon(c(BORDER_KAERI_KOBA, BORDER_KOBA_CHUBA, BORDER_KOBA_CHUBA, BORDER_KAERI_KOBA), c(0, 0, ymax, ymax), col=COL_KOBA, border=F)
+      polygon(c(BORDER_KOBA_CHUBA, BORDER_CHUBA_OHBA, BORDER_CHUBA_OHBA, BORDER_KOBA_CHUBA), c(0, 0, ymax, ymax), col=COL_CHUBA, border=F)
+      polygon(c(BORDER_CHUBA_OHBA, XMAX, XMAX, BORDER_CHUBA_OHBA), c(0, 0, ymax, ymax), col=COL_OHBA, border=F)
+      m_alkey0  <- AGE_LENGTH_KEY_0[, m]
+      m_alkey1  <- AGE_LENGTH_KEY_1[, m]
+      m_alkey2  <- AGE_LENGTH_KEY_2[, m]
+      bottom0   <- rep(0, length(m_alkey0))
+      top0      <- m_alkey0 * mdata
+      bottom1   <- top0
+      top1      <- (bottom1 + m_alkey1 * mdata)
+      bottom2   <- top1 
+      top2      <- (bottom2 + m_alkey2 * mdata)
+      rect(CLASS_LEFT, bottom0, CLASS_LEFT + BARWIDTH, top0, col=COL0, border=F)
+      rect(CLASS_LEFT, bottom1, CLASS_LEFT + BARWIDTH, top1, col=COL1, border=F)
+      rect(CLASS_LEFT, bottom2, CLASS_LEFT + BARWIDTH, top2, col=COL2, border=F)
+      # rect(CLASS_LEFT, rep(0, length(CLASS_LEFT)), CLASS_LEFT + BARWIDTH, mdata_pcnt, col=COL_FILL, border=F)
+      # text(15, ymax/2, paste(ychar, m), cex = 1.5)
+      axis(1, at=seq(0, XMAX, TICKBIN_X * 10), labels=F, tcl=TICKLEN_X)
+      # axis(1, at=seq(0, XMAX * 10, LABELBIN_X * 10), labels=seq(0, XMAX, LABELBIN_X))
+      axis(1, at=seq(0, XMAX * 10, LABELBIN_X * 10), labels=F, tcl=-0.3)
+      axis(2, at=seq(0, ymax), tcl=0, labels=F)
+      axis(2, at=seq(0, ymax, tickbin_y), labels=F, tcl=TICKLEN_Y)
+      axis(2, at=seq(0, ymax, labelbin_y), labels=F, tcl=-0.3)
+      axis(2, at=seq(0, ymax, labelbin_y), labels=T, las=2, pos=4, col="transparent")
+    }
+    if (exists("wb") == TRUE){
+      rm(wb)
+    }
+    gc(); gc()
+    if(y != (YEAR - 1)){
+      ychar_plus1 <- substr(y + 1, 3, 4)
+      yfilename <- paste("★カタクチ", ychar_plus1, ".xls", sep="")
+      wb        <- loadWorkbook(yfilename)
+      data      <- readWorksheetFromFile(yfilename, sheet=SHEETNAME)
+    }
+    for(m in 1:3){
+      if (y != (YEAR - 1)){
+        mdata       <- as.numeric(as.character(data[STARTROW:ENDROW, 3 + m - 1]))
+      }else{
+        if (m == 3){
+          break
+        }
+        mdata       <- as.numeric(as.character(data[STARTROW:ENDROW, 15 + m - 1]))
+      }
+      # if(y == 2017 & m == 1){browser()}
+      out         <- cbind(out, mdata)
+      n_mdata     <- sum(mdata)
+      mdata_pcnt  <- mdata / n_mdata * 100
+      if(sum(mdata)!=0){
+        max_pcnt    <- max(mdata_pcnt, na.rm=T) 
+        if(max_pcnt > ymax_updated){
+          ymax_updated <- max_pcnt
+        }
+      }
+      ymax      <- YMAX_INIT
+      ymax_int  <- ceiling(max(mdata)/100) * 100
+      if(ymax_int > ymax){
+        ymax <- ymax_int
+      }
+      tickbin_y   <- ymax/2
+      labelbin_y  <- ymax/1
+      plot(1, 1, xlim=c(0, XMAX), ylim=c(0, ymax), type="n", xaxs="i", yaxs="i", axes=F, ann=F)
+      polygon(c(0, BORDER_KAERI_KOBA, BORDER_KAERI_KOBA, 0), c(0, 0, ymax, ymax), col=COL_KAERI, border=F)
+      polygon(c(BORDER_KAERI_KOBA, BORDER_KOBA_CHUBA, BORDER_KOBA_CHUBA, BORDER_KAERI_KOBA), c(0, 0, ymax, ymax), col=COL_KOBA, border=F)
+      polygon(c(BORDER_KOBA_CHUBA, BORDER_CHUBA_OHBA, BORDER_CHUBA_OHBA, BORDER_KOBA_CHUBA), c(0, 0, ymax, ymax), col=COL_CHUBA, border=F)
+      polygon(c(BORDER_CHUBA_OHBA, XMAX, XMAX, BORDER_CHUBA_OHBA), c(0, 0, ymax, ymax), col=COL_OHBA, border=F)
+      m_alkey0  <- AGE_LENGTH_KEY_0[, m]
+      m_alkey1  <- AGE_LENGTH_KEY_1[, m]
+      m_alkey2  <- AGE_LENGTH_KEY_2[, m]
+      bottom0   <- rep(0, length(m_alkey0))
+      top0      <- m_alkey0 * mdata
+      bottom1   <- top0
+      top1      <- (bottom1 + m_alkey1 * mdata)
+      bottom2   <- top1 
+      top2      <- (bottom2 + m_alkey2 * mdata)
+      rect(CLASS_LEFT, bottom0, CLASS_LEFT + BARWIDTH, top0, col=COL0, border=F)
+      rect(CLASS_LEFT, bottom1, CLASS_LEFT + BARWIDTH, top1, col=COL1, border=F)
+      rect(CLASS_LEFT, bottom2, CLASS_LEFT + BARWIDTH, top2, col=COL2, border=F)
+      # rect(CLASS_LEFT, rep(0, length(CLASS_LEFT)), CLASS_LEFT + BARWIDTH, mdata_pcnt, col=COL_FILL, border=F)
+      axis(1, at=seq(0, XMAX, TICKBIN_X * 10), labels=F, tcl=TICKLEN_X)
+      # axis(1, at=seq(0, XMAX * 10, LABELBIN_X * 10), labels=seq(0, XMAX, LABELBIN_X))
+      axis(1, at=seq(0, XMAX * 10, LABELBIN_X * 10), labels=F, tcl=-0.3)
+      axis(2, at=seq(0, ymax), tcl=0, labels=F)
+      axis(2, at=seq(0, ymax, tickbin_y), labels=F, tcl=TICKLEN_Y)
+      axis(2, at=seq(0, ymax, labelbin_y), labels=F, tcl=-0.3)
+      axis(2, at=seq(0, ymax, labelbin_y), labels=T, las=2, pos=4, col="transparent")
+      # text(15, ymax/2, paste(ychar, m), cex = 1.5)
+    }
+    # }else{
+    out           <- as.data.frame(out)
+    colnames(out) <- month.abb[1:ncol(out)]
+    rownames(out) <- CLASS_NAME
+    if (exists("wb") == TRUE){
+      rm(wb)
+    }
+    gc(); gc()
+  }
+  dev.off()
+
+
+  # 資源量
+  data <- read_csv("/Users/ahayashi/Dropbox/Imported/Stock/Timeseries_TW_Engraulis-japonicus.csv")
+  plot_stock <- function(data, var) {
+    x <- dplyr::pull(data, Year)
+    y <- dplyr::pull(data, var)
+    xmin          <- 1975
+    xmax          <- 2020
+    ymax          <- 250
+    blimit        <- 91
+    tickbin_y     <- 50
+    ticklen_x     <- ymax/100000
+    ticklen_y     <- 0.3
+    labelbin_x    <- 5
+    labelbin_y    <- 100
+    thisx         <- rev(x)[1]
+    lastx         <- rev(x)[2]
+    recentx       <- (lastx - 4):lastx
+    thisy         <- y[which(x == thisx)]
+    lasty         <- y[which(x == lastx)]
+
+    plot(data$Year, y, ylim = c(0, ymax), type="n",
+         axes = FALSE, ann = FALSE, yaxs="i")
+    rect(recenty[1] - 0.2, 0, recenty[5] + 0.2, 250, col = hsv(136/360, 0.24, 0.87),
+         border = FALSE)
+    abline(h = blimit, lwd = 2,  lty = 2)
+    lines(data$Year, y, lwd = 4)
+    points(data$Year, y, pch = 16, cex = 3)
+    points(lastx, lasty, pch = 16, cex = 4, col = hsv(200/360, 0.8, 0.8))
+    points(thisx, thisy, pch = 16, cex = 4.5, col = hsv(0, 0.8, 0.8))
+    points(thisx, thisy, pch = 16, cex = 2.5, col = "white")
+    text(thisx, thisy, paste0(thisx, "年"),
+         pos = 4, offset = 1, xpd = TRUE, cex = 4,
+         col = hsv(0, 0.8, 0.8))
+    text(thisx + 2, blimit, "Blimit",
+         pos = 4, offset = -1, xpd = TRUE, cex = 4)
+    axis(1, at = seq(xmin, xmax, labelbin_x), tcl = 0, labels = FALSE)
+    axis(1, at = seq(xmin, xmax, labelbin_x), tcl = -1, labels = FALSE)
+    axis(1, at = seq(xmin, xmax, labelbin_x), cex.axis = 3.5, pos = -10,
+         col = "transparent")
+    axis(2, at = seq(0, ymax), tcl = 0, labels = FALSE)
+    axis(2, at = seq(0, ymax, labelbin_y), cex.axis = 3.5)
+    mtext("年", 1, cex = 5, line = 7)
+    mtext("親魚量（千トン）", 2, cex = 6, line = 5)
   }
 
-  yamaguchi %>%
-    group_by(year, month) %>%
-    summarize(catch = sum(catch, na.rm = TRUE)) %>%
-    export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_yamaguchi.csv")
+  png("ssb.png", width = 1300, height = 1000)
+  par(mai = c(2, 2, 2, 2), family = "HiraKakuProN-W3")
+  plot_stock(data, "SSB_10^3ton")
+  dev.off()
 
-  fukuoka %>%
-    group_by(year, month) %>%
-    summarize(catch = sum(catch, na.rm = TRUE)) %>%
-    export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_fukuoka.csv")
 
-  saga %>%
-    dplyr::filter(type == "kennai") %>%
-    group_by(year, month) %>%
-    summarize(catch = sum(catch, na.rm = TRUE)) %>%
-    export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_saga.csv")
-
-  nagasaki %>%
-    group_by(year, month) %>%
-    summarize(catch = sum(catch, na.rm = TRUE)) %>%
-    export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_nagasaki.csv")
-
-  kumamoto %>%
-    dplyr::filter(type == "maki") %>%
-    group_by(year, month) %>%
-    summarize(catch = sum(catch, na.rm = TRUE)) %>%
-    export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_kumamoto.csv")
-
-  kagoshima %>%
-    dplyr::filter(type == "maki4ports") %>%
-    group_by(year, month) %>%
-    summarize(catch = sum(catch, na.rm = TRUE)) %>%
-    export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_kagoshima.csv")
 #+END_SRC
-** 漁況予測
+** 水温データの整理
 #+BEGIN_SRC R
-
+  temp <- get_tw_sst("/Users/ahayashi/Documents/GitHub/gyokaikyor/data.git/水温データ/mgdsst_till201902.xlsx",
+                     year.end = 2019)
+  write.csv(temp, "/Volumes/評価研/個人的データ置き場/hayashi/output/gkk_2019Mar_sst.csv", row.names = FALSE)
 #+END_SRC
 * 開発環境の整備
 #+BEGIN_SRC R :results silent
@@ -748,125 +807,6 @@ cat NAMESPACE
 : >%")
 
 * 開発
-** 各県ファイルに対して必要な処理概要
-*** 体長
-**** まず県別に整理
-***** 山口
-fresco
-***** 福岡
-カタクチ測定なし
-***** 佐賀
-fresco
-***** DONE 長崎
-- シートを読み込む．対象は春と秋とで違う．
-  - 3月漁海況: 2017.09-2018.01小型まき網体長組成.xls
-  - 10月漁海況: 2018.02-2018.08小型まき網体長組成.xls
-- 漁法名をF2から取得
-***** DONE 熊本
-列方向に続いた精密測定データ．
-10月漁海況のときには前年ファイルも一緒に送ってくれる．
-- 04 【熊本県】H29まき網＆棒受網 体長組成.xlsx を開く <- *4月始まり*
-- 「カタクチ」シートを読み込み
-- df.out を初期化
-- 日付が入った列（H29.4.30形式）を取得
-- 漁法名を取得
-- できればその他情報も取得（操業海域・陸揚げ港）
-- 測定データ（全長・被鱗体長・体重）を取得
-- df.out を初期化
-- 過去のデータベースに df.out を結合
-- 重複除去
-- 新データベースをkumamoto_2018Oct.csv として書き出し
-***** DONE 鹿児島
-- 体長組成(H29年度).xlsx を開く　<- *4月始まり*
-- 「ｶﾀｸﾁ」シートを読み込み
-- 日付が入った列を取得
-- 漁法名などの情報を取得
-- 個体数情報を体長階級ブロックごと取得
-- 過去のdbに結合...
-**** まとめると
-精密，体長のような分け方はしないほうが良い．
-あくまでも，関数を部品として作り，各県ごとにそれを組み合わせて使う．
-強いて分類するなら，以下のようになる．
-- 精密タイプ: 熊本
-- 体長タイプ: 長崎，鹿児島
-- fresco タイプ: 山口，佐賀
-*** 漁獲量
-**** 山口
-資源評価のデータと，形式が全然違う．
-***** ファイルを開く
-***** 年シートをパースして年を取得
-***** シートを読み込む
-***** 各魚種のデータ列を与えてしまう
-****** 各魚種の4行目から，銘柄を取得
-***** 列Aから月を生成し，各月データの行位置を取得
-****** 「抄網」は行オフセット1，「棒受網」は行オフセット2として，各漁業の漁獲量を取得
-**** DONE 福岡
-***** 全年データが集まったファイルを開く
-***** type = 漁業 としてシートにアクセス
-***** "KEI"が入った月の列をget_datrow()に渡し，データ行を得る
-***** 年と月のベクトルから，データ行だけ抽出して月と年を作る
-***** 魚種の列もデータ行だけ抽出する
-**** DONE 熊本
-***** 漁業種別（まき網 or 棒受け網）のブックを開く
-***** ファイル名をパースして漁法を取得
-***** 魚種シートにアクセス
-***** 年を生成
-セルC4から真下に読み，「前年比」が出てきたらストップ
-***** 月とデータを一気に読む
-ただし年度整理になっているので1〜3月はyear+1年とする
-**** DONE 佐賀
-熊本と似てる．漁業種別もシートに分かれている
-***** シート一覧を取得
-***** 正規表現で魚種シートを絞り込み
-***** シートから漁法を取得
-***** 年を生成
-***** 月とデータを一気に読む
-熊本と同様，年度になっている
-**** DONE 長崎
-***** 魚種に応じてファイルを読み込み
-****** マアジ・サバ類
-****** マサバ・ゴマサバ
-****** イワシ類
-***** シート名を取得
-過去全データが期間別にシートを分けて入っている
-****** A列から魚種名を取得し，データ行を決定
-****** データ行から漁期の最初の月の列を取得
-前期と後期とで，エクセル方眼紙の列構成が違うのでこれが必要
-****** 漁獲量を取得
-とびとびにではあるが，一定の法則で入力されている．
-関数で処理．
-****** 合計が一致しているかチェック
-**** DONE 鹿児島
-***** 「４港計」「阿久根棒受」「内之浦棒受」シートを読み込み
-****** 「４港計」シート
-******* 第3行からスペース含みの魚種名を探し，列を決定
-******* 行オフセット4つの位置にある「４港計」列の値を行方向に12ヶ月分（第5〜16行）取得
-****** 「阿久根 or 内之浦棒受」シート
-******* 32行目から魚種名を検索して列を決定（行数は変化しない）
-******* 行方向に12ヶ月分（第33〜44行），値を取得
-** どう問題を解くか
-県ごとに，どうしてもデータ処理の振る舞いを変える必要がある
-そこで， 各県のファイル名に，県名を属性として与える
-#+TBLNAME: tbl_fname_prefec
-| fname                                    | prefec   |
-|------------------------------------------+----------|
-| 03 漁獲努力量（1804~1903）（熊本県）.xls | kumamoto |
-| 04 漁獲努力量（1704~1803）（熊本県）.xls | kumamoto |
-
-#+TBLNAME: tbl_prefec_key
-| prefec   | key.topleft |
-|----------+-------------|
-| nagasaki | FL(mm)      |
-
-
-各県のファイル名を fmtbl() に与えると，データ形式に適した形で整形される．
-水面下でデータ型式を読みに行き，ファイル名に属性として付与している
-
-fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
-
-
-
-*** get_topleft(key = "FL(mm)")
 ** リロード & 自動テスト
 #+BEGIN_SRC R :results silent
   devtools::document(roclets=c('rd', 'collate', 'namespace'))
@@ -1265,7 +1205,45 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #               "data.frame")
   # })
 #+END_SRC
+*** テスト/ レガシーファイル連携
+#+BEGIN_SRC  R :tangle tests/testthat/test_conv2legacy.R
+  context("Be friendly with legacy files")
 
+  test_that("conv2hoshifile() converts seimitsu data correctly", {
+    df     <- read.csv("ExcelFiles/test_conv2hoshifile_seimitsu.csv")
+    hoshi  <- conv2hoshifile(df, prefec = "toyama", type = "seimitsu",
+                             ym.start = 196901, ym.end = 196912)
+    expect_is(hoshi, "data.frame")
+    expect_equal(hoshi[, 1], c(1, rep(0, 29)))
+    expect_equal(hoshi[, 2], c(0, 1, rep(0, 28)))
+  })
+
+  test_that("conv2hoshifile() converts taichou data correctly", {
+    df     <- read.csv("ExcelFiles/test_conv2hoshifile_taichou.csv")
+    hoshi  <- conv2hoshifile(df, prefec = "nagasaki", type = "taichou",
+                             ym.start = 196901, ym.end = 196912)
+    expect_is(hoshi, "data.frame")
+    expect_equal(hoshi[, 1], c(1, rep(0, 29)))
+    expect_equal(hoshi[, 2], c(0, 1, rep(0, 28)))
+  })
+
+  test_that("iwashi2list() converts 'kakukeniwashi' file correctly", {
+    fname <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    urume     <- iwashi2list(fname, sheet = "ウルメイワシ",
+                             year.start = 1992, year.end = 2019)
+    maiwashi  <- iwashi2list(fname, sheet = "マイワシ",
+                             year.start = 1992, year.end = 2019)
+    katakuchi <- iwashi2list(fname, sheet = "カタクチイワシ",
+                 year.start = 1992, year.end = 2019)
+    expect_equal(urume$山口[1, "Jan"], 1)
+    expect_equal(maiwashi$山口[1, "Jan"], 11)
+    expect_equal(katakuchi$山口[1, "Jan"], 21)
+    expect_equal(urume$鹿児島[1, "Jan"], 51)
+    expect_equal(maiwashi$鹿児島[1, "Jan"], 61)
+    expect_equal(katakuchi$鹿児島[1, "Jan"], 71)
+
+  })
+#+END_SRC
 ** 関数
 :PROPERTIES:
 :header-args: :results silent :exports code
@@ -1403,7 +1381,20 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     out
   }
 
+  abb2num <- function(abb) {
+    lambda <- function(abb) {
+      which(abb == month.abb)
+    }
+    purrr::map_int(abb, lambda)
+  }
+
+  make_ym <- function(y, m) {
+    out <- paste0(y, formatC(m, width = 2, flag = 0)) %>%
+      readr::parse_integer()
+    out
+  }
 #+END_SRC
+
 *** 種名シート名生成
 #+BEGIN_SRC  R :tangle R/make_shtname.R
   make_shtname <- function(prefecture, spcs) {
@@ -1552,9 +1543,16 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #' Load and format bl histogram data
   #'
   #' @inheritParams readxl::read_excel
-  #' @param spcs Spcs name in romaji, one of
-  #' @param nest If \code{TRUE}, data will be shown in rectangle format
-  #'   whith nested bl datafor quick overview.
+  #' @param prefec Name of prefecture as string, oneof
+  #' \itemize{
+  #'   \item "yamaguchi"
+  #'   \item "fukuoka"
+  #'   \item "saga"
+  #'   \item "nagasaki"
+  #'   \item "kumamoto"
+  #'   \item "kagoshima"
+  #' }
+  #' @param spcs Spcs name as string, one of
   #' \itemize{
   #'   \item maiwashi
   #'   \item maaji
@@ -1564,7 +1562,14 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #'   \item katakuchi
   #'   \item urume
   #' }
+  #' @param nest If \code{TRUE}, data will be shown in rectangle format
+  #'   whith nested bl datafor quick overview.
   #' @export
+  format_bl <- function(path, prefec, spcs, nest = FALSE) {
+    class(path) <- prefec
+    fmtbl(path, spcs, nest)
+  }
+
   fmtbl <- function(path, spcs, nest = FALSE) {
     UseMethod("fmtbl")
   }
@@ -1792,6 +1797,15 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #'
   #' @inheritParams readxl::read_excel
   #' @param spcs Spcs name in romaji, one of
+  #' @param prefec Prefecture name as string, one of
+  #' \itemize{
+  #'   \item "yamaguchi"
+  #'   \item "fukuoka"
+  #'   \item "saga"
+  #'   \item "nagasaki"
+  #'   \item "kumamoto"
+  #'   \item "kagoshima"
+  #' }
   #' @param nest If \code{TRUE}, data will be shown in rectangle format
   #' @param type Character value either "maki" or "bouuke" to control
   #'   data processing algorithm for kumamoto data.
@@ -1806,7 +1820,12 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #'   \item urume
   #' }
   #' @export
-  fmtcatch <- function(path, spcs, type = NULL) {
+  format_catch <- function(path, prefec, spcs, type = NULL) {
+    class(path) <- prefec
+    fmtcatch(path, spcs, type)
+  }
+
+  fmtcatch <- function(path, spcs, type) {
     UseMethod("fmtcatch")
   }
 
@@ -2055,18 +2074,9 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
                 bou_akune = catch_bou_akune,
                 bou_uchinoura = catch_bou_uchinoura,
                 prefecture = "kagoshima") %>%
-      tibble::as_tibble()
-    if (maki.only == TRUE) {
-      out %<>% dplyr::select(-"bou_akune", -"bou_uchinoura")
-    } else {
-      out %<>%
-        dplyr::mutate(total = maki4ports + bou_akune + bou_uchinoura)
-      if (spread == FALSE) {
-        out %<>% dplyr::select(-"total") %>%
-          tidyr::gather("maki4ports", "bou_akune", "bou_uchinoura",
-                 key = "type", value = "catch")
-      }
-    }
+      tibble::as_tibble() %>%
+      tidyr::gather("maki4ports", "bou_akune", "bou_uchinoura",
+                    key = "type", value = "catch")
     out
   }
 #+END_SRC
@@ -2225,7 +2235,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   #' Make catch data reading multiple Excel worksheets
   #'
   #' @inheritParams fmtcatch
-  fmtcatch.nagasaki <- function(path, spcs) {
+  fmtcatch.nagasaki <- function(path, spcs, type = NULL) {
     spcs_jp <- switch(spcs,
                       "maiwashi" = "マイワシ",
                       "urume" = "ウルメイワシ",
@@ -2357,7 +2367,7 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   }
 #+END_SRC
 
-*** ★ファイル形式で書き出し
+*** レガシーファイル形式で書き出し
 #+BEGIN_SRC R :tangle R/conv2hoshifile.R
   conv2hoshifile <- function(df, prefec, type, ym.start, ym.end,
                              export = FALSE, fname = NULL,
@@ -2445,6 +2455,20 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
     }
     out
   }
+
+  export2kakuken_iwashi <- function(df, export.csv = FALSE, fname = NULL) {
+    out <- tribble(~year,
+                   ~`1`, ~`2`, ~`3`, ~`4`, ~`5`, ~`6`,
+                   ~`7`, ~`8`, ~`9`, ~`10`, ~`11`, ~`12`)
+    df2 <- df %>%
+      tidyr::spread(key = month, value = catch)
+    out %<>% right_join(df2)
+    if (export.csv == TRUE) {
+      write.csv(out, fname, row.names = FALSE)
+    }
+    out
+  }
+
 #+END_SRC
 
 *** 「各県いわし」をRで使いやすい形式に変換
@@ -2491,8 +2515,8 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
 
   make_list <- function(row.prefec, df.iwashi, year.end, year.start = 1992){
     years      <- year.start:year.end
-    row_prefec <- get_prefec_rows(df[, 1])
-    prefec_name      <- stringr::str_replace(df[row.prefec, 1], "県.+", "")
+    row_prefec <- get_prefec_rows(df.iwashi[, 1])
+    prefec_name      <- stringr::str_replace(df.iwashi[row.prefec, 1], "県.+", "")
     row_start        <- row.prefec + 2
     row_end          <- row_start + length(years) - 1
     data_prefec      <- df.iwashi[row_start:row_end, ] %>%
@@ -2527,24 +2551,81 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
   iwashi2list <- function(path, sheet, year.start = 1992, year.end) {
     df          <- load_iwashi(path = path, year.end = year.end,
                     sheet = sheet, year.start = year.start)
-    prefec_rows <- get_prefec_rows(df[, 1])
-    out <- purrr::map(prefec_rows, make_list, df, year.end = year.end) %>%
+    prefec_rows <- get_prefec_rows(dplyr::pull(df, 1))
+    out <- purrr::map(prefec_rows, make_list, df.iwashi = df,
+                      year.end = year.end) %>%
       purrr::flatten()
     out
   }
-#+END_SRC
-*** 体長頻度データを擬似精密データに変換
-#+BEGIN_SRC R
-  uncount_blclass <- function(df) {
-    out <- df %>%
-      mutate(bl = stringr::str_sub(class, 1, 3) %>%
-               as.numeric()) %>%
-      dplyr::select(-class) %>%
-      tidyr::uncount(count)
+
+  ym_matrix2df <- function(x) {
+    out <- x %>%
+      tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
+                    key = month, value = catch) %>%
+      dplyr::mutate(month = abb2num(month),
+                    ym    = make_ym(year, month)) %>%
+      arrange(ym)
+    out
+  }
+
+  make_ymrange <- function(year, gkk.month) {
+    out <- NULL
+    switch(gkk.month,
+           "Mar" = {
+             mstart <- 4
+             mend   <- 3
+           },
+           "Oct" = {
+           },
+           stop("Unknown month"))
+    out$start <- paste0(year - 1, formatC(mstart, width = 2, flag = 0)) %>%
+      as.numeric()
+    out$end   <- paste0(year, formatC(mend, width = 2, flag = 0)) %>%
+      as.numeric()
     out
   }
 #+END_SRC
+*** 漁獲量データ操作
+#+BEGIN_SRC R
+  get_ymrange <- function(year, list_catchdata, gkk.month) {
+    df  <- summarize_seikai(list_catchdata) %>%
+      ym_matrix2df()
+    out <- NULL
+    switch(gkk.month,
+           "Mar" = out <- make_ym(year, 4):make_ym(year, 9),
+           "Oct" = out <- make_ym(year, 11):make_ym(year + 1, 3))
+    out
+  }
 
+  get_catch <- function(year, list_catchdata, gkk.month) {
+    range <- get_ymrange(year, list_catchdata, gkk.month)
+    df    <- list_catchdata %>%
+      summarize_seikai() %>%
+      ym_matrix2df()
+    out <- NULL
+    out <- df %>% 
+      dplyr::filter(dplyr::between(ym, range[1], rev(range)[1])) %>%
+      dplyr::pull(catch)
+    out
+  }
+
+  make_summary <- function(list_catchdata, year, gkk.month) {
+    recentyr <- (year - 5):(year - 1)
+    out            <- NULL
+    out$last       <- get_catch(year - 1, list_catchdata, gkk.month)
+    out$last_upr   <- out$last * 1.2
+    out$last_lwr   <- out$last * 0.8
+    out$recent     <- purrr::map_dfc(recentyr, get_catch, list_catchdata, gkk.month) %>%
+      rowMeans()
+    out$recent_upr <- recent * 1.2
+    out$recent_lwr <- recent * 0.8
+    out            <- sapply(out, mean)
+    suppressWarnings(
+      out$range_last <- get_ymrange(year - 1, list_catchdata, gkk.month))
+    out
+  }
+
+#+END_SRC
 *** 水温データを整理
 #+BEGIN_SRC R :tangle R/fmttemp.R
   get_tw_sst <- function(fname, year.end) {
@@ -2570,5 +2651,310 @@ fname <- "04 漁獲努力量（1704~1803）（熊本県）.xls"
       dplyr::mutate(year  = as.integer(year),
                     month = as.integer(month))
     sst_tw
+  }
+#+END_SRC
+
+*** 作図
+#+BEGIN_SRC R tangle R/plot.R
+  plot_catch_monthvar <- function(df.seikai, year, gkk.month) {
+    get_catch  <- function(year, gkk.month, df.seikai) {
+      out      <- NULL
+      ym.start <- make_ymrange(year, gkk.month)$start
+      ym.end   <- make_ymrange(year, gkk.month)$end
+      out      <- ym_matrix2df(df.seikai) %>%
+        dplyr::filter(dplyr::between(ym,
+                                     ym.start,
+                                     ym.end)) %>%
+        dplyr::arrange(ym) %>%
+        dplyr::pull(catch)
+      out
+    }
+
+    draw_catch <- function(l, var, year) {
+      catch <- l[[var]]
+      ofst  <- 0.5
+      switch(var,
+             "recent" = {
+               polygon(c(1:12, 12:1), c(catch * 0.8, rev(catch * 1.2)),
+                       col = hsv(0, 0, 0.8), border = FALSE)
+               lines(1:12, catch, lwd = 4)
+               points(1:12, catch, pch = 16, cex = 2)
+               text(12, catch[12], "平年±20%", pos = 4, offset = ofst, cex = 4.5,
+                    xpd = TRUE)
+             },
+             "last" = {
+               col <- hsv(200/360, 0.8, 0.8)
+               lines(1:12, catch, col = col, lwd = 5)
+               points(1:12, catch, col = col , pch = 16, cex = 3)
+               arrows(1:12, catch * 0.8, 1:12, catch * 1.2,
+                      col = col, length = 0, lwd = 3)
+               text(12, catch[12], "前年±20%",
+                    col = col, pos = 4, offset = ofst, cex = 4.5, xpd = TRUE)
+             },
+             "this" = {
+               catch <- catch[1:11]
+               col <- hsv(0/360, 0.8, 0.8)
+               lines(1:11, catch, col = col, lwd = 5)
+               points(1:11, catch, col = col, pch = 16, cex = 4)
+               points(1:11, catch, col = "white", pch = 16, cex = 2.5)
+               text(11, catch[11], paste0(year - 1, "年度"),
+                    col = col, pos = 4, offset = ofst, cex = 5, xpd = TRUE)
+             })
+    }
+
+    init_plot <- function(l, gkk.month) {
+      max <- l$max
+      min <- l$min
+      plot(1, 1, xlim = c(1, 16), ylim = c(min, max * 1.2), type = "n",
+           axes = FALSE, ann = FALSE, yaxs = "i")
+      switch(gkk.month,
+             "Mar" = {
+               rect(7.8, -10, 12.2, max * 1.1, col = hsv(20/360, 0.2, 1),
+                           border = FALSE)
+               text(10, max, "漁期", cex = 5, col = hsv(20/360, 0.5, 0.85))
+               axis(1, at = 1:12, labels = FALSE)
+               axis(1, at = 1:12, labels = month.abb[c(4:12, 1:3)],
+                    cex.axis = 3, col = "transparent", pos = -0.1)
+             })
+    }
+
+    draw_axes <- function(l) {
+      axis(2, at = l$min:l$max, cex.axis = 3)
+      mtext("漁獲量 (千トン)", side = 2, line = 6, cex = 5)
+    }
+
+    lastyr   <- year - 1
+    recentyr <- (year - 4):year
+    l        <- list()
+    l$this   <- get_catch(year, "Mar", df.seikai) / 1000
+    l$last   <- get_catch(lastyr, "Mar", df.seikai) / 1000
+    l$recent <- purrr::map_dfc(recentyr, get_catch, "Mar", df.seikai) %>%
+      rowMeans() / 1000
+    max      <- max(unlist(l)) * 1.2
+    min      <- min(unlist(l)) * 0.8
+    l$max    <- max
+    l$min    <- min
+
+    init_plot(l, gkk.month)
+    draw_catch(l, var = "recent", year)
+    draw_catch(l, var = "last", year)
+    draw_catch(l, var = "this", year)
+    draw_axes(l)
+  }
+
+
+  plot_catch_prefec <- function(list, year, gkk.month) {
+    get_ysum <- function(yr, prefec, gkk.month, list) {
+      switch(gkk.month,
+             "Mar" = {
+               ym.start <- paste0(yr - 1, "11") %>% as.numeric()
+               ym.end   <- paste0(yr, "01") %>% as.numeric()
+             })
+      out <- list[[prefec]] %>%
+        ym_matrix2df() %>%
+        dplyr::filter(dplyr::between(ym, ym.start, ym.end)) %>%
+        dplyr::select(catch) %>%
+        sum(na.rm = TRUE)
+      out
+    }
+
+    get_prefec_catch <- function(prefec, yr, gkk.month, list) {
+      lastyr     <- yr - 1
+      recentyr   <- (yr - 5):(yr - 1)
+      out        <- NULL
+      out$this   <- get_ysum(yr, prefec, gkk.month, list)
+      out$last   <- get_ysum(lastyr, prefec, gkk.month, list)
+      out$recent <- purrr::map(recentyr, get_ysum, prefec, gkk.month, list) %>%
+        unlist() %>%
+        mean(na.rm = TRUE)
+      out
+    }
+
+    plot_init <- function(sums) {
+      max <- max(unlist(sums), na.rm = TRUE) / 1000
+      min <- min(unlist(sums), na.rm = TRUE) / 1000
+      prefecs <- names(sums)
+      plot(1, 1, xlim = c(0.5, 8), ylim = c(min * 0.8, max * 1.2),
+           type = "n", yaxs = "i",
+           axes = FALSE, ann = FALSE)
+      axis(1, at = c(1:6, 7), labels = FALSE)
+      axis(1, at = c(1:6, 7), labels = prefecs, cex.axis = 3.5, pos = -0.1,
+           col = "transparent")
+      axis(2, at = seq(0, ceiling(max * 1.2), 1), cex.axis = 3.5)
+      mtext("漁獲量（千トン）", 2, cex = 5, line = 5)
+      rect(0.7, 1.6, 3.2, max * 1.2, col = hsv(0, 0, 1), xpd = TRUE)
+      x1 <- 1.52
+      x2 <- 2
+      y1 <- 2.3
+      y2 <- 2.6
+      draw_point(1, 2.8, "recent", xright = 1.5)
+      lines(c(x1, x2), c(y1, y2), lwd = 3)
+      draw_point(x1, y1, "last")
+      draw_point(x2, y2, "this")
+      text(1.5, max, "平年±20%", col = hsv(0, 0, 0.2), cex = 3,
+           pos = 4, offset = 1)
+      text(x1, y1, "前年±20%", col = hsv(200/360, 0.8, 0.8), cex = 3,
+           pos = 4, offset = 2)
+      text(x2, y2, "今期", col = hsv(0, 0.8, 0.8), cex = 3,
+           pos = 4, offset = 2)
+    }
+    draw_point <- function(x, y, type, xright = NULL) {
+      switch(type,
+             "recent" = {
+               rect(x, y * 0.8, xright, y * 1.2, col = hsv(0, 0, 0.8))
+               lines(c(x, xright), c(y, y), lwd = 4)
+
+             },
+             "last" = {
+               arrows(x, y * 0.8, x, y * 1.2, length = 0, xpd = TRUE,
+                      col = hsv(200/360, 0.8, 0.8), lwd = 3)
+               points(x, y, pch = 16, col = hsv(200/360, 0.8, 0.8),
+                             cex = 3.5, xpd = TRUE)
+             },
+             "this" = {
+               points(x, y, pch = 16, col = hsv(0, 0.8, 0.8),
+                      cex = 4, xpd = TRUE)
+               points(x, y, pch = 16, col = "white",
+                      cex = 2.5, xpd = TRUE)
+             })
+    }
+
+    plot_prefec <- function(prefec, sums) {
+      pdata <- sums[[prefec]]
+      prefecs <- names(sums)
+      x       <- which(prefec == prefecs)
+      this <- pdata$this / 1000
+      last <- pdata$last / 1000
+      recent <- pdata$recent / 1000
+
+      x_this <- x + 0.3
+      x_last <- x + 0.1
+      lrecent <- x - 0.2
+      rrecent <- x_last
+
+      draw_point(x = lrecent, y = recent,
+                 xright = rrecent, type = "recent")
+      lines(c(x_last, x_this), c(last, this), lwd = 4)
+      draw_point(x_last, last, "last")
+      draw_point(x_this, this, "this")
+    }
+
+    make_sums <- function(sums, which) {
+      out <- NULL
+      for(i in seq_along(sums)) {
+        out <- append(out, sums[[i]][which])
+      }
+      out %<>% unlist %>%
+        sum(na.rm = TRUE)
+      out
+    }
+
+    prefecs <- names(list)
+    sums <- purrr::map(prefecs, get_prefec_catch, 2019, "Mar", list) %>%
+      purrr::set_names(prefecs)
+    sum_this <- make_sums(sums, "this")
+    sum_last <- make_sums(sums, "last")
+    sum_recent <- make_sums(sums, "recent")
+    sums$計$this <- sum_this
+    sums$計$last <- sum_last
+    sums$計$recent <- sum_recent
+    sums
+
+    plot_init(sums)
+    plot_prefec("山口", sums)
+    plot_prefec("福岡", sums)
+    plot_prefec("佐賀", sums)
+    plot_prefec("長崎", sums)
+    plot_prefec("熊本", sums)
+    plot_prefec("鹿児島", sums)
+    plot_prefec("鹿児島", sums)
+    plot_prefec("計", sums)
+  }
+
+
+
+  plot_forecast <- function(model, seikaidata, yr, month.until) {
+    plot_rects <- function(summary, yr) {
+      years <- (yr - 5):(yr - 1)
+      for(y in years) {
+        rect(y + (4 - 1)/12, summary$recent_lwr/1000,
+             y + (9 - 1)/12, summary$recent_upr/1000,
+             col = hsv(0, 0, 0.8, 0.8), border = FALSE)
+      }
+      rect(yr + (4-1)/12 + 0.05, summary$last_lwr/1000,
+           yr + (9-1)/12 + 0.05, summary$last_upr/1000,
+           col = hsv(200/360, 0.8, 0.8, 0.4), border = FALSE)
+    }
+
+    plot_lines <- function(model, summary, yr) {
+      years <- (yr - 5):(yr - 1)
+      pred  <- mean(exp(model$mean[4:9]))/1000
+      for(y in years) {
+        lines(c(y + (4-1)/12, y + (9-1)/12),
+              c(summary$recent/1000, summary$recent/1000),
+              col = hsv(0, 0, 0.2), lwd = 4)
+      }
+      lines(c(yr + (4 - 1)/12 + 0.05, yr + (9 - 1)/12 + 0.05),
+            c(summary$last/1000, summary$last/1000),
+            col = hsv(200/360, 1, 0.8), lwd = 4)
+      lines(c(yr + 1 + (4 - 1)/12 + 0.05, yr + 1 + (9 - 1)/12 + 0.05),
+            c(pred, pred),
+            col = hsv(0/360, 0.8, 0.8), lwd = 4)
+      text(yr + 1.8, pred, "予測平均値", pos = 4,
+           col = hsv(0, 0.8, 0.8), cex = 3, xpd = TRUE)
+    }
+
+    plot_texts <- function(model, yr, summary) {
+      text(yr + 1, model$upper[12,"80%"], "80%予測区間",
+           pos = 4, xpd = TRUE,
+           col = hsv(230/360, 0.14, 0.7), cex = 3)
+      text(yr + 1, model$upper[12,"95%"], "95%予測区間",
+           pos = 4, xpd = TRUE,
+           col = hsv(230/360, 0.02, 0.7), cex = 3)
+      rect(yr - 1.1, summary$last_lwr/1000,
+           yr + 0.1, summary$last_lwr/1000 - 0.5,
+           col = hsv(0, 0, 1, 0.7), border = FALSE)
+      text(yr - 0.5, summary$last_lwr/1000, "前年±20%",
+           pos = 1, col = hsv(200/360, 0.8, 0.8),
+           cex = 3)
+      rect(yr - 3.1, summary$recent_lwr/1000,
+           yr - 1.9, summary$recent_lwr/1000 - 0.5,
+           col = hsv(0, 0, 1, 0.7), border = FALSE)
+      text(yr - 2.5, summary$recent_lwr/1000, "平年±20%",
+           pos = 1, cex = 3)
+    }
+
+    real <- summarize_seikai(list_catchdata) %>%
+      ym_matrix2df() %>%
+      arrange(ym) %>%
+      filter(between(ym,
+                     make_ym(yr, 1),
+                     make_ym(yr, 12))) %>%
+      select(catch)
+
+    real2 <- real[1:month.until, ] %>%
+      ts(start = c(yr, 1), frequency = 12) / 1000
+
+    model_org   <- model
+    model$x     <- exp(model$x) / 1000
+    model$mean  <- exp(model$mean) / 1000
+    model$lower <- exp(model$lower) / 1000
+    model$upper <- exp(model$upper) / 1000
+    summary     <- make_summary(list_catchdata, 2019, "Mar")
+    max         <- ceiling(max(model$upper))
+    plot(model, main = "",
+         axes = FALSE, ann = FALSE, yaxs = "i",
+         xlim = c(yr - 6, yr + 1.5), ylim = c(0, max),
+         lwd = 3)
+    # points(real2, pch = 16, col = "red")
+    plot_rects(summary, yr - 1)
+    plot_lines(model_org, summary, yr - 1)
+    plot_texts(model, yr, summary)
+    mtext("年", 1, cex = 5, line = 7)
+    mtext("漁獲量（千トン）", 2, cex = 5, line = 5)
+    axis(1, at = seq(yr - 6, yr + 1, 1), cex.axis = 3, labels = FALSE)
+    axis(1, at = seq(yr - 6, yr + 1, 1), cex.axis = 3,
+         pos = -0.2, col = "transparent", srt = 30)
+    axis(2, at = seq(0, max, 2), cex.axis = 3, pos = yr - 6.3)
   }
 #+END_SRC
