@@ -74,3 +74,9 @@ test_that("fmtcatch.kagoshima() works well", {
                                spread = FALSE, maki.only = TRUE),
             "data.frame")
 })
+
+test_that("format_catch() call fmtcatch() and use method of each prefec", {
+  path <- "ExcelFiles/test_catch_kagoshima.xlsx"
+  df   <- format_catch(path, prefec = "kagoshima", spcs = "katakuchi")
+  expect_is(df, "data.frame")
+})
