@@ -2589,13 +2589,13 @@ cat NAMESPACE
     out
   }
 
-  ym_matrix2df <- function(x) {
+  iwashi2df <- function(x) {
     out <- x %>%
       tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
                     key = month, value = catch) %>%
       dplyr::mutate(month = abb2num(month),
                     ym    = make_ym(year, month)) %>%
-      arrange(ym)
+      dplyr::arrange(ym)
     out
   }
 
@@ -2620,7 +2620,7 @@ cat NAMESPACE
 #+BEGIN_SRC R
   get_ymrange <- function(year, list_catchdata, gkk.month) {
     df  <- summarize_seikai(list_catchdata) %>%
-      ym_matrix2df()
+      iwashi2df()
     out <- NULL
     switch(gkk.month,
            "Mar" = out <- make_ym(year, 4):make_ym(year, 9),
@@ -2632,7 +2632,7 @@ cat NAMESPACE
     range <- get_ymrange(year, list_catchdata, gkk.month)
     df    <- list_catchdata %>%
       summarize_seikai() %>%
-      ym_matrix2df()
+      iwashi2df()
     out <- NULL
     out <- df %>% 
       dplyr::filter(dplyr::between(ym, range[1], rev(range)[1])) %>%
@@ -2692,7 +2692,7 @@ cat NAMESPACE
       out      <- NULL
       ym.start <- make_ymrange(year, gkk.month)$start
       ym.end   <- make_ymrange(year, gkk.month)$end
-      out      <- ym_matrix2df(df.seikai) %>%
+      out      <- iwashi2df(df.seikai) %>%
         dplyr::filter(dplyr::between(ym,
                                      ym.start,
                                      ym.end)) %>%
@@ -2782,7 +2782,7 @@ cat NAMESPACE
                ym.end   <- paste0(yr, "01") %>% as.numeric()
              })
       out <- list[[prefec]] %>%
-        ym_matrix2df() %>%
+        iwashi2df() %>%
         dplyr::filter(dplyr::between(ym, ym.start, ym.end)) %>%
         dplyr::select(catch) %>%
         sum(na.rm = TRUE)
@@ -2956,7 +2956,7 @@ cat NAMESPACE
     }
 
     real <- summarize_seikai(list_catchdata) %>%
-      ym_matrix2df() %>%
+      iwashi2df() %>%
       arrange(ym) %>%
       filter(between(ym,
                      make_ym(yr, 1),
