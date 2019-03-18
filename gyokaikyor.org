@@ -1112,22 +1112,6 @@ R パッケージのディレクトリは全て GitHub で公開する．
     facet_grid(year ~ prefecture)
 
 
-  export2kakuken_iwashi <- function(df, export.csv = FALSE, fname = NULL) {
-    out <- tribble(~year,
-                   ~`1`, ~`2`, ~`3`, ~`4`, ~`5`, ~`6`,
-                   ~`7`, ~`8`, ~`9`, ~`10`, ~`11`, ~`12`)
-    df2 <- df %>%
-      tidyr::spread(key = month, value = catch)
-    out %<>% right_join(df2)
-    if (export.csv == TRUE) {
-      write.csv(out,
-                paste0("/Volumes/評価研/個人的データ置き場/hayashi/output/",
-                       fname),
-                row.names = FALSE)
-    }
-    out
-  }
-
   yamaguchi %>%
     group_by(year, month) %>%
     summarize(catch = sum(catch, na.rm = TRUE)) %>%
@@ -2753,7 +2737,7 @@ cat NAMESPACE
   }
 #+END_SRC
 
-*** ★ファイル形式で書き出し
+*** レガシーファイル形式で書き出し
 #+BEGIN_SRC R :tangle R/conv2hoshifile.R
   conv2hoshifile <- function(df, prefec, type, ym.start, ym.end,
                              export = FALSE, fname = NULL,
@@ -2841,6 +2825,20 @@ cat NAMESPACE
     }
     out
   }
+
+  export2kakuken_iwashi <- function(df, export.csv = FALSE, fname = NULL) {
+    out <- tribble(~year,
+                   ~`1`, ~`2`, ~`3`, ~`4`, ~`5`, ~`6`,
+                   ~`7`, ~`8`, ~`9`, ~`10`, ~`11`, ~`12`)
+    df2 <- df %>%
+      tidyr::spread(key = month, value = catch)
+    out %<>% right_join(df2)
+    if (export.csv == TRUE) {
+      write.csv(out, fname, row.names = FALSE)
+    }
+    out
+  }
+
 #+END_SRC
 
 *** 「各県いわし」をRで使いやすい形式に変換
