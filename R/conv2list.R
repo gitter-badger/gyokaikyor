@@ -83,13 +83,13 @@ iwashi2list <- function(path, sheet, year.start = 1992, year.end) {
   out
 }
 
-ym_matrix2df <- function(x) {
+iwashi2df <- function(x) {
   out <- x %>%
     tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
                   key = month, value = catch) %>%
     dplyr::mutate(month = abb2num(month),
                   ym    = make_ym(year, month)) %>%
-    arrange(ym)
+    dplyr::arrange(ym)
   out
 }
 

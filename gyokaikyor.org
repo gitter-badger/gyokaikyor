@@ -1221,14 +1221,16 @@ cat NAMESPACE
   test_that("conv2hoshifile() converts taichou data correctly", {
     df     <- read.csv("ExcelFiles/test_conv2hoshifile_taichou.csv")
     hoshi  <- conv2hoshifile(df, prefec = "nagasaki", type = "taichou",
-                             ym.start = 196901, ym.end = 196912)
+                             ym.start = 196901, ym.end = 196912,
+                             export = TRUE, fname = "foo.csv")
     expect_is(hoshi, "data.frame")
     expect_equal(hoshi[, 1], c(1, rep(0, 29)))
     expect_equal(hoshi[, 2], c(0, 1, rep(0, 28)))
+    file.remove("foo.csv")
   })
 
   test_that("iwashi2list() converts 'kakukeniwashi' file correctly", {
-    fname <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    fname     <- "ExcelFiles/test_kakukeniwashi.xlsx"
     urume     <- iwashi2list(fname, sheet = "ウルメイワシ",
                              year.start = 1992, year.end = 2019)
     maiwashi  <- iwashi2list(fname, sheet = "マイワシ",
@@ -1241,7 +1243,36 @@ cat NAMESPACE
     expect_equal(urume$鹿児島[1, "Jan"], 51)
     expect_equal(maiwashi$鹿児島[1, "Jan"], 61)
     expect_equal(katakuchi$鹿児島[1, "Jan"], 71)
+  })
 
+  test_that("summarize_seikai() and iwashi2df()
+   hacks 'kakukeniwashi' file correctly", {
+    fname     <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    katakuchi <- summarize_seikai(iwashi2list(fname, sheet = "カタクチイワシ",
+                 year.start = 1992, year.end = 2019))
+    expect_equal(katakuchi[1, "Jan"], 276)
+    expect_equal(katakuchi[28, "Jan"], 2220)
+
+    katakuchi_df <- iwashi2df(katakuchi)
+    expect_equal(katakuchi_df[1, "catch"], 276)
+    expect_equal(katakuchi_df[2, "catch"], 282)
+  })
+
+  test_that("export2kakuken_iwashi() converts df to 'iwashi' style", {
+    df     <- data.frame(year = c(rep(1969, 12), rep(1970, 12)),
+                     month = rep(1:12, 2), catch = 11:34)
+    iwashi <- export2kakuken_iwashi(df, export.csv = TRUE, fname = "bar.csv") %>%
+      as.data.frame()
+    expect_equal(iwashi[1, 2], 11)
+    expect_equal(iwashi[2, 2], 23)
+    file.remove("bar.csv")
+  })
+
+  test_that("make_ymrange() makes proper ym range", {
+    ymrange <- make_ymrange(1969, "Mar")
+    expect_equal(ymrange$start, 196804)
+    expect_equal(ymrange$end, 196903)
+    expect_error(make_ymrange(1969, "Jan"), "Unknown month")
   })
 #+END_SRC
 ** 関数
@@ -2457,12 +2488,12 @@ cat NAMESPACE
   }
 
   export2kakuken_iwashi <- function(df, export.csv = FALSE, fname = NULL) {
-    out <- tribble(~year,
-                   ~`1`, ~`2`, ~`3`, ~`4`, ~`5`, ~`6`,
-                   ~`7`, ~`8`, ~`9`, ~`10`, ~`11`, ~`12`)
+    out <- tibble::tribble(~year,
+                           ~`1`, ~`2`, ~`3`, ~`4`, ~`5`, ~`6`,
+                           ~`7`, ~`8`, ~`9`, ~`10`, ~`11`, ~`12`)
     df2 <- df %>%
       tidyr::spread(key = month, value = catch)
-    out %<>% right_join(df2)
+    out %<>% dplyr::right_join(df2)
     if (export.csv == TRUE) {
       write.csv(out, fname, row.names = FALSE)
     }
@@ -2558,13 +2589,13 @@ cat NAMESPACE
     out
   }
 
-  ym_matrix2df <- function(x) {
+  iwashi2df <- function(x) {
     out <- x %>%
       tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
                     key = month, value = catch) %>%
       dplyr::mutate(month = abb2num(month),
                     ym    = make_ym(year, month)) %>%
-      arrange(ym)
+      dplyr::arrange(ym)
     out
   }
 
@@ -2589,7 +2620,7 @@ cat NAMESPACE
 #+BEGIN_SRC R
   get_ymrange <- function(year, list_catchdata, gkk.month) {
     df  <- summarize_seikai(list_catchdata) %>%
-      ym_matrix2df()
+      iwashi2df()
     out <- NULL
     switch(gkk.month,
            "Mar" = out <- make_ym(year, 4):make_ym(year, 9),
@@ -2601,7 +2632,7 @@ cat NAMESPACE
     range <- get_ymrange(year, list_catchdata, gkk.month)
     df    <- list_catchdata %>%
       summarize_seikai() %>%
-      ym_matrix2df()
+      iwashi2df()
     out <- NULL
     out <- df %>% 
       dplyr::filter(dplyr::between(ym, range[1], rev(range)[1])) %>%
@@ -2661,7 +2692,7 @@ cat NAMESPACE
       out      <- NULL
       ym.start <- make_ymrange(year, gkk.month)$start
       ym.end   <- make_ymrange(year, gkk.month)$end
-      out      <- ym_matrix2df(df.seikai) %>%
+      out      <- iwashi2df(df.seikai) %>%
         dplyr::filter(dplyr::between(ym,
                                      ym.start,
                                      ym.end)) %>%
@@ -2751,7 +2782,7 @@ cat NAMESPACE
                ym.end   <- paste0(yr, "01") %>% as.numeric()
              })
       out <- list[[prefec]] %>%
-        ym_matrix2df() %>%
+        iwashi2df() %>%
         dplyr::filter(dplyr::between(ym, ym.start, ym.end)) %>%
         dplyr::select(catch) %>%
         sum(na.rm = TRUE)
@@ -2925,7 +2956,7 @@ cat NAMESPACE
     }
 
     real <- summarize_seikai(list_catchdata) %>%
-      ym_matrix2df() %>%
+      iwashi2df() %>%
       arrange(ym) %>%
       filter(between(ym,
                      make_ym(yr, 1),
