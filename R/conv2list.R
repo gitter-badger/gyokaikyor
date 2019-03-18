@@ -88,7 +88,8 @@ ym_matrix2df <- function(x) {
     tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
                   key = month, value = catch) %>%
     dplyr::mutate(month = abb2num(month),
-                  ym    = make_ym(year, month))
+                  ym    = make_ym(year, month)) %>%
+    arrange(ym)
   out
 }
 

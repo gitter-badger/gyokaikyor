@@ -391,9 +391,6 @@
   plot_forecast(sarimax_f_future, list_catchdata, 2019, 1)
   dev.off()
 #+END_SRC
-*** 問題点
-各県いわしに依存している．
-catch49など，手作業が介在
 ** 作図
 #+BEGIN_SRC R
   list_catchdata <- iwashi2list(path = "../../../Google Drive/gkk/各県いわし_林20190312.xlsx",
