@@ -23,6 +23,7 @@
     - [[#テスト-体長データ整形][テスト/ 体長データ整形]]
     - [[#テスト-漁獲量データ整形][テスト/ 漁獲量データ整形]]
     - [[#テスト-長崎漁獲量][テスト/ 長崎漁獲量]]
+    - [[#テスト-水温データ整形][テスト/ 水温データ整形]]
     - [[#テスト-レガシーファイル連携][テスト/ レガシーファイル連携]]
   - [[#関数][関数]]
     - [[#インポート][インポート]]
@@ -247,7 +248,7 @@
            biomass = `B_10^3ton`) %>%
     dplyr::select(year, biomass)
 
-  sstdata        <- get_tw_sst("data.git/水温データ/mgdsst_till201902.xlsx", 2018)
+  sstdata        <- format_temp("data.git/水温データ/mgdsst_till201902.xlsx", 2018)
 
   list_catchdata <- iwashi2list(path = "../../../Google Drive/gkk/各県いわし_林20190312.xlsx",
                                 sheet = "カタクチイワシ",
@@ -725,7 +726,7 @@
 #+END_SRC
 ** 水温データの整理
 #+BEGIN_SRC R
-  temp <- get_tw_sst("/Users/ahayashi/Documents/GitHub/gyokaikyor/data.git/水温データ/mgdsst_till201902.xlsx",
+  temp <- format_temp("/Users/ahayashi/Documents/GitHub/gyokaikyor/data.git/水温データ/mgdsst_till201902.xlsx",
                      year.end = 2019)
   write.csv(temp, "/Volumes/評価研/個人的データ置き場/hayashi/output/gkk_2019Mar_sst.csv", row.names = FALSE)
 #+END_SRC
@@ -1228,6 +1229,21 @@ cat NAMESPACE
   #               spcs = "katakuchi"),
   #               "data.frame")
   # })
+#+END_SRC
+*** テスト/ 水温データ整形
+#+BEGIN_SRC  R :tangle tests/testthat/test_format_temp.R
+  context("Format TW sst data")
+
+  test_that("format_temp() loads and format temp data correctly", {
+    fname     <- "ExcelFiles/test_sst.xlsx"
+    data_2000 <- format_temp(fname, year.end = 2000)
+    data_2018 <- format_temp(fname, year.end = 2018)
+
+    expect_equal(tail(data_2000, 1)$year, 2000)
+    expect_equal(tail(data_2000, 1)$tw_degc, 606)
+    expect_equal(tail(data_2018, 1)$year, 2018)
+    expect_equal(tail(data_2018, 1)$tw_degc, 822)
+  })
 #+END_SRC
 *** テスト/ レガシーファイル連携
 #+BEGIN_SRC  R :tangle tests/testthat/test_conv2legacy.R
@@ -2682,14 +2698,14 @@ cat NAMESPACE
 
 #+END_SRC
 *** 水温データを整理
-#+BEGIN_SRC R :tangle R/fmttemp.R
-  get_tw_sst <- function(fname, year.end) {
+#+BEGIN_SRC R :tangle R/format_temp.R
+  format_temp <- function(fname, year.end) {
     year.start <- 1953
     nrows      <- (year.end - year.start + 1) * 12
     range2read <- paste0("A1:F", nrows + 1)
-    xldata <- readxl::read_xlsx(fname,
+    xldata <- suppressMessages(readxl::read_xlsx(fname,
                                 sheet = "三旬平均実測値",
-                                range = range2read) %>%
+                                range = range2read)) %>%
       dplyr::mutate(tw_degc = 対馬暖流Ｄ,
                     year    = 0,
                     month   = 0)
