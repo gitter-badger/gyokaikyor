@@ -2741,7 +2741,7 @@ cat NAMESPACE
   }
 #+END_SRC
 *** 作図
-#+BEGIN_SRC R tangle R/plot.R
+#+BEGIN_SRC R :tangle R/plot.R
   plot_catch_monthvar <- function(df.seikai, year, gkk.month) {
     get_catch  <- function(year, gkk.month, df.seikai) {
       out      <- NULL
