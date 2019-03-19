@@ -2,6 +2,15 @@
 #'
 #' @inheritParams readxl::read_excel
 #' @param spcs Spcs name in romaji, one of
+#' \itemize{
+#'   \item "maiwashi"
+#'   \item "maaji"
+#'   \item "sabarui"
+#'   \item "masaba"
+#'   \item "gomasaba"
+#'   \item "katakuchi"
+#'   \item "urume"
+#' }
 #' @param prefec Prefecture name as string, one of
 #' \itemize{
 #'   \item "yamaguchi"
@@ -11,19 +20,8 @@
 #'   \item "kumamoto"
 #'   \item "kagoshima"
 #' }
-#' @param nest If \code{TRUE}, data will be shown in rectangle format
 #' @param type Character value either "maki" or "bouuke" to control
 #'   data processing algorithm for kumamoto data.
-#'   whith nested catch data for quick overview.
-#' \itemize{
-#'   \item maiwashi
-#'   \item maaji
-#'   \item sabarui
-#'   \item masaba
-#'   \item gomasaba
-#'   \item katakuchi
-#'   \item urume
-#' }
 #' @export
 format_catch <- function(path, prefec, spcs, type = NULL) {
   class(path) <- prefec
