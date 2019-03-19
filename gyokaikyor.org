@@ -1896,10 +1896,10 @@ cat NAMESPACE
         dplyr::rename(blclass = 開始の階級値,
                       count = 度数) %>%
         dplyr::mutate(blclass = ifelse(階級幅 == 0.5,
-                                            blclass * 10,
-                                            ifelse(階級幅 == 5,
-                                                   blclass,
-                                                   NA))) %>%
+                                       blclass * 10,
+                                ifelse(階級幅 == 5 | 階級幅 == 1,
+                                       blclass,
+                                       stop("Unknown blclass")))) %>%
         tidyr::drop_na(count) %>%
         dplyr::select(date, year, month, day, ym,
                       spcs_code, prefec_code, prefecture, blclass, count) %>%
