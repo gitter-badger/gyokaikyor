@@ -1330,6 +1330,23 @@ cat NAMESPACE
     expect_equal(ymrange$end, 196903)
     expect_error(make_ymrange(1969, "Jan"), "Unknown month")
   })
+
+  test_that("get_catch() pulls total catch data during fishing period", {
+    fname <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    l     <- iwashi2list(fname, year.end = 2019, sheet = "カタクチイワシ")
+    summarize_seikai(l)
+    expect_equal(get_catch(2017, l, "Mar"), c(seq(2094, 2124, by = 6)))
+    expect_equal(get_catch(2018, l, "Mar"), c(seq(2166, 2196, by = 6)))
+  })
+
+  test_that("make_summary() returns catch summary during fishing period", {
+    fname <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    l     <- iwashi2list(fname, year.end = 2019, sheet = "カタクチイワシ")
+    expect_equal(make_summary(l, 2018, "Mar")$last, 2109)
+    expect_equal(make_summary(l, 2018, "Mar")$recent, 1965)
+    expect_equal(make_summary(l, 2019, "Mar")$last, 2181)
+    expect_equal(make_summary(l, 2019, "Mar")$recent, 2037)
+  })
 #+END_SRC
 ** 関数
 :PROPERTIES:
