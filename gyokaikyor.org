@@ -1646,7 +1646,8 @@ cat NAMESPACE
                            "漁区"               = "i",
                            "統一大海区農林漁区" = "i",
                            "開始緯度"           = "d",
-                           "開始経度"           = "d")
+                           "開始経度"           = "d",
+                           "船名"               = "c")
   url <- "https://gist.githubusercontent.com/smxshxishxad/47d898c195e611aa9751f7a3d6f9e611/raw/3f07db9c411fae7b65df3c6e29e9529368c43392/prefec_code_eng.csv"
   tmp <- RCurl::getURL(url, ssl.verifypeer = FALSE)
   prefec_code <- read.csv(textConnection(tmp), sep = ",", header = TRUE)
