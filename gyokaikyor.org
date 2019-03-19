@@ -2687,9 +2687,9 @@ cat NAMESPACE
     year.start <- 1953
     nrows      <- (year.end - year.start + 1) * 12
     range2read <- paste0("A1:F", nrows + 1)
-    xldata <- readxl::read_xlsx(fname,
+    xldata <- suppressMessages(readxl::read_xlsx(fname,
                                 sheet = "三旬平均実測値",
-                                range = range2read) %>%
+                                range = range2read)) %>%
       dplyr::mutate(tw_degc = 対馬暖流Ｄ,
                     year    = 0,
                     month   = 0)
