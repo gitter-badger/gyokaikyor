@@ -201,26 +201,36 @@ rename_class <- function(left, bin) {
 #' }
 #' @export
 fmtbl_fresco <- function(path, type, date.start, date.end) {
+  detect_bad_data <- function(data) {
+    check_date <- function(x) {
+      badrow <- which(nchar(data$漁獲年月日) != 8)
+      unique(dplyr::pull(data, "県コード")[badrow])
+    }
+    bad_prefec <- check_date(data)
+    if (length(bad_prefec) > 0)
+      stop(paste0("Bad date format in prefec code ", bad_prefec))
+  }
+
   dstart <- lubridate::ymd(date.start)
   dend   <- lubridate::ymd(date.end)
   if (type == "seimitsu") {
     suppressMessages(
-      data <- readr::read_csv(path, locale = readr::locale(encoding = "cp932"),
-                              col_types = coltypes_seimitsu)
+      data <- readr::read_csv(path, col_types = coltypes_seimitsu)
     )
   } else if (type == "taichou") {
     suppressMessages(
-      data <- readr::read_csv(path, locale = readr::locale(encoding = "cp932"),
-                              col_types = coltypes_taichou)
+      data <- readr::read_csv(path, col_types = coltypes_taichou)
     )
   }
+  detect_bad_data(data)
   out <- data %>%
     dplyr::mutate(date  = lubridate::ymd(漁獲年月日),
                   year  = lubridate::year(date),
                   month = lubridate::month(date),
                   day   = lubridate::day(date),
                   ym    = paste0(year, formatC(month, width = 2, flag = 0)) %>%
-                    as.numeric()) %>%
+                    as.numeric()
+                  ) %>%
       dplyr::rename(spcs_code = 魚種コード,
                     prefec_code = 県コード) %>%
       dplyr::left_join(prefec_code, by = c("prefec_code" = "code"))
@@ -235,10 +245,10 @@ fmtbl_fresco <- function(path, type, date.start, date.end) {
       dplyr::rename(blclass = 開始の階級値,
                     count = 度数) %>%
       dplyr::mutate(blclass = ifelse(階級幅 == 0.5,
-                                          blclass * 10,
-                                          ifelse(階級幅 == 5,
-                                                 blclass,
-                                                 NA))) %>%
+                                     blclass * 10,
+                              ifelse(階級幅 == 5 | 階級幅 == 1,
+                                     blclass,
+                                     stop("Unknown blclass")))) %>%
       tidyr::drop_na(count) %>%
       dplyr::select(date, year, month, day, ym,
                     spcs_code, prefec_code, prefecture, blclass, count) %>%
