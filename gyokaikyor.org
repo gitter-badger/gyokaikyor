@@ -247,7 +247,7 @@
            biomass = `B_10^3ton`) %>%
     dplyr::select(year, biomass)
 
-  sstdata        <- get_tw_sst("data.git/水温データ/mgdsst_till201902.xlsx", 2018)
+  sstdata        <- format_temp("data.git/水温データ/mgdsst_till201902.xlsx", 2018)
 
   list_catchdata <- iwashi2list(path = "../../../Google Drive/gkk/各県いわし_林20190312.xlsx",
                                 sheet = "カタクチイワシ",
@@ -725,7 +725,7 @@
 #+END_SRC
 ** 水温データの整理
 #+BEGIN_SRC R
-  temp <- get_tw_sst("/Users/ahayashi/Documents/GitHub/gyokaikyor/data.git/水温データ/mgdsst_till201902.xlsx",
+  temp <- format_temp("/Users/ahayashi/Documents/GitHub/gyokaikyor/data.git/水温データ/mgdsst_till201902.xlsx",
                      year.end = 2019)
   write.csv(temp, "/Volumes/評価研/個人的データ置き場/hayashi/output/gkk_2019Mar_sst.csv", row.names = FALSE)
 #+END_SRC
@@ -2682,8 +2682,8 @@ cat NAMESPACE
 
 #+END_SRC
 *** 水温データを整理
-#+BEGIN_SRC R :tangle R/fmttemp.R
-  get_tw_sst <- function(fname, year.end) {
+#+BEGIN_SRC R :tangle R/format_temp.R
+  format_temp <- function(fname, year.end) {
     year.start <- 1953
     nrows      <- (year.end - year.start + 1) * 12
     range2read <- paste0("A1:F", nrows + 1)
