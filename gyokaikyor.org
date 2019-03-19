@@ -1862,6 +1862,16 @@ cat NAMESPACE
   #' }
   #' @export
   fmtbl_fresco <- function(path, type, date.start, date.end) {
+    detect_bad_data <- function(data) {
+      check_date <- function(x) {
+        badrow <- which(nchar(data$漁獲年月日) != 8)
+        unique(dplyr::pull(data, "県コード")[badrow])
+      }
+      bad_prefec <- check_date(data)
+      if (length(bad_prefec) > 0)
+        stop(paste0("Bad date format in prefec code ", bad_prefec))
+    }
+
     dstart <- lubridate::ymd(date.start)
     dend   <- lubridate::ymd(date.end)
     if (type == "seimitsu") {
