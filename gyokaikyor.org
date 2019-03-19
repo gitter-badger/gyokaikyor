@@ -1335,17 +1335,17 @@ cat NAMESPACE
     fname <- "ExcelFiles/test_kakukeniwashi.xlsx"
     l     <- iwashi2list(fname, year.end = 2019, sheet = "カタクチイワシ")
     summarize_seikai(l)
-    expect_equal(get_catch(2017, l, "Mar"), c(seq(2094, 2124, by = 6)))
-    expect_equal(get_catch(2018, l, "Mar"), c(seq(2166, 2196, by = 6)))
+    expect_equal(get_catch(2017, l, "Mar"), c(seq(2022, 2088, by = 6)))
+    expect_equal(get_catch(2018, l, "Mar"), c(seq(2094, 2160, by = 6)))
   })
 
   test_that("make_summary() returns catch summary during fishing period", {
     fname <- "ExcelFiles/test_kakukeniwashi.xlsx"
     l     <- iwashi2list(fname, year.end = 2019, sheet = "カタクチイワシ")
-    expect_equal(make_summary(l, 2018, "Mar")$last, 2109)
-    expect_equal(make_summary(l, 2018, "Mar")$recent, 1965)
-    expect_equal(make_summary(l, 2019, "Mar")$last, 2181)
-    expect_equal(make_summary(l, 2019, "Mar")$recent, 2037)
+    expect_equal(make_summary(l, 2018, "Mar")$last, 2055)
+    expect_equal(make_summary(l, 2018, "Mar")$recent, 1911)
+    expect_equal(make_summary(l, 2019, "Mar")$last, 2127)
+    expect_equal(make_summary(l, 2019, "Mar")$recent, 1983)
   })
 #+END_SRC
 ** 関数
