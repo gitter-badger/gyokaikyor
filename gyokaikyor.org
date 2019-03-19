@@ -2683,24 +2683,14 @@ cat NAMESPACE
   }
 #+END_SRC
 *** 漁獲量データ操作
-#+BEGIN_SRC R
-  get_ymrange <- function(year, list_catchdata, gkk.month) {
-    df  <- summarize_seikai(list_catchdata) %>%
-      iwashi2df()
-    out <- NULL
-    switch(gkk.month,
-           "Mar" = out <- make_ym(year, 4):make_ym(year, 9),
-           "Oct" = out <- make_ym(year, 11):make_ym(year + 1, 3))
-    out
-  }
-
+#+BEGIN_SRC R :tangle R/handle_catchdata.R
   get_catch <- function(year, list_catchdata, gkk.month) {
     range <- get_ymrange(year, list_catchdata, gkk.month)
     df    <- list_catchdata %>%
       summarize_seikai() %>%
       iwashi2df()
     out <- NULL
-    out <- df %>% 
+    out <- df %>%
       dplyr::filter(dplyr::between(ym, range[1], rev(range)[1])) %>%
       dplyr::pull(catch)
     out
