@@ -49,13 +49,60 @@
    library(dplyr)
    library(ggplot2)
 
-   seikai_seimitsu   <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_seimitsu_katakuchi.csv", type = "seimitsu",
+   seikai_seimitsu   <- bind_rows(fmtbl_fresco("data.git/fresco/201601_201612_seikai_seimitsu_katakuchi.csv",
+                                               type = "seimitsu",
+                                               date.start = "20160101", date.end = "20161231"),
+                                  fmtbl_fresco("data.git/fresco/201701_201712_seikai_seimitsu_katakuchi.csv",
+                                               type = "seimitsu",
+                                               date.start = "20170101", date.end = "20171231"),
+                                  fmtbl_fresco("data.git/fresco/201801_201812_seikai_seimitsu_katakuchi.csv",
+                                               type = "seimitsu",
+                                               date.start = "20180101", date.end = "20181231"),
+                                  fmtbl_fresco("data.git/fresco/201901_201912_seikai_seimitsu_katakuchi.csv",
+                                               type = "seimitsu",
+                                               date.start = "20190101", date.end = "20190228"))
+
+   seikai_taichou   <- bind_rows(fmtbl_fresco("data.git/fresco/201601_201612_seikai_taichou_katakuchi.csv",
+                                               type = "taichou",
+                                               date.start = "20160101", date.end = "20161231"),
+                                  fmtbl_fresco("data.git/fresco/201701_201712_seikai_taichou_katakuchi.csv",
+                                               type = "taichou",
+                                               date.start = "20170101", date.end = "20171231"),
+                                  fmtbl_fresco("data.git/fresco/201801_201812_seikai_taichou_katakuchi.csv",
+                                               type = "taichou",
+                                               date.start = "20180101", date.end = "20181231"),
+                                  fmtbl_fresco("data.git/fresco/201901_201912_seikai_taichou_katakuchi.csv",
+                                               type = "taichou",
+                                               date.start = "20190101", date.end = "20190228"))
+
+   nihonkai_seimitsu   <- bind_rows(fmtbl_fresco("data.git/fresco/201601_201612_nihonkai_seimitsu_katakuchi.csv",
+                                               type = "seimitsu",
+                                               date.start = "20160101", date.end = "20161231"),
+                                  fmtbl_fresco("data.git/fresco/201701_201712_nihonkai_seimitsu_katakuchi.csv",
+                                               type = "seimitsu",
+                                               date.start = "20170101", date.end = "20171231"),
+                                  fmtbl_fresco("data.git/fresco/201801_201812_nihonkai_seimitsu_katakuchi.csv",
+                                               type = "seimitsu",
+                                               date.start = "20180101", date.end = "20181231"))
+
+   nihonkai_taichou   <- bind_rows(fmtbl_fresco("data.git/fresco/201601_201612_nihonkai_taichou_katakuchi.csv",
+                                                 type = "taichou",
+                                                 date.start = "20160101", date.end = "20161231"),
+                                   fmtbl_fresco("data.git/fresco/201701_201712_nihonkai_taichou_katakuchi.csv",
+                                                type = "taichou",
+                                                date.start = "20170101", date.end = "20171231"),
+                                   fmtbl_fresco("data.git/fresco/201801_201812_nihonkai_taichou_katakuchi.csv",
+                                                type = "taichou",
+                                                date.start = "20180101", date.end = "20181231"),
+                                   fmtbl_fresco("data.git/fresco/201901_201902_nihonkai_taichou_katakuchi.csv",
+                                                type = "taichou",
+                                                date.start = "20190101", date.end = "20190228"))
+
+   nihonkai_seimitsu <- fmtbl_fresco("data.git/fresco/2018_nihonkai_seimitsu_katakuchi.csv", type = "seimitsu",
                                        date.start = "20180101", date.end = "20190331")
-   nihonkai_seimitsu <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_seimitsu_katakuchi.csv", type = "seimitsu",
+   seikai_taichou    <- fmtbl_fresco("data.git/fresco/2018_seikai_taichou_katakuchi.csv", type = "taichou",
                                        date.start = "20180101", date.end = "20190331")
-   seikai_taichou    <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_taichou_katakuchi.csv", type = "taichou",
-                                       date.start = "20180101", date.end = "20190331")
-   nihonkai_taichou  <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_taichou_katakuchi.csv", type = "taichou",
+   nihonkai_taichou  <- fmtbl_fresco("data.git/fresco/2018_nihonkai_taichou_katakuchi.csv", type = "taichou",
                                        date.start = "20180101", date.end = "20190331")
    fresco_seimitsu   <- dplyr::bind_rows(seikai_seimitsu, nihonkai_seimitsu)
    fresco_taichou    <- dplyr::bind_rows(seikai_taichou, nihonkai_taichou)
@@ -1599,7 +1646,8 @@ cat NAMESPACE
                            "漁区"               = "i",
                            "統一大海区農林漁区" = "i",
                            "開始緯度"           = "d",
-                           "開始経度"           = "d")
+                           "開始経度"           = "d",
+                           "船名"               = "c")
   url <- "https://gist.githubusercontent.com/smxshxishxad/47d898c195e611aa9751f7a3d6f9e611/raw/3f07db9c411fae7b65df3c6e29e9529368c43392/prefec_code_eng.csv"
   tmp <- RCurl::getURL(url, ssl.verifypeer = FALSE)
   prefec_code <- read.csv(textConnection(tmp), sep = ",", header = TRUE)
@@ -1814,26 +1862,36 @@ cat NAMESPACE
   #' }
   #' @export
   fmtbl_fresco <- function(path, type, date.start, date.end) {
+    detect_bad_data <- function(data) {
+      check_date <- function(x) {
+        badrow <- which(nchar(data$漁獲年月日) != 8)
+        unique(dplyr::pull(data, "県コード")[badrow])
+      }
+      bad_prefec <- check_date(data)
+      if (length(bad_prefec) > 0)
+        stop(paste0("Bad date format in prefec code ", bad_prefec))
+    }
+
     dstart <- lubridate::ymd(date.start)
     dend   <- lubridate::ymd(date.end)
     if (type == "seimitsu") {
       suppressMessages(
-        data <- readr::read_csv(path, locale = readr::locale(encoding = "cp932"),
-                                col_types = coltypes_seimitsu)
+        data <- readr::read_csv(path, col_types = coltypes_seimitsu)
       )
     } else if (type == "taichou") {
       suppressMessages(
-        data <- readr::read_csv(path, locale = readr::locale(encoding = "cp932"),
-                                col_types = coltypes_taichou)
+        data <- readr::read_csv(path, col_types = coltypes_taichou)
       )
     }
+    detect_bad_data(data)
     out <- data %>%
       dplyr::mutate(date  = lubridate::ymd(漁獲年月日),
                     year  = lubridate::year(date),
                     month = lubridate::month(date),
                     day   = lubridate::day(date),
                     ym    = paste0(year, formatC(month, width = 2, flag = 0)) %>%
-                      as.numeric()) %>%
+                      as.numeric()
+                    ) %>%
         dplyr::rename(spcs_code = 魚種コード,
                       prefec_code = 県コード) %>%
         dplyr::left_join(prefec_code, by = c("prefec_code" = "code"))
@@ -1848,10 +1906,10 @@ cat NAMESPACE
         dplyr::rename(blclass = 開始の階級値,
                       count = 度数) %>%
         dplyr::mutate(blclass = ifelse(階級幅 == 0.5,
-                                            blclass * 10,
-                                            ifelse(階級幅 == 5,
-                                                   blclass,
-                                                   NA))) %>%
+                                       blclass * 10,
+                                ifelse(階級幅 == 5 | 階級幅 == 1,
+                                       blclass,
+                                       stop("Unknown blclass")))) %>%
         tidyr::drop_na(count) %>%
         dplyr::select(date, year, month, day, ym,
                       spcs_code, prefec_code, prefecture, blclass, count) %>%
@@ -2724,7 +2782,6 @@ cat NAMESPACE
     sst_tw
   }
 #+END_SRC
-
 *** 作図
 #+BEGIN_SRC R tangle R/plot.R
   plot_catch_monthvar <- function(df.seikai, year, gkk.month) {
