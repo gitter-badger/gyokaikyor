@@ -82,17 +82,8 @@ fmtcatch.kagoshima <- function(path, spcs, spread = TRUE, maki.only = FALSE) {
               bou_akune = catch_bou_akune,
               bou_uchinoura = catch_bou_uchinoura,
               prefecture = "kagoshima") %>%
-    tibble::as_tibble()
-  if (maki.only == TRUE) {
-    out %<>% dplyr::select(-"bou_akune", -"bou_uchinoura")
-  } else {
-    out %<>%
-      dplyr::mutate(total = maki4ports + bou_akune + bou_uchinoura)
-    if (spread == FALSE) {
-      out %<>% dplyr::select(-"total") %>%
-        tidyr::gather("maki4ports", "bou_akune", "bou_uchinoura",
-               key = "type", value = "catch")
-    }
-  }
+    tibble::as_tibble() %>%
+    tidyr::gather("maki4ports", "bou_akune", "bou_uchinoura",
+                  key = "type", value = "catch")
   out
 }

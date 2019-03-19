@@ -30,3 +30,21 @@ test_that("fmtbl.kagoshima() works well", {
   expect_is(fmtbl.kagoshima(path, spcs = "katakuchi", nest = FALSE),
             "data.frame")
 })
+
+test_that("rename_class() make blclass from start of class and bin", {
+  expect_equal(rename_class(10, 5), "[10,15)")
+  expect_equal(rename_class(20, 5), "[20,25)")
+  expect_equal(rename_class(0, 1), "[0,1)")
+  expect_equal(rename_class(1, 2), "[1,3)")
+})
+
+test_that("fmtbl_fresco() tidy fresco data", {
+  fname_taichou <- "ExcelFiles/test_fresco_taichou.csv"
+  fname_seimitsu <- "ExcelFiles/test_fresco_seimitsu.csv"
+  taichou  <- fmtbl_fresco(fname_taichou, type = "taichou",
+                           date.start = "20180101", date.end = "20190331")
+  seimitsu <- fmtbl_fresco(fname_seimitsu, type = "seimitsu",
+                          date.start = "20180101", date.end = "20190331")
+  expect_is(taichou, "data.frame")
+  expect_is(seimitsu, "data.frame")
+})

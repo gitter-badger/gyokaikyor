@@ -1,14 +1,13 @@
- #+TITLE: gyokaikyor プロジェクトノート
- #+PROPERTY: header-args :exports code :results scalar :session *R:gyokaikyor*
- #+STARTUP: contents
+#+TITLE: gyokaikyor プロジェクトノート
+#+PROPERTY: header-args :exports code :results scalar :session *R:gyokaikyor*
+#+STARTUP: contents
 
 * 目次                                                                :TOC_3:
 - [[#使い方デモ][使い方デモ]]
   - [[#体長組成整理][体長組成整理]]
+  - [[#漁獲量整理][漁獲量整理]]
   - [[#漁況予測][漁況予測]]
-    - [[#glmによる予測][GLMによる予測]]
     - [[#時系列解析による予測][時系列解析による予測]]
-    - [[#問題点][問題点]]
   - [[#作図][作図]]
   - [[#水温データの整理][水温データの整理]]
 - [[#開発環境の整備][開発環境の整備]]
@@ -24,6 +23,7 @@
     - [[#テスト-体長データ整形][テスト/ 体長データ整形]]
     - [[#テスト-漁獲量データ整形][テスト/ 漁獲量データ整形]]
     - [[#テスト-長崎漁獲量][テスト/ 長崎漁獲量]]
+    - [[#テスト-レガシーファイル連携][テスト/ レガシーファイル連携]]
   - [[#関数][関数]]
     - [[#インポート][インポート]]
     - [[#ファイル名操作][ファイル名操作]]
@@ -43,76 +43,75 @@
 
 * 使い方デモ
 ** 体長組成整理
-    #+BEGIN_SRC R
-    library(gyokaikyor)
-    library(dplyr)
-    library(hash)
-    library(ggplot2)
+ #+BEGIN_SRC R
+   library(gyokaikyor)
+   library(dplyr)
+   library(ggplot2)
 
-    seikai_seimitsu   <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_seimitsu_katakuchi.csv", type = "seimitsu",
-                                        date.start = "20180101", date.end = "20190331")
-    nihonkai_seimitsu <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_seimitsu_katakuchi.csv", type = "seimitsu",
-                                        date.start = "20180101", date.end = "20190331")
-    seikai_taichou    <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_taichou_katakuchi.csv", type = "taichou",
-                                        date.start = "20180101", date.end = "20190331")
-    nihonkai_taichou  <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_taichou_katakuchi.csv", type = "taichou",
-                                        date.start = "20180101", date.end = "20190331")
-    fresco_seimitsu   <- dplyr::bind_rows(seikai_seimitsu, nihonkai_seimitsu)
-    fresco_taichou    <- dplyr::bind_rows(seikai_taichou, nihonkai_taichou)
+   seikai_seimitsu   <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_seimitsu_katakuchi.csv", type = "seimitsu",
+                                       date.start = "20180101", date.end = "20190331")
+   nihonkai_seimitsu <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_seimitsu_katakuchi.csv", type = "seimitsu",
+                                       date.start = "20180101", date.end = "20190331")
+   seikai_taichou    <- fmtbl_fresco("data.git/fresco/2019Mar_seikai_taichou_katakuchi.csv", type = "taichou",
+                                       date.start = "20180101", date.end = "20190331")
+   nihonkai_taichou  <- fmtbl_fresco("data.git/fresco/2019Mar_nihonkai_taichou_katakuchi.csv", type = "taichou",
+                                       date.start = "20180101", date.end = "20190331")
+   fresco_seimitsu   <- dplyr::bind_rows(seikai_seimitsu, nihonkai_seimitsu)
+   fresco_taichou    <- dplyr::bind_rows(seikai_taichou, nihonkai_taichou)
 
-    fname_kumamoto_oct  <- "data.git/漁海況/2018年10月/各県資料/熊本県/05 H29体長組成 まき網＆棒受網（熊本県）.xlsx"
-    fname_kumamoto_mar  <- "data.git/漁海況/2019年3月/各県資料/熊本県/04_H30_まき網＆棒受網体長組成.xlsx"
-    fname_nagasaki_1    <- "data.git/漁海況/2018年3月/各県資料/長崎県/2017.09-2018.01小型まき網体長組成.xls"
-    fname_nagasaki_2    <- "data.git/漁海況/2018年10月/各県資料/長崎県/2018.02-2018.08小型まき網体長組成.xls"
-    fname_nagasaki_3    <- "data.git/漁海況/2019年3月/各県資料/長崎県/2018.09-2019.01小型まき網体長組成.xls"
-    fname_kagoshima_oct <- "data.git/漁海況/2018年10月/各県資料/鹿児島県/体長組成(H29年度).xlsx"
-    fname_kagoshima_mar <- "data.git/漁海況/2019年3月/各県資料/鹿児島県/体長組成(H30年度).xlsx"
+   fname_kumamoto_oct  <- "data.git/漁海況/2018年10月/各県資料/熊本県/05 H29体長組成 まき網＆棒受網（熊本県）.xlsx"
+   fname_kumamoto_mar  <- "data.git/漁海況/2019年3月/各県資料/熊本県/04_H30_まき網＆棒受網体長組成.xlsx"
+   fname_nagasaki_1    <- "data.git/漁海況/2018年3月/各県資料/長崎県/2017.09-2018.01小型まき網体長組成.xls"
+   fname_nagasaki_2    <- "data.git/漁海況/2018年10月/各県資料/長崎県/2018.02-2018.08小型まき網体長組成.xls"
+   fname_nagasaki_3    <- "data.git/漁海況/2019年3月/各県資料/長崎県/2018.09-2019.01小型まき網体長組成.xls"
+   fname_kagoshima_oct <- "data.git/漁海況/2018年10月/各県資料/鹿児島県/体長組成(H29年度).xlsx"
+   fname_kagoshima_mar <- "data.git/漁海況/2019年3月/各県資料/鹿児島県/体長組成(H30年度).xlsx"
 
-    kumamoto <- bind_rows(format_bl(fname_kumamoto_oct,
-                                    prefec = "kumamoto", spcs = "katakuchi"),
-                            format_bl(fname_kumamoto_mar,
-                                    prefec = "kumamoto", spcs = "katakuchi"))
-    nagasaki <- bind_rows(format_bl(fname_nagasaki_1,
-                                    prefec = "nagasaki", spcs = "katakuchi"),
-                            format_bl(fname_nagasaki_2,
-                                    prefec = "nagasaki", spcs = "katakuchi"),
-                            format_bl(fname_nagasaki_3,
-                                    prefec = "nagasaki", spcs = "katakuchi"))
-    nagasaki <- bind_rows(format_bl(fname_kagoshima_oct,
-                                    prefec = "kagoshima", spcs = "katakuchi"),
-                            format_bl(fname_kagoshima_mar,
-                                    prefec = "kagoshima", spcs = "katakuchi"))
+   kumamoto <- bind_rows(format_bl(fname_kumamoto_oct,
+                                   prefec = "kumamoto", spcs = "katakuchi"),
+                           format_bl(fname_kumamoto_mar,
+                                   prefec = "kumamoto", spcs = "katakuchi"))
+   nagasaki <- bind_rows(format_bl(fname_nagasaki_1,
+                                   prefec = "nagasaki", spcs = "katakuchi"),
+                           format_bl(fname_nagasaki_2,
+                                   prefec = "nagasaki", spcs = "katakuchi"),
+                           format_bl(fname_nagasaki_3,
+                                   prefec = "nagasaki", spcs = "katakuchi"))
+   kagoshima <- bind_rows(format_bl(fname_kagoshima_oct,
+                                   prefec = "kagoshima", spcs = "katakuchi"),
+                           format_bl(fname_kagoshima_mar,
+                                   prefec = "kagoshima", spcs = "katakuchi"))
 
-    bl_yamaguchi <- conv2hoshifile(df = fresco_seimitsu, prefec = "yamaguchi",
-                                    type = "seimitsu",
-                                    ym.start = 201801, ym.end = 201903,
-                                    export = TRUE, fname = "gkk_2019Mar_bl_yamaguchi.csv")
-    bl_fukuoka   <- 0
-    bl_saga      <- 0
-    bl_nagasaki  <- conv2hoshifile(df = nagasaki, prefec = "nagasaki",
-                                    type = "taichou",
-                                    ym.start = 201801, ym.end = 201903,
-                                    export = TRUE, fname = "gkk_2019Mar_bl_nagasaki.csv")
+   bl_yamaguchi <- conv2hoshifile(df = fresco_seimitsu, prefec = "yamaguchi",
+                                   type = "seimitsu",
+                                   ym.start = 201801, ym.end = 201903,
+                                   export = TRUE, fname = "gkk_2019Mar_bl_yamaguchi.csv")
+   bl_fukuoka   <- 0
+   bl_saga      <- 0
+   bl_nagasaki  <- conv2hoshifile(df = nagasaki, prefec = "nagasaki",
+                                   type = "taichou",
+                                   ym.start = 201801, ym.end = 201903,
+                                   export = TRUE, fname = "gkk_2019Mar_bl_nagasaki.csv")
 
-    bl_kumamoto  <- kumamoto %>%
-        dplyr::filter(type == "まき網") %>%
-        conv2hoshifile(prefec = "kumamoto",
-                    type = "seimitsu",
-                    ym.start = 201801, ym.end = 201903,
-                    export = TRUE, fname = "gkk_2019Mar_bl_kumamoto_maki.csv")
+   bl_kumamoto  <- kumamoto %>%
+       dplyr::filter(type == "まき網") %>%
+       conv2hoshifile(prefec = "kumamoto",
+                   type = "seimitsu",
+                   ym.start = 201801, ym.end = 201903,
+                   export = TRUE, fname = "gkk_2019Mar_bl_kumamoto_maki.csv")
 
-    bl_kagoshima <- kagoshima %>%
-        dplyr::filter(grepl("まき", type)) %>%
-        conv2hoshifile(prefec = "kagoshima",
-                    type = "taichou",
-                    ym.start = 201801, ym.end = 201903,
-                    export = TRUE, fname = "gkk_2019Mar_bl_kagoshima_maki.csv")
-    bl_seikai    <- 0
+   bl_kagoshima <- kagoshima %>%
+       dplyr::filter(grepl("まき", type)) %>%
+       conv2hoshifile(prefec = "kagoshima",
+                   type = "taichou",
+                   ym.start = 201801, ym.end = 201903,
+                   export = TRUE, fname = "gkk_2019Mar_bl_kagoshima_maki.csv")
+   bl_seikai    <- 0
 
-    bl_all <- bl_yamaguchi + bl_fukuoka + bl_saga +
-        bl_nagasaki + bl_kumamoto + bl_kagoshima + bl_seikai
+   bl_all <- bl_yamaguchi + bl_fukuoka + bl_saga +
+       bl_nagasaki + bl_kumamoto + bl_kagoshima + bl_seikai
     #+END_SRC
-    ** 漁獲量整理
+** 漁獲量整理
     #+BEGIN_SRC R
       library(hash)
       library(dplyr)
@@ -229,77 +228,6 @@
         export2kakuken_iwashi(export.csv = TRUE, fname = "gkk_2019Mar_catch_kagoshima.csv")
 #+END_SRC
 ** 漁況予測
-*** GLMによる予測
-どの変数も効いていない
-#+BEGIN_SRC R
-  # 漁海況予報会議のためのコード：カタクチイワシ3月時点の予報（黒田作成・林責任）
-  # 一般化線形モデルを用いて、4–8月の水揚量を説明。漁獲量の予測値±95%信頼区間を表示
-
-  library(MuMIn)
-
-  # データ読み込み
-  data_org <- read.csv("/Users/ahayashi/Documents/work/gyokaikyo_2019_katakuchi_data_190314.csv",
-                       header = TRUE)
-
-  yr2pred <- 2019
-  period2use  <- 10
-  last_row <- which(data_org$year == yr2pred) # 2018
-  first_row <- last_row - period2use
-
-  data        <- data_org[first_row:last_row, ]
-  data_minus1 <- data[1:(nrow(data) - 1), ]
-  data_recent <- data_minus1[(nrow(data_minus1) - 4):(nrow(data_minus1)), ]
-  recent_lower  <- mean(data_recent$catch49) * 0.8
-  recent_upper  <- mean(data_recent$catch49) * 1.2
-
-  resglm <- glm(catch49 ~ catch1 + catch11 + catch12 + catch111 +
-                  temp11 + temp12 + temp1 + temp2 + bio,
-                family = gaussian(link = "identity"),
-                    data = data_minus1)
-  MASS::stepAIC(resglm)
-  summary(resglm)
-
-  prediction  <- predict(resglm, newdata = data.frame(catch1 = data$catch1),
-                         se.fit = TRUE, type = "response",
-                         na.action = "na.fail")
-  uconf  <- prediction$fit + prediction$se.fit * 1.96
-  lconf  <- prediction$fit - prediction$se.fit * 1.96
-  summary(resglm)
-  as.numeric(resglm$fitted.values)
-
-
-  color.model.shade <- hsv( 20/360, 0.2, 0.9)
-  color.model       <- hsv( 20/360, 0.8, 0.9)
-  col.lastyr        <- hsv(200/360, 0.8, 0.9)
-  min.catch         <- 5000
-  max.catch         <- 20000
-
-  # png(paste("/Volumes/評価研/個人的データ置き場/hayashi/output/figs/gkk", yr2pred, "年3月_漁獲量予測.png"),
-  #     width = 1300, height = 800)
-  # plot(data_minus1$year, data_minus1$catch49,
-  #      xlim = c(min(data$year), max(data$year)),
-  #      ylim=c(min.catch, max.catch), type = "n", axes = FALSE, ann = FALSE)
-  # polygon(c(data$year, rev(data$year)),
-  #         c(uconf, rev(lconf)), col = color.model.shade, border = FALSE)
-  # lines(data$year, prediction$fit, col = COLOR.MODEL, lwd = 8)
-  # lines(data.minus1$year, data.minus1$catch49, lwd = 4)
-  # points(data.minus1$year, data.minus1$catch49, pch = 16, cex = 3)
-  # lines(min(data.recent$year):year.to.predict, rep(recent.lower,
-  #                                             nrow(data.recent) + 1), lty = 2, lwd = 4)
-  # lines(min(data.recent$year):year.to.predict, rep(recent.upper,
-  #                                             nrow(data.recent) + 1), lty = 2, lwd = 4)
-  # arrows((year.to.predict - 1), data.minus1[nrow(data.minus1), "catch49"] * 1.2,
-  #        (year.to.predict - 1), data.minus1[nrow(data.minus1), "catch49"] * 0.8,
-  #       length = 0, col = COL.LASTYR, lwd = 4)
-  # points((year.to.predict - 1), data.minus1[nrow(data.minus1), "catch49"]
-  #        , pch = 16, col = COL.LASTYR, cex = 4)
-  # points(max(data$year), prediction$fit[nrow(data)],
-  #        col = COLOR.MODEL, pch = 16, cex = 6)
-  # axis(1, data$year, tcl = -0.6, lwd = 4, labels = FALSE)
-  # axis(1, data$year[(data$year %% 5) == 0], tcl = -1.6, lwd = 4, labels = FALSE)
-  # axis(2, seq(MIN.CATCH, MAX.CATCH, 5000), lwd = 4, tcl = -1.6, labels = FALSE)
-  # dev.off()
-#+END_SRC
 *** 時系列解析による予測
 #+BEGIN_SRC R
   library(tidyverse)
@@ -463,9 +391,6 @@
   plot_forecast(sarimax_f_future, list_catchdata, 2019, 1)
   dev.off()
 #+END_SRC
-*** 問題点
-各県いわしに依存している．
-catch49など，手作業が介在
 ** 作図
 #+BEGIN_SRC R
   list_catchdata <- iwashi2list(path = "../../../Google Drive/gkk/各県いわし_林20190312.xlsx",
@@ -1103,6 +1028,24 @@ cat NAMESPACE
     expect_is(fmtbl.kagoshima(path, spcs = "katakuchi", nest = FALSE),
               "data.frame")
   })
+
+  test_that("rename_class() make blclass from start of class and bin", {
+    expect_equal(rename_class(10, 5), "[10,15)")
+    expect_equal(rename_class(20, 5), "[20,25)")
+    expect_equal(rename_class(0, 1), "[0,1)")
+    expect_equal(rename_class(1, 2), "[1,3)")
+  })
+
+  test_that("fmtbl_fresco() tidy fresco data", {
+    fname_taichou <- "ExcelFiles/test_fresco_taichou.csv"
+    fname_seimitsu <- "ExcelFiles/test_fresco_seimitsu.csv"
+    taichou  <- fmtbl_fresco(fname_taichou, type = "taichou",
+                             date.start = "20180101", date.end = "20190331")
+    seimitsu <- fmtbl_fresco(fname_seimitsu, type = "seimitsu",
+                            date.start = "20180101", date.end = "20190331")
+    expect_is(taichou, "data.frame")
+    expect_is(seimitsu, "data.frame")
+  })
 #+END_SRC
 *** テスト/ 漁獲量データ整形
 #+BEGIN_SRC  R :tangle tests/testthat/test_fmtcatch.R
@@ -1181,6 +1124,12 @@ cat NAMESPACE
     expect_is(fmtcatch.kagoshima(path, spcs = "maiwashi",
                                  spread = FALSE, maki.only = TRUE),
               "data.frame")
+  })
+
+  test_that("format_catch() call fmtcatch() and use method of each prefec", {
+    path <- "ExcelFiles/test_catch_kagoshima.xlsx"
+    df   <- format_catch(path, prefec = "kagoshima", spcs = "katakuchi")
+    expect_is(df, "data.frame")
   })
 #+END_SRC
 *** テスト/ 長崎漁獲量
@@ -1280,7 +1229,76 @@ cat NAMESPACE
   #               "data.frame")
   # })
 #+END_SRC
+*** テスト/ レガシーファイル連携
+#+BEGIN_SRC  R :tangle tests/testthat/test_conv2legacy.R
+  context("Be friendly with legacy files")
 
+  test_that("conv2hoshifile() converts seimitsu data correctly", {
+    df     <- read.csv("ExcelFiles/test_conv2hoshifile_seimitsu.csv")
+    hoshi  <- conv2hoshifile(df, prefec = "toyama", type = "seimitsu",
+                             ym.start = 196901, ym.end = 196912)
+    expect_is(hoshi, "data.frame")
+    expect_equal(hoshi[, 1], c(1, rep(0, 29)))
+    expect_equal(hoshi[, 2], c(0, 1, rep(0, 28)))
+  })
+
+  test_that("conv2hoshifile() converts taichou data correctly", {
+    df     <- read.csv("ExcelFiles/test_conv2hoshifile_taichou.csv")
+    hoshi  <- conv2hoshifile(df, prefec = "nagasaki", type = "taichou",
+                             ym.start = 196901, ym.end = 196912,
+                             export = TRUE, fname = "foo.csv")
+    expect_is(hoshi, "data.frame")
+    expect_equal(hoshi[, 1], c(1, rep(0, 29)))
+    expect_equal(hoshi[, 2], c(0, 1, rep(0, 28)))
+    file.remove("foo.csv")
+  })
+
+  test_that("iwashi2list() converts 'kakukeniwashi' file correctly", {
+    fname     <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    urume     <- iwashi2list(fname, sheet = "ウルメイワシ",
+                             year.start = 1992, year.end = 2019)
+    maiwashi  <- iwashi2list(fname, sheet = "マイワシ",
+                             year.start = 1992, year.end = 2019)
+    katakuchi <- iwashi2list(fname, sheet = "カタクチイワシ",
+                 year.start = 1992, year.end = 2019)
+    expect_equal(urume$山口[1, "Jan"], 1)
+    expect_equal(maiwashi$山口[1, "Jan"], 11)
+    expect_equal(katakuchi$山口[1, "Jan"], 21)
+    expect_equal(urume$鹿児島[1, "Jan"], 51)
+    expect_equal(maiwashi$鹿児島[1, "Jan"], 61)
+    expect_equal(katakuchi$鹿児島[1, "Jan"], 71)
+  })
+
+  test_that("summarize_seikai() and iwashi2df()
+   hacks 'kakukeniwashi' file correctly", {
+    fname     <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    katakuchi <- summarize_seikai(iwashi2list(fname, sheet = "カタクチイワシ",
+                 year.start = 1992, year.end = 2019))
+    expect_equal(katakuchi[1, "Jan"], 276)
+    expect_equal(katakuchi[28, "Jan"], 2220)
+
+    katakuchi_df <- iwashi2df(katakuchi)
+    expect_equal(katakuchi_df[1, "catch"], 276)
+    expect_equal(katakuchi_df[2, "catch"], 282)
+  })
+
+  test_that("export2kakuken_iwashi() converts df to 'iwashi' style", {
+    df     <- data.frame(year = c(rep(1969, 12), rep(1970, 12)),
+                     month = rep(1:12, 2), catch = 11:34)
+    iwashi <- export2kakuken_iwashi(df, export.csv = TRUE, fname = "bar.csv") %>%
+      as.data.frame()
+    expect_equal(iwashi[1, 2], 11)
+    expect_equal(iwashi[2, 2], 23)
+    file.remove("bar.csv")
+  })
+
+  test_that("make_ymrange() makes proper ym range", {
+    ymrange <- make_ymrange(1969, "Mar")
+    expect_equal(ymrange$start, 196804)
+    expect_equal(ymrange$end, 196903)
+    expect_error(make_ymrange(1969, "Jan"), "Unknown month")
+  })
+#+END_SRC
 ** 関数
 :PROPERTIES:
 :header-args: :results silent :exports code
@@ -2494,12 +2512,12 @@ cat NAMESPACE
   }
 
   export2kakuken_iwashi <- function(df, export.csv = FALSE, fname = NULL) {
-    out <- tribble(~year,
-                   ~`1`, ~`2`, ~`3`, ~`4`, ~`5`, ~`6`,
-                   ~`7`, ~`8`, ~`9`, ~`10`, ~`11`, ~`12`)
+    out <- tibble::tribble(~year,
+                           ~`1`, ~`2`, ~`3`, ~`4`, ~`5`, ~`6`,
+                           ~`7`, ~`8`, ~`9`, ~`10`, ~`11`, ~`12`)
     df2 <- df %>%
       tidyr::spread(key = month, value = catch)
-    out %<>% right_join(df2)
+    out %<>% dplyr::right_join(df2)
     if (export.csv == TRUE) {
       write.csv(out, fname, row.names = FALSE)
     }
@@ -2595,13 +2613,13 @@ cat NAMESPACE
     out
   }
 
-  ym_matrix2df <- function(x) {
+  iwashi2df <- function(x) {
     out <- x %>%
       tidyr::gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec,
                     key = month, value = catch) %>%
       dplyr::mutate(month = abb2num(month),
                     ym    = make_ym(year, month)) %>%
-      arrange(ym)
+      dplyr::arrange(ym)
     out
   }
 
@@ -2626,7 +2644,7 @@ cat NAMESPACE
 #+BEGIN_SRC R
   get_ymrange <- function(year, list_catchdata, gkk.month) {
     df  <- summarize_seikai(list_catchdata) %>%
-      ym_matrix2df()
+      iwashi2df()
     out <- NULL
     switch(gkk.month,
            "Mar" = out <- make_ym(year, 4):make_ym(year, 9),
@@ -2638,7 +2656,7 @@ cat NAMESPACE
     range <- get_ymrange(year, list_catchdata, gkk.month)
     df    <- list_catchdata %>%
       summarize_seikai() %>%
-      ym_matrix2df()
+      iwashi2df()
     out <- NULL
     out <- df %>% 
       dplyr::filter(dplyr::between(ym, range[1], rev(range)[1])) %>%
@@ -2698,7 +2716,7 @@ cat NAMESPACE
       out      <- NULL
       ym.start <- make_ymrange(year, gkk.month)$start
       ym.end   <- make_ymrange(year, gkk.month)$end
-      out      <- ym_matrix2df(df.seikai) %>%
+      out      <- iwashi2df(df.seikai) %>%
         dplyr::filter(dplyr::between(ym,
                                      ym.start,
                                      ym.end)) %>%
@@ -2788,7 +2806,7 @@ cat NAMESPACE
                ym.end   <- paste0(yr, "01") %>% as.numeric()
              })
       out <- list[[prefec]] %>%
-        ym_matrix2df() %>%
+        iwashi2df() %>%
         dplyr::filter(dplyr::between(ym, ym.start, ym.end)) %>%
         dplyr::select(catch) %>%
         sum(na.rm = TRUE)
@@ -2962,7 +2980,7 @@ cat NAMESPACE
     }
 
     real <- summarize_seikai(list_catchdata) %>%
-      ym_matrix2df() %>%
+      iwashi2df() %>%
       arrange(ym) %>%
       filter(between(ym,
                      make_ym(yr, 1),
