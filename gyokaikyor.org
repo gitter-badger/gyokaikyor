@@ -2699,13 +2699,13 @@ cat NAMESPACE
 *** 漁獲量データ操作
 #+BEGIN_SRC R :tangle R/handle_catchdata.R
   get_catch <- function(year, list_catchdata, gkk.month) {
-    range <- get_ymrange(year, list_catchdata, gkk.month)
+    range <- make_ymrange(year, gkk.month)
     df    <- list_catchdata %>%
       summarize_seikai() %>%
       iwashi2df()
     out <- NULL
     out <- df %>%
-      dplyr::filter(dplyr::between(ym, range[1], rev(range)[1])) %>%
+      dplyr::filter(dplyr::between(ym, range$start, range$end)) %>%
       dplyr::pull(catch)
     out
   }
@@ -2722,7 +2722,7 @@ cat NAMESPACE
     out$recent_lwr <- out$recent * 0.8
     out            <- sapply(out, mean)
     suppressWarnings(
-      out$range_last <- get_ymrange(year - 1, list_catchdata, gkk.month))
+      out$range_last <- make_ymrange(year - 1, gkk.month))
     out
   }
 
