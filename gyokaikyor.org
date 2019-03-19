@@ -23,6 +23,7 @@
     - [[#テスト-体長データ整形][テスト/ 体長データ整形]]
     - [[#テスト-漁獲量データ整形][テスト/ 漁獲量データ整形]]
     - [[#テスト-長崎漁獲量][テスト/ 長崎漁獲量]]
+    - [[#テスト-水温データ整形][テスト/ 水温データ整形]]
     - [[#テスト-レガシーファイル連携][テスト/ レガシーファイル連携]]
   - [[#関数][関数]]
     - [[#インポート][インポート]]
@@ -1228,6 +1229,21 @@ cat NAMESPACE
   #               spcs = "katakuchi"),
   #               "data.frame")
   # })
+#+END_SRC
+*** テスト/ 水温データ整形
+#+BEGIN_SRC  R :tangle tests/testthat/test_format_temp.R
+  context("Format TW sst data")
+
+  test_that("format_temp() loads and format temp data correctly", {
+    fname     <- "ExcelFiles/test_sst.xlsx"
+    data_2000 <- format_temp(fname, year.end = 2000)
+    data_2018 <- format_temp(fname, year.end = 2018)
+
+    expect_equal(tail(data_2000, 1)$year, 2000)
+    expect_equal(tail(data_2000, 1)$tw_degc, 606)
+    expect_equal(tail(data_2018, 1)$year, 2018)
+    expect_equal(tail(data_2018, 1)$tw_degc, 822)
+  })
 #+END_SRC
 *** テスト/ レガシーファイル連携
 #+BEGIN_SRC  R :tangle tests/testthat/test_conv2legacy.R
