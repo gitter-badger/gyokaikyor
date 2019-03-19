@@ -1866,13 +1866,11 @@ cat NAMESPACE
     dend   <- lubridate::ymd(date.end)
     if (type == "seimitsu") {
       suppressMessages(
-        data <- readr::read_csv(path, locale = readr::locale(encoding = "cp932"),
-                                col_types = coltypes_seimitsu)
+        data <- readr::read_csv(path, col_types = coltypes_seimitsu)
       )
     } else if (type == "taichou") {
       suppressMessages(
-        data <- readr::read_csv(path, locale = readr::locale(encoding = "cp932"),
-                                col_types = coltypes_taichou)
+        data <- readr::read_csv(path, col_types = coltypes_taichou)
       )
     }
     detect_bad_data(data)
