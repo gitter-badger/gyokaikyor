@@ -150,7 +150,7 @@ ngs_fmt_sheet <- function(sheet, path, regex) {
 
 #' Make catch data reading multiple Excel worksheets
 #'
-#' @inheritParams fmtcatch
+#' @inheritParams format_catch
 fmtcatch.nagasaki <- function(path, spcs, type = NULL) {
   spcs_jp <- switch(spcs,
                     "maiwashi" = "マイワシ",

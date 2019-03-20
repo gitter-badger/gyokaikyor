@@ -80,7 +80,7 @@ conv2hoshifile <- function(df, prefec, type, ym.start, ym.end,
   }
   out <- extract_count(classes, ymseq, df.count)
   if (export == TRUE) {
-    write.csv(out, fname)
+    utils::write.csv(out, fname)
   }
   out
 }
@@ -93,7 +93,7 @@ export2kakuken_iwashi <- function(df, export.csv = FALSE, fname = NULL) {
     tidyr::spread(key = month, value = catch)
   out %<>% dplyr::right_join(df2)
   if (export.csv == TRUE) {
-    write.csv(out, fname, row.names = FALSE)
+    utils::write.csv(out, fname, row.names = FALSE)
   }
   out
 }

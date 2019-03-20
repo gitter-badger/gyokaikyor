@@ -25,7 +25,8 @@ Imports:
     Nippon,
     dplyr,
     readr,
-    stringi
+    stringi,
+    forecast
 Suggests: 
     testthat,
     covr

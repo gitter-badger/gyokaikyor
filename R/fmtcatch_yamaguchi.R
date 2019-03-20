@@ -64,7 +64,7 @@ fmtcatch.yamaguchi <- function(path, spcs, type = NULL) {
 
   sheets <- readxl::excel_sheets(path) %>%
     stringr::str_extract("[0-9]+.+") %>%
-    na.omit()
+    stats::na.omit()
 
   dat1   <- purrr::map_df(meigara_ofst, get_catch_meigara,
                         spcs_col = spcs_col, sheet = sheets[1])

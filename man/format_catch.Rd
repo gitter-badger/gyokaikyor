@@ -19,22 +19,19 @@ format_catch(path, prefec, spcs, type = NULL)
   \item "kagoshima"
 }}
 
-\item{spcs}{Spcs name in romaji, one of}
-
-\item{type}{Character value either "maki" or "bouuke" to control
-  data processing algorithm for kumamoto data.
-  whith nested catch data for quick overview.
+\item{spcs}{Spcs name in romaji, one of
 \itemize{
-  \item maiwashi
-  \item maaji
-  \item sabarui
-  \item masaba
-  \item gomasaba
-  \item katakuchi
-  \item urume
+  \item "maiwashi"
+  \item "maaji"
+  \item "sabarui"
+  \item "masaba"
+  \item "gomasaba"
+  \item "katakuchi"
+  \item "urume"
 }}
 
-\item{nest}{If \code{TRUE}, data will be shown in rectangle format}
+\item{type}{Character value either "maki" or "bouuke" to control
+data processing algorithm for kumamoto data.}
 }
 \description{
 Load and format catch data

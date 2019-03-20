@@ -31,7 +31,7 @@ fmtcatch.fukuoka <- function(path, spcs, type) {
   startrow <- get_row(mstr, "ﾂｷ", offset = 1)
   endrow   <- get_row(mstr, "KEI") %>% max()
   rows     <- startrow:endrow
-  datrow   <- stringr::str_count(mstr[startrow:endrow], "KEI") == 0
+  datrow   <- stringr::str_count(mstr[rows], "KEI") == 0
   spcs_col <- get_spcscol(alldata, spcs_jp)
 
   out       <- NULL
