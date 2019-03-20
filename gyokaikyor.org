@@ -1347,47 +1347,6 @@ cat NAMESPACE
     expect_equal(make_summary(l, 2019, "Mar")$recent, 1983)
   })
 #+END_SRC
-*** テスト/ 作図
-#+BEGIN_SRC R :tangle tests/testthat/test_plot.R
-  context("Drawing figs")
-
-  Sys.unsetenv("R_TESTS")
-
-  test_that("plot_catch_monthvar() draw monthly variation of catch", {
-    path <- "ExcelFiles/test_kakukeniwashi.xlsx"
-    df   <- iwashi2list(path, sheet = "カタクチイワシ", year.end = 2019) %>%
-      summarize_seikai()
-    expect_silent(plot_catch_monthvar(df.seikai = df,
-                                      year = 2019, gkk.month = "Mar"))
-    expect_silent(plot_catch_monthvar(df.seikai = df,
-                                      year = 2019, gkk.month = "Mar",
-                  fname = "foo.png", family = "Times"))
-    file.remove("foo.png")
-  })
-
-  test_that("plot_catch_prefec() draw", {
-    path <- "ExcelFiles/test_kakukeniwashi.xlsx"
-    l    <- iwashi2list(path, sheet = "カタクチイワシ", year.end = 2019)
-    expect_silent(plot_catch_prefec(list = l, year = 2019, gkk.month = "Mar"))
-    expect_silent(plot_catch_prefec(list = l, year = 2019, gkk.month = "Mar",
-                                    fname = "bar.png", family = "Times"))
-    file.remove("bar.png")
-  })
-
-  test_that("plot_catch_forecast() draw catch forcast", {
-    path     <- "ExcelFiles/test_kakukeniwashi.xlsx"
-    l        <- iwashi2list(path, sheet = "カタクチイワシ", year.end = 2019)
-    df       <- l %>%
-      summarize_seikai() %>%
-      iwashi2df() %>%
-      dplyr::filter(dplyr::between(year, 1992, 1995)) %>%
-      dplyr::mutate(logcatch = log(catch))
-    ts       <- stats::ts(df, start = 1992, frequency = 12)
-    model    <- forecast::Arima(y = ts[, "logcatch"])
-    forecast <- forecast::forecast(model)
-    expect_silent(plot_forecast(forecast, l, 2019, 3))
-  })
-#+END_SRC
 ** 関数
 :PROPERTIES:
 :header-args: :results silent :exports code
