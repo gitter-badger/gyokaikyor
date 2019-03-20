@@ -2064,7 +2064,7 @@ cat NAMESPACE
 
     sheets <- readxl::excel_sheets(path) %>%
       stringr::str_extract("[0-9]+.+") %>%
-      na.omit()
+      stats::na.omit()
 
     dat1   <- purrr::map_df(meigara_ofst, get_catch_meigara,
                           spcs_col = spcs_col, sheet = sheets[1])
@@ -2110,7 +2110,7 @@ cat NAMESPACE
     startrow <- get_row(mstr, "ﾂｷ", offset = 1)
     endrow   <- get_row(mstr, "KEI") %>% max()
     rows     <- startrow:endrow
-    datrow   <- stringr::str_count(mstr[startrow:endrow], "KEI") == 0
+    datrow   <- stringr::str_count(mstr[rows], "KEI") == 0
     spcs_col <- get_spcscol(alldata, spcs_jp)
 
     out       <- NULL
@@ -2392,6 +2392,7 @@ cat NAMESPACE
 
   #' Make catch data reading multiple Excel worksheets
   #'
+  #' @inheritParams format_catch
   fmtcatch.nagasaki <- function(path, spcs, type = NULL) {
     spcs_jp <- switch(spcs,
                       "maiwashi" = "マイワシ",
@@ -2608,7 +2609,7 @@ cat NAMESPACE
     }
     out <- extract_count(classes, ymseq, df.count)
     if (export == TRUE) {
-      write.csv(out, fname)
+      utils::write.csv(out, fname)
     }
     out
   }
@@ -2621,7 +2622,7 @@ cat NAMESPACE
       tidyr::spread(key = month, value = catch)
     out %<>% dplyr::right_join(df2)
     if (export.csv == TRUE) {
-      write.csv(out, fname, row.names = FALSE)
+      utils::write.csv(out, fname, row.names = FALSE)
     }
     out
   }
@@ -2761,7 +2762,8 @@ cat NAMESPACE
     out$last       <- get_catch(year - 1, list_catchdata, gkk.month)
     out$last_upr   <- out$last * 1.2
     out$last_lwr   <- out$last * 0.8
-    out$recent     <- purrr::map_dfc(recentyr, get_catch, list_catchdata, gkk.month) %>%
+    out$recent     <- purrr::map_dfc(recentyr, get_catch,
+                                     list_catchdata, gkk.month) %>%
       rowMeans()
     out$recent_upr <- out$recent * 1.2
     out$recent_lwr <- out$recent * 0.8
