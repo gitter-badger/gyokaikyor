@@ -25,6 +25,7 @@
     - [[#テスト-長崎漁獲量][テスト/ 長崎漁獲量]]
     - [[#テスト-水温データ整形][テスト/ 水温データ整形]]
     - [[#テスト-レガシーファイル連携][テスト/ レガシーファイル連携]]
+    - [[#テスト-作図][テスト/ 作図]]
   - [[#関数][関数]]
     - [[#インポート][インポート]]
     - [[#ファイル名操作][ファイル名操作]]
@@ -286,9 +287,6 @@
   library(forecast)
   library(tseries)
   library(ggfortify)
-  source("_bk/fmtcatch/R/make_list.R")
-  source("_bk/fmtcatch/R/plot_figs.R")
-  source("_bk/fmtcatch/R/get_temp.R")
 
   stacdata       <- read_csv("/Users/ahayashi/Dropbox/Imported/Stock/Timeseries_TW_Engraulis-japonicus.csv") %>%
     rename(year = Year,
@@ -446,13 +444,13 @@
                                 year.end = 2019, year.start = 1992)
   df.seikai <- summarize_seikai(list_catchdata)
 
-  png("catch_monthvar.png", width = 1300, height = 1000)
-  par(mai = c(2, 2, 2, 2), family = "HiraKakuProN-W3")
+  png("catch_monthvar.png", width = 1300, height = 1000, res = 150)
+  par(mai = c(0.5, 2, 0.5, 1), family = "HiraKakuProN-W3")
   plot_catch_monthvar(df.seikai = df.seikai, year = 2019, gkk.month = "Mar")
   dev.off()
 
   png("catch_prefec.png", width = 1500, height = 1000)
-  par(mai = c(2, 2, 2, 2), family = "HiraKakuProN-W3")
+  par(mai = c(0.5, 2, 0.5, 1), family = "HiraKakuProN-W3")
   plot_catch_prefec(list_catchdata, 2019, "Mar")
   dev.off()
 
@@ -800,6 +798,7 @@
   usethis::use_package("Nippon")
   usethis::use_package("stringi")
   usethis::use_package("dplyr")
+  usethis::use_package("forecast")
   # usethis::use_package("ggplot2", "Imports")
   # usethis::use_package("tibble", "Imports")
   # usethis::use_testthat()
@@ -1262,7 +1261,7 @@ cat NAMESPACE
   })
 #+END_SRC
 *** テスト/ レガシーファイル連携
-#+BEGIN_SRC  R :tangle tests/testthat/test_conv2legacy.R
+#+BEGIN_SRC R :tangle tests/testthat/test_conv2legacy.R
   context("Be friendly with legacy files")
 
   test_that("conv2hoshifile() converts seimitsu data correctly", {
