@@ -862,7 +862,7 @@ cat NAMESPACE
   devtools::test()
   lintr::lint_package()
   devtools::check(args = "--as-cran")
-  covr::package_coverage()
+  covr::package_coverage(line_exclusions = "R/plot.R")
 #+END_SRC
 
 ** テストコード
