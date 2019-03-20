@@ -188,7 +188,7 @@ rename_class <- function(left, bin) {
 
 #' Format bldata exported from FRESCO database
 #'
-#' @inheritParams fmtbl
+#' @param path File path to load
 #' @param type Format of data to load either 'taichou' or 'seimitsu'.
 #' @param date.start The first day of the processed data.
 #' @param date.end The last day of the the processed data

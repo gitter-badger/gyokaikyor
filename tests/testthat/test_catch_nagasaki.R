@@ -61,34 +61,3 @@ test_that("ngs_make_yrvec() makes year vector correctly", {
   expect_equal(ngs_make_yrvec("2019.01-2019.03", c(1, 2, 3)),
                rep(2019, 3))
 })
-
-
-# test_that("ngs_get_port() parses port name correctly", {
-#   port1 <- "地名 ：（Ｈ.29）長崎魚市      漁業種 ：中小型まき網"
-#   port2 <- "地名 ：（Ｈ.29）奈留      漁業種 ：中小型まき網"
-#   port3 <- "地名 ：（Ｈ.29）小佐々      漁業種 ：中小型まき網"
-#   port4 <- "地名 ：（Ｈ.29）九十九      漁業種 ：中小型まき網"
-#   port5 <- "地名 ：（Ｈ.29）橘      漁業種 ：中小型まき網"
-#   port6 <- "地名 ：（Ｈ.29）foo      漁業種 ：中小型まき網"
-#   expect_equal(ngs_get_port(port1), "nagasaki")
-#   expect_equal(ngs_get_port(port2), "naru")
-#   expect_equal(ngs_get_port(port3), "kujuku")
-#   expect_equal(ngs_get_port(port4), "kujuku")
-#   expect_equal(ngs_get_port(port5), "tachibana")
-#   expect_error(ngs_get_port(port6), "Unknown port")
-# })
-
-# test_that("ngs_fmt_sheet() load catch data and tidy it up correctly", {
-#   expect_is(
-#     ngs_fmt_sheet(sheet = "2017.02-2017.08",
-#     path = "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls",
-#     regex = "カ タ ク チ"),
-#     "data.frame")
-# })
-
-# test_that("fmtcatch.nagasaki() load catch data and tidy it up correctly", {
-#   expect_is(fmtcatch.nagasaki(
-#               path = "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls",
-#               spcs = "katakuchi"),
-#               "data.frame")
-# })

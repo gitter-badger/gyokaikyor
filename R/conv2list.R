@@ -39,20 +39,19 @@ get_prefec_rows <- function(str) {
 }
 
 make_list <- function(row.prefec, df.iwashi, year.end, year.start = 1992){
-  years      <- year.start:year.end
-  row_prefec <- get_prefec_rows(df.iwashi[, 1])
-  prefec_name      <- stringr::str_replace(df.iwashi[row.prefec, 1], "県.+", "")
-  row_start        <- row.prefec + 2
-  row_end          <- row_start + length(years) - 1
-  data_prefec      <- df.iwashi[row_start:row_end, ] %>%
+  years       <- year.start:year.end
+  prefec_name <- stringr::str_replace(df.iwashi[row.prefec, 1], "県.+", "")
+  row_start   <- row.prefec + 2
+  row_end     <- row_start + length(years) - 1
+  data_prefec <- df.iwashi[row_start:row_end, ] %>%
     parse_num_df(2:13, ., "double") %>%
     magrittr::set_colnames(month.abb)
-  year             <- df.iwashi[row_start:row_end, 1] %>%
+  year        <- df.iwashi[row_start:row_end, 1] %>%
     stringr::str_replace("年", "") %>%
     readr::parse_integer()
-  out              <- NULL
-  out$df           <- cbind(year, data_prefec)
-  names(out)       <- prefec_name
+  out         <- NULL
+  out$df      <- cbind(year, data_prefec)
+  names(out)  <- prefec_name
   out
 }
 

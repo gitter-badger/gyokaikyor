@@ -25,6 +25,7 @@
     - [[#テスト-長崎漁獲量][テスト/ 長崎漁獲量]]
     - [[#テスト-水温データ整形][テスト/ 水温データ整形]]
     - [[#テスト-レガシーファイル連携][テスト/ レガシーファイル連携]]
+    - [[#テスト-作図][テスト/ 作図]]
   - [[#関数][関数]]
     - [[#インポート][インポート]]
     - [[#ファイル名操作][ファイル名操作]]
@@ -286,9 +287,6 @@
   library(forecast)
   library(tseries)
   library(ggfortify)
-  source("_bk/fmtcatch/R/make_list.R")
-  source("_bk/fmtcatch/R/plot_figs.R")
-  source("_bk/fmtcatch/R/get_temp.R")
 
   stacdata       <- read_csv("/Users/ahayashi/Dropbox/Imported/Stock/Timeseries_TW_Engraulis-japonicus.csv") %>%
     rename(year = Year,
@@ -446,13 +444,13 @@
                                 year.end = 2019, year.start = 1992)
   df.seikai <- summarize_seikai(list_catchdata)
 
-  png("catch_monthvar.png", width = 1300, height = 1000)
-  par(mai = c(2, 2, 2, 2), family = "HiraKakuProN-W3")
+  png("catch_monthvar.png", width = 1300, height = 1000, res = 150)
+  par(mai = c(0.5, 2, 0.5, 1), family = "HiraKakuProN-W3")
   plot_catch_monthvar(df.seikai = df.seikai, year = 2019, gkk.month = "Mar")
   dev.off()
 
   png("catch_prefec.png", width = 1500, height = 1000)
-  par(mai = c(2, 2, 2, 2), family = "HiraKakuProN-W3")
+  par(mai = c(0.5, 2, 0.5, 1), family = "HiraKakuProN-W3")
   plot_catch_prefec(list_catchdata, 2019, "Mar")
   dev.off()
 
@@ -513,7 +511,7 @@
   LABELBIN_Y    <- 20
   pdf(paste("../output/gyokaikyo_", YEAR, "年3月_体長組成.pdf", sep=""), family="Helvetica", width=9, height=6)
   par(mfcol=c(12, 3), mai=c(0.1, 0.4, 0.05, 0.1), ps=20, oma=c(0, 0, 0.5, 0))
-  for(y in (YEAR - 2):YEAR){ # To plot blhist of recent three years
+  for (y in (YEAR - 2):YEAR){ # To plot blhist of recent three years
     ychar     <- substr(y, 3, 4)
     if (y != YEAR){
       yfilename <- paste("★カタクチ", ychar, ".xls", sep="")
@@ -523,7 +521,7 @@
       # No need to read file
     }
     out       <- NULL
-    for(m in MONTHS){
+    for (m in MONTHS){
       if (y != YEAR){
         startcol    <- 3
       }else{
@@ -593,7 +591,7 @@
 
   pdf(paste("../output/gyokaikyo_", YEAR, "年3月_体長組成_4月スタート.pdf", sep=""), family="Helvetica", width=9, height=6)
   par(mfcol=c(12, 3), mai=c(0.1, 0.4, 0.05, 0.1), ps=20, oma=c(0, 0, 0.5, 0))
-  for(y in (YEAR - 2):YEAR - 1){
+  for (y in (YEAR - 2):YEAR - 1){
     ychar     <- substr(y, 3, 4)
     yfilename <- paste("★カタクチ", ychar, ".xls", sep = "")
     wb        <- loadWorkbook(yfilename)
@@ -746,7 +744,7 @@
     abline(h = blimit, lwd = 2,  lty = 2)
     lines(data$Year, y, lwd = 4)
     points(data$Year, y, pch = 16, cex = 3)
-    points(lastx, lasty, pch = 16, cex = 4, col = hsv(200/360, 0.8, 0.8))
+    points(lastx, lasty, pch = 16, cex = 4, col = hsv(200 / 360, 0.8, 0.8))
     points(thisx, thisy, pch = 16, cex = 4.5, col = hsv(0, 0.8, 0.8))
     points(thisx, thisy, pch = 16, cex = 2.5, col = "white")
     text(thisx, thisy, paste0(thisx, "年"),
@@ -800,6 +798,7 @@
   usethis::use_package("Nippon")
   usethis::use_package("stringi")
   usethis::use_package("dplyr")
+  usethis::use_package("forecast")
   # usethis::use_package("ggplot2", "Imports")
   # usethis::use_package("tibble", "Imports")
   # usethis::use_testthat()
@@ -1245,37 +1244,6 @@ cat NAMESPACE
     expect_equal(ngs_make_yrvec("2019.01-2019.03", c(1, 2, 3)),
                  rep(2019, 3))
   })
-
-
-  # test_that("ngs_get_port() parses port name correctly", {
-  #   port1 <- "地名 ：（Ｈ.29）長崎魚市      漁業種 ：中小型まき網"
-  #   port2 <- "地名 ：（Ｈ.29）奈留      漁業種 ：中小型まき網"
-  #   port3 <- "地名 ：（Ｈ.29）小佐々      漁業種 ：中小型まき網"
-  #   port4 <- "地名 ：（Ｈ.29）九十九      漁業種 ：中小型まき網"
-  #   port5 <- "地名 ：（Ｈ.29）橘      漁業種 ：中小型まき網"
-  #   port6 <- "地名 ：（Ｈ.29）foo      漁業種 ：中小型まき網"
-  #   expect_equal(ngs_get_port(port1), "nagasaki")
-  #   expect_equal(ngs_get_port(port2), "naru")
-  #   expect_equal(ngs_get_port(port3), "kujuku")
-  #   expect_equal(ngs_get_port(port4), "kujuku")
-  #   expect_equal(ngs_get_port(port5), "tachibana")
-  #   expect_error(ngs_get_port(port6), "Unknown port")
-  # })
-
-  # test_that("ngs_fmt_sheet() load catch data and tidy it up correctly", {
-  #   expect_is(
-  #     ngs_fmt_sheet(sheet = "2017.02-2017.08",
-  #     path = "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls",
-  #     regex = "カ タ ク チ"),
-  #     "data.frame")
-  # })
-
-  # test_that("fmtcatch.nagasaki() load catch data and tidy it up correctly", {
-  #   expect_is(fmtcatch.nagasaki(
-  #               path = "ExcelFiles/test_catch_ngs_nagasaki_iwashi.xls",
-  #               spcs = "katakuchi"),
-  #               "data.frame")
-  # })
 #+END_SRC
 *** テスト/ 水温データ整形
 #+BEGIN_SRC  R :tangle tests/testthat/test_format_temp.R
@@ -1293,7 +1261,7 @@ cat NAMESPACE
   })
 #+END_SRC
 *** テスト/ レガシーファイル連携
-#+BEGIN_SRC  R :tangle tests/testthat/test_conv2legacy.R
+#+BEGIN_SRC R :tangle tests/testthat/test_conv2legacy.R
   context("Be friendly with legacy files")
 
   test_that("conv2hoshifile() converts seimitsu data correctly", {
@@ -1361,6 +1329,64 @@ cat NAMESPACE
     expect_equal(ymrange$end, 196903)
     expect_error(make_ymrange(1969, "Jan"), "Unknown month")
   })
+
+  test_that("get_catch() pulls total catch data during fishing period", {
+    fname <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    l     <- iwashi2list(fname, year.end = 2019, sheet = "カタクチイワシ")
+    summarize_seikai(l)
+    expect_equal(get_catch(2017, l, "Mar"), c(seq(2022, 2088, by = 6)))
+    expect_equal(get_catch(2018, l, "Mar"), c(seq(2094, 2160, by = 6)))
+  })
+
+  test_that("make_summary() returns catch summary during fishing period", {
+    fname <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    l     <- iwashi2list(fname, year.end = 2019, sheet = "カタクチイワシ")
+    expect_equal(make_summary(l, 2018, "Mar")$last, 2055)
+    expect_equal(make_summary(l, 2018, "Mar")$recent, 1911)
+    expect_equal(make_summary(l, 2019, "Mar")$last, 2127)
+    expect_equal(make_summary(l, 2019, "Mar")$recent, 1983)
+  })
+#+END_SRC
+*** テスト/ 作図
+#+BEGIN_SRC R :tangle tests/testthat/test_plot.R
+  context("Drawing figs")
+
+  Sys.unsetenv("R_TESTS")
+
+  test_that("plot_catch_monthvar() draw monthly variation of catch", {
+    path <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    df   <- iwashi2list(path, sheet = "カタクチイワシ", year.end = 2019) %>%
+      summarize_seikai()
+    expect_silent(plot_catch_monthvar(df.seikai = df,
+                                      year = 2019, gkk.month = "Mar"))
+    expect_silent(plot_catch_monthvar(df.seikai = df,
+                                      year = 2019, gkk.month = "Mar",
+                  fname = "foo.png", family = "Times"))
+    file.remove("foo.png")
+  })
+
+  test_that("plot_catch_prefec() draw", {
+    path <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    l    <- iwashi2list(path, sheet = "カタクチイワシ", year.end = 2019)
+    expect_silent(plot_catch_prefec(list = l, year = 2019, gkk.month = "Mar"))
+    expect_silent(plot_catch_prefec(list = l, year = 2019, gkk.month = "Mar",
+                                    fname = "bar.png", family = "Times"))
+    file.remove("bar.png")
+  })
+
+  test_that("plot_catch_forecast() draw catch forcast", {
+    path     <- "ExcelFiles/test_kakukeniwashi.xlsx"
+    l        <- iwashi2list(path, sheet = "カタクチイワシ", year.end = 2019)
+    df       <- l %>%
+      summarize_seikai() %>%
+      iwashi2df() %>%
+      dplyr::filter(dplyr::between(year, 1992, 1995)) %>%
+      dplyr::mutate(logcatch = log(catch))
+    ts       <- stats::ts(df, start = 1992, frequency = 12)
+    model    <- forecast::Arima(y = ts[, "logcatch"])
+    forecast <- forecast::forecast(model)
+    expect_silent(plot_forecast(forecast, l, 2019, 3))
+  })
 #+END_SRC
 ** 関数
 :PROPERTIES:
@@ -1370,8 +1396,53 @@ cat NAMESPACE
 #+BEGIN_SRC  R :tangle R/util.R
   ## quiets concerns of R CMD check re: the .'s that appear in pipelines
   if (getRversion() >= "2.15.1") {
-    utils::globalVariables(c(".", "maki4ports", "bou_akune", "bou_uchinoura"))
+    utils::globalVariables(c(".",
+                             "maki4ports", "bou_akune", "bou_uchinoura",
+                             "year", "month", "ym", "day",
+                             "prefecture", "spcs_code",
+                             "scbl", "blclass", "count", "bw",
+                             "catch", "list_catchdata",
+                             "漁獲年月日", "魚種コード", "県コード",
+                             "被鱗体長", "体重",
+                             "開始の階級値", "度数", "階級幅",
+                             "対馬暖流Ｄ", "tw_degc",
+                             "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"))
   }
+
+  #' @export
+  #' @importFrom graphics polygon
+
+  #' @export
+  #' @importFrom graphics lines
+
+  #' @export
+  #' @importFrom graphics points
+
+  #' @export
+  #' @importFrom graphics text
+
+  #' @export
+  #' @importFrom graphics arrows
+
+  #' @export
+  #' @importFrom graphics plot
+
+  #' @export
+  #' @importFrom graphics rect
+
+  #' @export
+  #' @importFrom graphics mtext
+
+  #' @export
+  #' @importFrom graphics axis
+
+  #' @export
+  #' @importFrom grDevices hsv
+
+  #' @export
+  #' @importFrom grDevices dev.off
+  NULL
 #+END_SRC
 *** ファイル名操作
 #+BEGIN_SRC R :tangle R/handle_fname.R
@@ -1849,7 +1920,7 @@ cat NAMESPACE
 
   #' Format bldata exported from FRESCO database
   #'
-  #' @inheritParams fmtbl
+  #' @param path File path to load
   #' @param type Format of data to load either 'taichou' or 'seimitsu'.
   #' @param date.start The first day of the processed data.
   #' @param date.end The last day of the the processed data
@@ -1926,6 +1997,15 @@ cat NAMESPACE
   #'
   #' @inheritParams readxl::read_excel
   #' @param spcs Spcs name in romaji, one of
+  #' \itemize{
+  #'   \item "maiwashi"
+  #'   \item "maaji"
+  #'   \item "sabarui"
+  #'   \item "masaba"
+  #'   \item "gomasaba"
+  #'   \item "katakuchi"
+  #'   \item "urume"
+  #' }
   #' @param prefec Prefecture name as string, one of
   #' \itemize{
   #'   \item "yamaguchi"
@@ -1935,19 +2015,8 @@ cat NAMESPACE
   #'   \item "kumamoto"
   #'   \item "kagoshima"
   #' }
-  #' @param nest If \code{TRUE}, data will be shown in rectangle format
   #' @param type Character value either "maki" or "bouuke" to control
   #'   data processing algorithm for kumamoto data.
-  #'   whith nested catch data for quick overview.
-  #' \itemize{
-  #'   \item maiwashi
-  #'   \item maaji
-  #'   \item sabarui
-  #'   \item masaba
-  #'   \item gomasaba
-  #'   \item katakuchi
-  #'   \item urume
-  #' }
   #' @export
   format_catch <- function(path, prefec, spcs, type = NULL) {
     class(path) <- prefec
@@ -2035,7 +2104,7 @@ cat NAMESPACE
 
     sheets <- readxl::excel_sheets(path) %>%
       stringr::str_extract("[0-9]+.+") %>%
-      na.omit()
+      stats::na.omit()
 
     dat1   <- purrr::map_df(meigara_ofst, get_catch_meigara,
                           spcs_col = spcs_col, sheet = sheets[1])
@@ -2081,7 +2150,7 @@ cat NAMESPACE
     startrow <- get_row(mstr, "ﾂｷ", offset = 1)
     endrow   <- get_row(mstr, "KEI") %>% max()
     rows     <- startrow:endrow
-    datrow   <- stringr::str_count(mstr[startrow:endrow], "KEI") == 0
+    datrow   <- stringr::str_count(mstr[rows], "KEI") == 0
     spcs_col <- get_spcscol(alldata, spcs_jp)
 
     out       <- NULL
@@ -2363,7 +2432,7 @@ cat NAMESPACE
 
   #' Make catch data reading multiple Excel worksheets
   #'
-  #' @inheritParams fmtcatch
+  #' @inheritParams format_catch
   fmtcatch.nagasaki <- function(path, spcs, type = NULL) {
     spcs_jp <- switch(spcs,
                       "maiwashi" = "マイワシ",
@@ -2580,7 +2649,7 @@ cat NAMESPACE
     }
     out <- extract_count(classes, ymseq, df.count)
     if (export == TRUE) {
-      write.csv(out, fname)
+      utils::write.csv(out, fname)
     }
     out
   }
@@ -2593,7 +2662,7 @@ cat NAMESPACE
       tidyr::spread(key = month, value = catch)
     out %<>% dplyr::right_join(df2)
     if (export.csv == TRUE) {
-      write.csv(out, fname, row.names = FALSE)
+      utils::write.csv(out, fname, row.names = FALSE)
     }
     out
   }
@@ -2643,20 +2712,19 @@ cat NAMESPACE
   }
 
   make_list <- function(row.prefec, df.iwashi, year.end, year.start = 1992){
-    years      <- year.start:year.end
-    row_prefec <- get_prefec_rows(df.iwashi[, 1])
-    prefec_name      <- stringr::str_replace(df.iwashi[row.prefec, 1], "県.+", "")
-    row_start        <- row.prefec + 2
-    row_end          <- row_start + length(years) - 1
-    data_prefec      <- df.iwashi[row_start:row_end, ] %>%
+    years       <- year.start:year.end
+    prefec_name <- stringr::str_replace(df.iwashi[row.prefec, 1], "県.+", "")
+    row_start   <- row.prefec + 2
+    row_end     <- row_start + length(years) - 1
+    data_prefec <- df.iwashi[row_start:row_end, ] %>%
       parse_num_df(2:13, ., "double") %>%
       magrittr::set_colnames(month.abb)
-    year             <- df.iwashi[row_start:row_end, 1] %>%
+    year        <- df.iwashi[row_start:row_end, 1] %>%
       stringr::str_replace("年", "") %>%
       readr::parse_integer()
-    out              <- NULL
-    out$df           <- cbind(year, data_prefec)
-    names(out)       <- prefec_name
+    out         <- NULL
+    out$df      <- cbind(year, data_prefec)
+    names(out)  <- prefec_name
     out
   }
 
@@ -2715,25 +2783,15 @@ cat NAMESPACE
   }
 #+END_SRC
 *** 漁獲量データ操作
-#+BEGIN_SRC R
-  get_ymrange <- function(year, list_catchdata, gkk.month) {
-    df  <- summarize_seikai(list_catchdata) %>%
-      iwashi2df()
-    out <- NULL
-    switch(gkk.month,
-           "Mar" = out <- make_ym(year, 4):make_ym(year, 9),
-           "Oct" = out <- make_ym(year, 11):make_ym(year + 1, 3))
-    out
-  }
-
+#+BEGIN_SRC R :tangle R/handle_catchdata.R
   get_catch <- function(year, list_catchdata, gkk.month) {
-    range <- get_ymrange(year, list_catchdata, gkk.month)
+    range <- make_ymrange(year, gkk.month)
     df    <- list_catchdata %>%
       summarize_seikai() %>%
       iwashi2df()
     out <- NULL
-    out <- df %>% 
-      dplyr::filter(dplyr::between(ym, range[1], rev(range)[1])) %>%
+    out <- df %>%
+      dplyr::filter(dplyr::between(ym, range$start, range$end)) %>%
       dplyr::pull(catch)
     out
   }
@@ -2744,13 +2802,14 @@ cat NAMESPACE
     out$last       <- get_catch(year - 1, list_catchdata, gkk.month)
     out$last_upr   <- out$last * 1.2
     out$last_lwr   <- out$last * 0.8
-    out$recent     <- purrr::map_dfc(recentyr, get_catch, list_catchdata, gkk.month) %>%
+    out$recent     <- purrr::map_dfc(recentyr, get_catch,
+                                     list_catchdata, gkk.month) %>%
       rowMeans()
-    out$recent_upr <- recent * 1.2
-    out$recent_lwr <- recent * 0.8
+    out$recent_upr <- out$recent * 1.2
+    out$recent_lwr <- out$recent * 0.8
     out            <- sapply(out, mean)
     suppressWarnings(
-      out$range_last <- get_ymrange(year - 1, list_catchdata, gkk.month))
+      out$range_last <- make_ymrange(year - 1, gkk.month))
     out
   }
 
@@ -2768,7 +2827,7 @@ cat NAMESPACE
                     year    = 0,
                     month   = 0)
 
-    for(i in 1:nrows){
+    for (i in 1:nrows){
       xldata[i, "year"]  <-
         as.numeric(Nippon::zen2han(gsub("年", "", xldata[i, 1])))
       xldata[i, "month"] <-
@@ -2783,9 +2842,10 @@ cat NAMESPACE
   }
 #+END_SRC
 *** 作図
-#+BEGIN_SRC R tangle R/plot.R
-  plot_catch_monthvar <- function(df.seikai, year, gkk.month) {
-    get_catch  <- function(year, gkk.month, df.seikai) {
+#+BEGIN_SRC R :tangle R/plot.R
+  plot_catch_monthvar <- function(df.seikai, year, gkk.month,
+                                  fname = NULL, family = NULL) {
+    get_mvar  <- function(year, gkk.month, df.seikai) {
       out      <- NULL
       ym.start <- make_ymrange(year, gkk.month)$start
       ym.end   <- make_ymrange(year, gkk.month)$end
@@ -2805,73 +2865,83 @@ cat NAMESPACE
              "recent" = {
                polygon(c(1:12, 12:1), c(catch * 0.8, rev(catch * 1.2)),
                        col = hsv(0, 0, 0.8), border = FALSE)
-               lines(1:12, catch, lwd = 4)
-               points(1:12, catch, pch = 16, cex = 2)
-               text(12, catch[12], "平年±20%", pos = 4, offset = ofst, cex = 4.5,
+               lines(1:12, catch)
+               points(1:12, catch, pch = 16)
+               text(12, catch[12], "平年±20%", pos = 4, offset = ofst,
                     xpd = TRUE)
              },
              "last" = {
-               col <- hsv(200/360, 0.8, 0.8)
-               lines(1:12, catch, col = col, lwd = 5)
-               points(1:12, catch, col = col , pch = 16, cex = 3)
+               col <- hsv(200 / 360, 0.8, 0.8)
+               lines(1:12, catch, col = col)
+               points(1:12, catch, col = col, pch = 16)
                arrows(1:12, catch * 0.8, 1:12, catch * 1.2,
-                      col = col, length = 0, lwd = 3)
+                      col = col, length = 0)
                text(12, catch[12], "前年±20%",
-                    col = col, pos = 4, offset = ofst, cex = 4.5, xpd = TRUE)
+                    col = col, pos = 4, offset = ofst, xpd = TRUE)
              },
              "this" = {
                catch <- catch[1:11]
-               col <- hsv(0/360, 0.8, 0.8)
-               lines(1:11, catch, col = col, lwd = 5)
-               points(1:11, catch, col = col, pch = 16, cex = 4)
-               points(1:11, catch, col = "white", pch = 16, cex = 2.5)
-               text(11, catch[11], paste0(year - 1, "年度"),
-                    col = col, pos = 4, offset = ofst, cex = 5, xpd = TRUE)
+               col <- hsv(0 / 360, 0.8, 0.8)
+               lines(1:11, catch, col = col)
+               points(1:11, catch, col = col, pch = 16, cex = 1.3)
+               points(1:11, catch, col = "white", pch = 16, cex = 0.9)
+               text(11, catch[11], paste0(year - 1, "年度"), cex = 1.5,
+                    col = col, pos = 4, offset = ofst, xpd = TRUE)
              })
     }
 
     init_plot <- function(l, gkk.month) {
       max <- l$max
       min <- l$min
-      plot(1, 1, xlim = c(1, 16), ylim = c(min, max * 1.2), type = "n",
+      plot(1, 1, xlim = c(1, 13.5), ylim = c(min, max * 1.2), type = "n",
            axes = FALSE, ann = FALSE, yaxs = "i")
       switch(gkk.month,
              "Mar" = {
-               rect(7.8, -10, 12.2, max * 1.1, col = hsv(20/360, 0.2, 1),
+               rect(7.8, -10, 12.2, max * 1.1, col = hsv(20 / 360, 0.2, 1),
                            border = FALSE)
-               text(10, max, "漁期", cex = 5, col = hsv(20/360, 0.5, 0.85))
+               text(10, max, "漁期", col = hsv(20 / 360, 0.5, 0.85), cex = 1.5)
                axis(1, at = 1:12, labels = FALSE)
-               axis(1, at = 1:12, labels = month.abb[c(4:12, 1:3)],
-                    cex.axis = 3, col = "transparent", pos = -0.1)
+               axis(1, at = 1:12, pos = 0.06, las = 2,
+                    labels = month.abb[c(4:12, 1:3)], col = "transparent")
              })
     }
 
     draw_axes <- function(l) {
-      axis(2, at = l$min:l$max, cex.axis = 3)
-      mtext("漁獲量 (千トン)", side = 2, line = 6, cex = 5)
+      axis(2, at = l$min:l$max, labels = FALSE)
+      axis(2, at = l$min:l$max, pos = 0.6, col = "transparent")
+      mtext("漁獲量 (千トン)", side = 2, line = 2, cex = 1.2)
     }
 
     lastyr   <- year - 1
     recentyr <- (year - 4):year
     l        <- list()
-    l$this   <- get_catch(year, "Mar", df.seikai) / 1000
-    l$last   <- get_catch(lastyr, "Mar", df.seikai) / 1000
-    l$recent <- purrr::map_dfc(recentyr, get_catch, "Mar", df.seikai) %>%
+    l$this   <- get_mvar(year, "Mar", df.seikai) / 1000
+    l$last   <- get_mvar(lastyr, "Mar", df.seikai) / 1000
+    l$recent <- purrr::map_dfc(recentyr, get_mvar, "Mar", df.seikai) %>%
       rowMeans() / 1000
     max      <- max(unlist(l)) * 1.2
     min      <- min(unlist(l)) * 0.8
     l$max    <- max
     l$min    <- min
 
+    if (!is.null(fname)) {
+      grDevices::png(filename = fname, width = 1200, height = 800, res = 190)
+      graphics::par(mai = c(0.5, 0.7, 0.1, 0.1), family = family)
+    }
+
     init_plot(l, gkk.month)
     draw_catch(l, var = "recent", year)
     draw_catch(l, var = "last", year)
     draw_catch(l, var = "this", year)
     draw_axes(l)
+
+    if (!is.null(fname)) {
+      dev.off()
+    }
   }
 
-
-  plot_catch_prefec <- function(list, year, gkk.month) {
+  plot_catch_prefec <- function(list, year, gkk.month,
+                                fname = NULL, family = NULL) {
     get_ysum <- function(yr, prefec, gkk.month, list) {
       switch(gkk.month,
              "Mar" = {
@@ -2902,48 +2972,48 @@ cat NAMESPACE
       max <- max(unlist(sums), na.rm = TRUE) / 1000
       min <- min(unlist(sums), na.rm = TRUE) / 1000
       prefecs <- names(sums)
-      plot(1, 1, xlim = c(0.5, 8), ylim = c(min * 0.8, max * 1.2),
+      plot(1, 1, xlim = c(0.5, 7.1), ylim = c(0, max * 1.2),
            type = "n", yaxs = "i",
            axes = FALSE, ann = FALSE)
       axis(1, at = c(1:6, 7), labels = FALSE)
-      axis(1, at = c(1:6, 7), labels = prefecs, cex.axis = 3.5, pos = -0.1,
-           col = "transparent")
-      axis(2, at = seq(0, ceiling(max * 1.2), 1), cex.axis = 3.5)
-      mtext("漁獲量（千トン）", 2, cex = 5, line = 5)
-      rect(0.7, 1.6, 3.2, max * 1.2, col = hsv(0, 0, 1), xpd = TRUE)
+      axis(1, at = c(1:6, 7), labels = prefecs, pos = 0.2, col = "transparent")
+      axis(2, at = seq(0, ceiling(max * 1.2), 1), labels = FALSE)
+      axis(2, at = seq(0, ceiling(max * 1.2), 1), pos = 0.3, col = "transparent")
+      mtext("漁獲量（千トン）", 2, line = 2, cex = 1.2)
+      rect(0.7, 1.6, 3.3, max * 1.2, col = hsv(0, 0, 1), xpd = TRUE)
       x1 <- 1.52
       x2 <- 2
       y1 <- 2.3
       y2 <- 2.6
       draw_point(1, 2.8, "recent", xright = 1.5)
-      lines(c(x1, x2), c(y1, y2), lwd = 3)
+      lines(c(x1, x2), c(y1, y2))
       draw_point(x1, y1, "last")
       draw_point(x2, y2, "this")
-      text(1.5, max, "平年±20%", col = hsv(0, 0, 0.2), cex = 3,
+      text(1.5, max, "平年±20%", col = hsv(0, 0, 0.2),
            pos = 4, offset = 1)
-      text(x1, y1, "前年±20%", col = hsv(200/360, 0.8, 0.8), cex = 3,
+      text(x1, y1, "前年±20%", col = hsv(200 / 360, 0.8, 0.8),
            pos = 4, offset = 2)
-      text(x2, y2, "今期", col = hsv(0, 0.8, 0.8), cex = 3,
+      text(x2, y2, "今期", col = hsv(0, 0.8, 0.8),
            pos = 4, offset = 2)
     }
+
     draw_point <- function(x, y, type, xright = NULL) {
       switch(type,
              "recent" = {
                rect(x, y * 0.8, xright, y * 1.2, col = hsv(0, 0, 0.8))
-               lines(c(x, xright), c(y, y), lwd = 4)
+               lines(c(x, xright), c(y, y), lwd = 2)
 
              },
              "last" = {
                arrows(x, y * 0.8, x, y * 1.2, length = 0, xpd = TRUE,
-                      col = hsv(200/360, 0.8, 0.8), lwd = 3)
-               points(x, y, pch = 16, col = hsv(200/360, 0.8, 0.8),
-                             cex = 3.5, xpd = TRUE)
+                      col = hsv(200 / 360, 0.8, 0.8), lwd = 1.5)
+               points(x, y, pch = 16, col = hsv(200 / 360, 0.8, 0.8),
+                      cex = 1.5, xpd = TRUE)
              },
              "this" = {
                points(x, y, pch = 16, col = hsv(0, 0.8, 0.8),
-                      cex = 4, xpd = TRUE)
-               points(x, y, pch = 16, col = "white",
-                      cex = 2.5, xpd = TRUE)
+                      cex = 2, xpd = TRUE)
+               points(x, y, pch = 16, col = "white", cex = 1.5, xpd = TRUE)
              })
     }
 
@@ -2962,14 +3032,14 @@ cat NAMESPACE
 
       draw_point(x = lrecent, y = recent,
                  xright = rrecent, type = "recent")
-      lines(c(x_last, x_this), c(last, this), lwd = 4)
+      lines(c(x_last, x_this), c(last, this), lwd = 2)
       draw_point(x_last, last, "last")
       draw_point(x_this, this, "this")
     }
 
     make_sums <- function(sums, which) {
       out <- NULL
-      for(i in seq_along(sums)) {
+      for (i in seq_along(sums)) {
         out <- append(out, sums[[i]][which])
       }
       out %<>% unlist %>%
@@ -2988,6 +3058,11 @@ cat NAMESPACE
     sums$計$recent <- sum_recent
     sums
 
+    if (!is.null(fname)) {
+      grDevices::png(filename = fname, width = 1200, height = 800, res = 190)
+      graphics::par(mai = c(0.5, 0.7, 0.1, 0.1), family = family)
+    }
+
     plot_init(sums)
     plot_prefec("山口", sums)
     plot_prefec("福岡", sums)
@@ -2997,87 +3072,88 @@ cat NAMESPACE
     plot_prefec("鹿児島", sums)
     plot_prefec("鹿児島", sums)
     plot_prefec("計", sums)
+
+    if (!is.null(fname)) {
+      dev.off()
+    }
   }
 
-
-
-  plot_forecast <- function(model, seikaidata, yr, month.until) {
+  plot_forecast <- function(forecast, list.catchdata, yr, month.until) {
     plot_rects <- function(summary, yr) {
       years <- (yr - 5):(yr - 1)
-      for(y in years) {
-        rect(y + (4 - 1)/12, summary$recent_lwr/1000,
-             y + (9 - 1)/12, summary$recent_upr/1000,
+      for (y in years) {
+        rect(y + (4 - 1) / 12, summary$recent_lwr / 1000,
+             y + (9 - 1) / 12, summary$recent_upr / 1000,
              col = hsv(0, 0, 0.8, 0.8), border = FALSE)
       }
-      rect(yr + (4-1)/12 + 0.05, summary$last_lwr/1000,
-           yr + (9-1)/12 + 0.05, summary$last_upr/1000,
-           col = hsv(200/360, 0.8, 0.8, 0.4), border = FALSE)
+      rect(yr + (4 - 1) / 12 + 0.05, summary$last_lwr / 1000,
+           yr + (9 - 1) / 12 + 0.05, summary$last_upr / 1000,
+           col = hsv(200 / 360, 0.8, 0.8, 0.4), border = FALSE)
     }
 
-    plot_lines <- function(model, summary, yr) {
+    plot_lines <- function(forecast, summary, yr) {
       years <- (yr - 5):(yr - 1)
-      pred  <- mean(exp(model$mean[4:9]))/1000
-      for(y in years) {
-        lines(c(y + (4-1)/12, y + (9-1)/12),
-              c(summary$recent/1000, summary$recent/1000),
+      pred  <- mean(exp(forecast$mean[4:9])) / 1000
+      for (y in years) {
+        lines(c(y + (4 - 1) / 12, y + (9 - 1) / 12),
+              c(summary$recent / 1000, summary$recent / 1000),
               col = hsv(0, 0, 0.2), lwd = 4)
       }
-      lines(c(yr + (4 - 1)/12 + 0.05, yr + (9 - 1)/12 + 0.05),
-            c(summary$last/1000, summary$last/1000),
-            col = hsv(200/360, 1, 0.8), lwd = 4)
-      lines(c(yr + 1 + (4 - 1)/12 + 0.05, yr + 1 + (9 - 1)/12 + 0.05),
+      lines(c(yr + (4 - 1) / 12 + 0.05, yr + (9 - 1) / 12 + 0.05),
+            c(summary$last / 1000, summary$last / 1000),
+            col = hsv(200 / 360, 1, 0.8), lwd = 4)
+      lines(c(yr + 1 + (4 - 1) / 12 + 0.05, yr + 1 + (9 - 1) / 12 + 0.05),
             c(pred, pred),
-            col = hsv(0/360, 0.8, 0.8), lwd = 4)
+            col = hsv(0 / 360, 0.8, 0.8), lwd = 4)
       text(yr + 1.8, pred, "予測平均値", pos = 4,
            col = hsv(0, 0.8, 0.8), cex = 3, xpd = TRUE)
     }
 
-    plot_texts <- function(model, yr, summary) {
-      text(yr + 1, model$upper[12,"80%"], "80%予測区間",
+    plot_texts <- function(forecast, yr, summary) {
+      text(yr + 1, forecast$upper[12, "80%"], "80%予測区間",
            pos = 4, xpd = TRUE,
-           col = hsv(230/360, 0.14, 0.7), cex = 3)
-      text(yr + 1, model$upper[12,"95%"], "95%予測区間",
+           col = hsv(230 / 360, 0.14, 0.7), cex = 3)
+      text(yr + 1, forecast$upper[12, "95%"], "95%予測区間",
            pos = 4, xpd = TRUE,
-           col = hsv(230/360, 0.02, 0.7), cex = 3)
-      rect(yr - 1.1, summary$last_lwr/1000,
-           yr + 0.1, summary$last_lwr/1000 - 0.5,
+           col = hsv(230 / 360, 0.02, 0.7), cex = 3)
+      rect(yr - 1.1, summary$last_lwr / 1000,
+           yr + 0.1, summary$last_lwr / 1000 - 0.5,
            col = hsv(0, 0, 1, 0.7), border = FALSE)
-      text(yr - 0.5, summary$last_lwr/1000, "前年±20%",
-           pos = 1, col = hsv(200/360, 0.8, 0.8),
+      text(yr - 0.5, summary$last_lwr / 1000, "前年±20%",
+           pos = 1, col = hsv(200 / 360, 0.8, 0.8),
            cex = 3)
-      rect(yr - 3.1, summary$recent_lwr/1000,
-           yr - 1.9, summary$recent_lwr/1000 - 0.5,
+      rect(yr - 3.1, summary$recent_lwr / 1000,
+           yr - 1.9, summary$recent_lwr / 1000 - 0.5,
            col = hsv(0, 0, 1, 0.7), border = FALSE)
-      text(yr - 2.5, summary$recent_lwr/1000, "平年±20%",
+      text(yr - 2.5, summary$recent_lwr / 1000, "平年±20%",
            pos = 1, cex = 3)
     }
 
-    real <- summarize_seikai(list_catchdata) %>%
+    real <- summarize_seikai(list.catchdata) %>%
       iwashi2df() %>%
-      arrange(ym) %>%
-      filter(between(ym,
+      dplyr::arrange(ym) %>%
+      dplyr::filter(dplyr::between(ym,
                      make_ym(yr, 1),
                      make_ym(yr, 12))) %>%
-      select(catch)
+      dplyr::select(catch)
 
     real2 <- real[1:month.until, ] %>%
-      ts(start = c(yr, 1), frequency = 12) / 1000
+      stats::ts(start = c(yr, 1), frequency = 12) / 1000
 
-    model_org   <- model
-    model$x     <- exp(model$x) / 1000
-    model$mean  <- exp(model$mean) / 1000
-    model$lower <- exp(model$lower) / 1000
-    model$upper <- exp(model$upper) / 1000
-    summary     <- make_summary(list_catchdata, 2019, "Mar")
-    max         <- ceiling(max(model$upper))
-    plot(model, main = "",
+    forecast_org   <- forecast
+    forecast$x     <- exp(forecast$x) / 1000
+    forecast$mean  <- exp(forecast$mean) / 1000
+    forecast$lower <- exp(forecast$lower) / 1000
+    forecast$upper <- exp(forecast$upper) / 1000
+    summary     <- make_summary(list.catchdata, 2019, "Mar")
+    max         <- ceiling(max(forecast$upper))
+    plot(forecast, main = "",
          axes = FALSE, ann = FALSE, yaxs = "i",
          xlim = c(yr - 6, yr + 1.5), ylim = c(0, max),
          lwd = 3)
-    # points(real2, pch = 16, col = "red")
     plot_rects(summary, yr - 1)
-    plot_lines(model_org, summary, yr - 1)
-    plot_texts(model, yr, summary)
+    plot_lines(forecast_org, summary, yr - 1)
+    plot_texts(forecast, yr, summary)
     mtext("年", 1, cex = 5, line = 7)
     mtext("漁獲量（千トン）", 2, cex = 5, line = 5)
     axis(1, at = seq(yr - 6, yr + 1, 1), cex.axis = 3, labels = FALSE)

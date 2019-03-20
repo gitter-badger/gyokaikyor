@@ -6,6 +6,23 @@
 \usage{
 \method{fmtcatch}{nagasaki}(path, spcs, type = NULL)
 }
+\arguments{
+\item{path}{Path to the xls/xlsx file.}
+
+\item{spcs}{Spcs name in romaji, one of
+\itemize{
+  \item "maiwashi"
+  \item "maaji"
+  \item "sabarui"
+  \item "masaba"
+  \item "gomasaba"
+  \item "katakuchi"
+  \item "urume"
+}}
+
+\item{type}{Character value either "maki" or "bouuke" to control
+data processing algorithm for kumamoto data.}
+}
 \description{
 Make catch data reading multiple Excel worksheets
 }

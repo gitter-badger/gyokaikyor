@@ -9,7 +9,7 @@ format_temp <- function(fname, year.end) {
                   year    = 0,
                   month   = 0)
 
-  for(i in 1:nrows){
+  for (i in 1:nrows){
     xldata[i, "year"]  <-
       as.numeric(Nippon::zen2han(gsub("年", "", xldata[i, 1])))
     xldata[i, "month"] <-

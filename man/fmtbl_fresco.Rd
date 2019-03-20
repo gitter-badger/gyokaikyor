@@ -7,6 +7,8 @@
 fmtbl_fresco(path, type, date.start, date.end)
 }
 \arguments{
+\item{path}{File path to load}
+
 \item{type}{Format of data to load either 'taichou' or 'seimitsu'.}
 
 \item{date.start}{The first day of the processed data.}
