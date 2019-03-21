@@ -2,10 +2,10 @@ Package: gyokaikyor
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Akira",
+           family = "Hayashi",
            role = c("aut", "cre"),
-           email = "first.last@example.com")
+           email = "akira.hayashi.1987@gmail.com")
 Description: What the package does (one paragraph).
 Depends: R (>= 2.10)
 License: MIT + file LICENSE

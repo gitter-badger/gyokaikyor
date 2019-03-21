@@ -25,7 +25,6 @@
     - [[#テスト-長崎漁獲量][テスト/ 長崎漁獲量]]
     - [[#テスト-水温データ整形][テスト/ 水温データ整形]]
     - [[#テスト-レガシーファイル連携][テスト/ レガシーファイル連携]]
-    - [[#テスト-作図][テスト/ 作図]]
   - [[#関数][関数]]
     - [[#インポート][インポート]]
     - [[#ファイル名操作][ファイル名操作]]
@@ -327,9 +326,9 @@
 
   # Build model ----------------------------------------------------------------------
   model_sarimax1 <- Arima(y = train[, "logcatch"],
-                         order = c(1, 1, 1),
-                         seasonal = list(order = c(1, 0, 0)),
-                         xreg = sst_b)
+                          order = c(1, 1, 1),
+                          seasonal = list(order = c(1, 0, 0)),
+                          xreg = sst_b)
   model_sarimax1
   #   Sst and biomass have positive effect to catch.
   #   AIC was 750.41.
@@ -367,9 +366,10 @@
   # Forcast completed successfully.
   # But, x values sould be considered.
 
+
   # Forecast using mean- or last x values
-  sst_b_mean <- data.frame(logsst = rep(mean(train[, "logsst"]), 12),
-                           logb   = rep(mean(train[, "logb"]), 12)) %>%
+  sst_b_mean <- data.frame(logsst = tapply(train[, "logsst"], cycle(train[, "logsst"]), mean),
+                           logb   = tapply(train[, "logb"], cycle(train[, "logb"]), mean)) %>%
     as.matrix()
   sarimax_f_mean <- forecast(model_sarimax, xreg = sst_b_mean)
   autoplot(sarimax_f_mean, predict.colour = 1, main = "Prediction by ARIMA, using mean SST and Biomass")
@@ -412,30 +412,35 @@
 
   # Forcast for next period
   sarimax_f <- forecast(model_sarimax,
-                        xreg = sst_b_test,
+                        xreg = sst_b_mean,
                         h = 12,
                         level = c(95, 70))
 
   train2           <- window(dbts,  end = c(2018, 12))
   sst_b2           <- train2[, c("logsst", "logb")]
-  sarimax_forecast <- auto.arima(y = train2[, "logcatch"],
-                              xreg = sst_b2,
-                              ic = "aic",
-                              max.order = 8,
-                              stepwise = FALSE,
-                              approximation = FALSE,
-                              parallel = TRUE,
-                              num.cores = 4)
-  sst_b_tail2 <- data.frame(logsst = rep(tail(train2[, "logsst"], 1), 12),
-                            logb   = rep(tail(train2[, "logb"], 1), 12)) %>%
+  sst_b2_mean      <- data.frame(logsst = tapply(train2[, "logsst"], cycle(train2[, "logsst"]), mean),
+                                 logb   = tapply(train2[, "logb"], cycle(train2[, "logb"]), mean)) %>%
     as.matrix()
-  sarimax_f_future <- forecast(sarimax_forecast, xreg = sst_b_tail2)
+  sarimax_forecast <- auto.arima(y = train2[, "logcatch"],
+                                 xreg = sst_b2,
+                                 ic = "aic",
+                                 max.order = 8,
+                                 stepwise = FALSE,
+                                 approximation = FALSE,
+                                 parallel = TRUE,
+                                 num.cores = 4)
+  sarimax_f_future <- forecast(sarimax_forecast, xreg = sst_b2_mean)
 
 
   png("forecast.png", width = 1400, height = 1000)
   par(mai = c(2, 2, 0, 2), family = "HiraKakuProN-W3")
   plot_forecast(sarimax_f_future, list_catchdata, 2019, 1)
   dev.off()
+  exp(mean(sarimax_f_future$mean[4:9]))
+  make_summary(list_catchdata, 2019, "Mar")
+
+
+
 #+END_SRC
 ** 作図
 #+BEGIN_SRC R
@@ -862,7 +867,7 @@ cat NAMESPACE
   devtools::test()
   lintr::lint_package()
   devtools::check(args = "--as-cran")
-  covr::package_coverage()
+  covr::package_coverage(line_exclusions = "R/plot.R")
 #+END_SRC
 
 ** Vignettes
@@ -1279,47 +1284,6 @@ cat NAMESPACE
     expect_equal(make_summary(l, 2018, "Mar")$recent, 1911)
     expect_equal(make_summary(l, 2019, "Mar")$last, 2127)
     expect_equal(make_summary(l, 2019, "Mar")$recent, 1983)
-  })
-#+END_SRC
-*** テスト/ 作図
-#+BEGIN_SRC R :tangle tests/testthat/test_plot.R
-  context("Drawing figs")
-
-  Sys.unsetenv("R_TESTS")
-
-  test_that("plot_catch_monthvar() draw monthly variation of catch", {
-    path <- "ExcelFiles/test_kakukeniwashi.xlsx"
-    df   <- iwashi2list(path, sheet = "カタクチイワシ", year.end = 2019) %>%
-      summarize_seikai()
-    expect_silent(plot_catch_monthvar(df.seikai = df,
-                                      year = 2019, gkk.month = "Mar"))
-    expect_silent(plot_catch_monthvar(df.seikai = df,
-                                      year = 2019, gkk.month = "Mar",
-                  fname = "foo.png", family = "Times"))
-    file.remove("foo.png")
-  })
-
-  test_that("plot_catch_prefec() draw", {
-    path <- "ExcelFiles/test_kakukeniwashi.xlsx"
-    l    <- iwashi2list(path, sheet = "カタクチイワシ", year.end = 2019)
-    expect_silent(plot_catch_prefec(list = l, year = 2019, gkk.month = "Mar"))
-    expect_silent(plot_catch_prefec(list = l, year = 2019, gkk.month = "Mar",
-                                    fname = "bar.png", family = "Times"))
-    file.remove("bar.png")
-  })
-
-  test_that("plot_catch_forecast() draw catch forcast", {
-    path     <- "ExcelFiles/test_kakukeniwashi.xlsx"
-    l        <- iwashi2list(path, sheet = "カタクチイワシ", year.end = 2019)
-    df       <- l %>%
-      summarize_seikai() %>%
-      iwashi2df() %>%
-      dplyr::filter(dplyr::between(year, 1992, 1995)) %>%
-      dplyr::mutate(logcatch = log(catch))
-    ts       <- stats::ts(df, start = 1992, frequency = 12)
-    model    <- forecast::Arima(y = ts[, "logcatch"])
-    forecast <- forecast::forecast(model)
-    expect_silent(plot_forecast(forecast, l, 2019, 3))
   })
 #+END_SRC
 ** 関数
