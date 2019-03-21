@@ -865,6 +865,11 @@ cat NAMESPACE
   covr::package_coverage()
 #+END_SRC
 
+** Vignettes
+#+BEGIN_SRC R
+  usethis::use_vignette("gyokaikyor")
+#+END_SRC
+
 ** テストコード
 :PROPERTIES:
 :header-args: :results silent :exports code
