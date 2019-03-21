@@ -9,9 +9,4 @@
 
 プロジェクトの詳細は [こちら](https://github.com/smxshxishxad/gyokaikyor/blob/master/gyokaikyor.org) を参照
 
-## 改善案の募集
-改善案は [Issues](https://github.com/smxshxishxad/gyokaikyor/issues) にて随時募集中
-
--   データや関数の使いやすさについて
--   その他プロジェクトや関数の構成，わかりにくい箇所全てについて
-
+ホームページは [こちら](https://smxshxishxad.github.io/gyokaikyor/)
