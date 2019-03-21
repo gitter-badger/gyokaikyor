@@ -1,3 +1,7 @@
+get_row <- function(str, regex, offset = 0) {
+  stringr::str_which(str, regex) + offset
+}
+
 get_col2load   <- function(target, regex, offset) {
   match <- stringr::str_detect(target, regex)
   out <- which(match == TRUE) + offset

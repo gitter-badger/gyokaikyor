@@ -29,7 +29,10 @@ Imports:
     forecast
 Suggests: 
     testthat,
-    covr
+    covr,
+    knitr,
+    rmarkdown
 RoxygenNote: 6.1.1
 Remotes: 
     smxshxishxad/tinyplyr
+VignetteBuilder: knitr
