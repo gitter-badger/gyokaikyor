@@ -1,7 +1,7 @@
 # gyokaikyor
 [![Travis build status](<https://travis-ci.org/smxshxishxad/gyokaikyor.svg?branch=master>)](<https://travis-ci.org/smxshxishxad/gyokaikyor>)
 [![Coverage status](https://codecov.io/gh/smxshxishxad/gyokaikyor/branch/master/graph/badge.svg)](https://codecov.io/github/smxshxishxad/gyokaikyor?branch=master)
-[![lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+[![lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental) [![Join the chat at https://gitter.im/gyokaikyor/community](https://badges.gitter.im/gyokaikyor/community.svg)](https://gitter.im/gyokaikyor/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## これは何か？
 漁海況業務に関するパッケージ．
